@@ -1,0 +1,54 @@
+<?php
+/**
+ * SmartCast Configuration
+ */
+
+// Database Configuration
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'smartcast');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_CHARSET', 'utf8mb4');
+
+// Application Configuration
+define('APP_NAME', 'SmartCast Voting System');
+define('APP_VERSION', '1.0.0');
+define('APP_URL', 'http://localhost/smartcast');
+define('APP_DEBUG', true);
+
+// Security Configuration
+define('JWT_SECRET', 'your-jwt-secret-key-change-this');
+define('ENCRYPTION_KEY', 'your-encryption-key-change-this');
+define('PASSWORD_SALT', 'your-password-salt-change-this');
+
+// File Upload Configuration
+define('UPLOAD_PATH', __DIR__ . '/../public/uploads/');
+define('UPLOAD_URL', APP_URL . '/public/uploads/');
+define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
+
+// Session Configuration
+define('SESSION_LIFETIME', 3600); // 1 hour
+define('SESSION_NAME', 'smartcast_session');
+
+// Multi-tenant Dashboard URLs
+define('PUBLIC_URL', APP_URL);
+define('ORGANIZER_URL', APP_URL . '/organizer');
+define('ADMIN_URL', APP_URL . '/admin');
+define('SUPERADMIN_URL', APP_URL . '/superadmin');
+
+// CoreUI Configuration
+define('COREUI_VERSION', '4.2.6');
+define('COREUI_CSS', 'https://cdn.jsdelivr.net/npm/@coreui/coreui@' . COREUI_VERSION . '/dist/css/coreui.min.css');
+define('COREUI_JS', 'https://cdn.jsdelivr.net/npm/@coreui/coreui@' . COREUI_VERSION . '/dist/js/coreui.bundle.min.js');
+
+// Rate Limiting
+define('RATE_LIMIT_REQUESTS', 100);
+define('RATE_LIMIT_WINDOW', 3600); // 1 hour
+
+// Timezone
+date_default_timezone_set('UTC');
+
+// Include environment-specific config if exists
+if (file_exists(__DIR__ . '/config.local.php')) {
+    require_once __DIR__ . '/config.local.php';
+}
