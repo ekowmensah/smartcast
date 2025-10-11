@@ -2701,13 +2701,13 @@ class OrganizerController extends BaseController
         $filename = uniqid($type . '_') . '.' . $extension;
         
         // Create upload directory if it doesn't exist
-        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/uploads/' . $type . '/';
+        $uploadDir = UPLOAD_PATH . $type . '/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
         
         $uploadPath = $uploadDir . $filename;
-        $webPath = '/uploads/' . $type . '/' . $filename;
+        $webPath = UPLOAD_URL . $type . '/' . $filename;
         
         // Move uploaded file
         if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
