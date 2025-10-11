@@ -25,30 +25,3 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Upload files (ignore actual uploads but keep directory structure)
-# Allow directories but ignore image files
-uploads/events/*.jpg
-uploads/events/*.jpeg
-uploads/events/*.png
-uploads/events/*.gif
-uploads/events/*.webp
-uploads/nominees/*.jpg
-uploads/nominees/*.jpeg
-uploads/nominees/*.png
-uploads/nominees/*.gif
-uploads/nominees/*.webp
-
-public/uploads/events/*.jpg
-public/uploads/events/*.jpeg
-public/uploads/events/*.png
-public/uploads/events/*.gif
-public/uploads/events/*.webp
-public/uploads/nominees/*.jpg
-public/uploads/nominees/*.jpeg
-public/uploads/nominees/*.png
-public/uploads/nominees/*.gif
-public/uploads/nominees/*.webp
-
-# Keep .gitkeep files
-!uploads/*/.gitkeep
-!public/uploads/*/.gitkeep
