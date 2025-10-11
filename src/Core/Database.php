@@ -51,7 +51,21 @@ class Database
     {
         try {
             $stmt = $this->connection->prepare($sql);
-            $stmt->execute($params);
+            
+            // Bind parameters individually to handle null values properly
+            foreach ($params as $key => $value) {
+                if (is_null($value)) {
+                    $stmt->bindValue(":$key", null, PDO::PARAM_NULL);
+                } elseif (is_int($value)) {
+                    $stmt->bindValue(":$key", $value, PDO::PARAM_INT);
+                } elseif (is_bool($value)) {
+                    $stmt->bindValue(":$key", $value, PDO::PARAM_BOOL);
+                } else {
+                    $stmt->bindValue(":$key", $value, PDO::PARAM_STR);
+                }
+            }
+            
+            $stmt->execute();
             return $stmt;
         } catch (PDOException $e) {
             throw new \Exception("Query failed: " . $e->getMessage());
@@ -85,12 +99,18 @@ class Database
     {
         $set = [];
         foreach (array_keys($data) as $column) {
-            $set[] = "{$column} = :{$column}";
+            $set[] = "{$column} = :set_{$column}";
         }
         $setClause = implode(', ', $set);
         
+        // Prefix data parameters to avoid conflicts with where parameters
+        $setParams = [];
+        foreach ($data as $key => $value) {
+            $setParams["set_{$key}"] = $value;
+        }
+        
         $sql = "UPDATE {$table} SET {$setClause} WHERE {$where}";
-        $params = array_merge($data, $whereParams);
+        $params = array_merge($setParams, $whereParams);
         
         $stmt = $this->query($sql, $params);
         return $stmt->rowCount();

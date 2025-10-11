@@ -9,7 +9,8 @@ class FeeRule extends BaseModel
 {
     protected $table = 'fee_rules';
     protected $fillable = [
-        'tenant_id', 'event_id', 'rule_type', 'percentage_rate', 'fixed_amount', 'active'
+        'name', 'description', 'tenant_id', 'event_id', 'rule_type', 
+        'percentage_rate', 'fixed_amount', 'min_amount', 'max_amount', 'active'
     ];
     
     const RULE_TYPE_PERCENTAGE = 'percentage';
@@ -18,27 +19,40 @@ class FeeRule extends BaseModel
     
     public function getApplicableFeeRule($tenantId, $eventId = null)
     {
-        // Priority: Event-specific > Tenant-specific > Global
+        // NEW PRIORITY: Event-specific > Plan-based > Global fallback
         
-        // 1. Check for event-specific rule
+        // 1. Check for event-specific rule (highest priority)
         if ($eventId) {
-            $sql = "SELECT * FROM {$this->table} WHERE tenant_id = ? AND event_id = ? AND active = 1 ORDER BY created_at DESC LIMIT 1";
-            $eventRule = $this->db->select($sql, [$tenantId, $eventId]);
+            $sql = "SELECT fr.* FROM {$this->table} fr WHERE fr.event_id = :event_id AND fr.active = 1 ORDER BY fr.created_at DESC LIMIT 1";
+            $eventRule = $this->db->select($sql, ['event_id' => $eventId]);
             
             if (!empty($eventRule)) {
                 return $eventRule[0];
             }
         }
         
-        // 2. Check for tenant-specific rule (event_id IS NULL)
-        $sql = "SELECT * FROM {$this->table} WHERE tenant_id = ? AND event_id IS NULL AND active = 1 ORDER BY created_at DESC LIMIT 1";
-        $tenantRule = $this->db->select($sql, [$tenantId]);
+        // 2. Check for plan-based rule (via tenant's active subscription)
+        $sql = "
+            SELECT fr.*, sp.name as plan_name, ts.status as subscription_status
+            FROM {$this->table} fr
+            INNER JOIN subscription_plans sp ON fr.id = sp.fee_rule_id
+            INNER JOIN tenant_subscriptions ts ON sp.id = ts.plan_id
+            WHERE ts.tenant_id = :tenant_id 
+            AND ts.status = 'active' 
+            AND fr.active = 1
+            AND fr.tenant_id IS NULL 
+            AND fr.event_id IS NULL
+            ORDER BY ts.created_at DESC 
+            LIMIT 1
+        ";
         
-        if (!empty($tenantRule)) {
-            return $tenantRule[0];
+        $planRule = $this->db->select($sql, ['tenant_id' => $tenantId]);
+        
+        if (!empty($planRule)) {
+            return $planRule[0];
         }
         
-        // 3. Check for global rule (tenant_id IS NULL AND event_id IS NULL)
+        // 3. Check for global fallback rule (lowest priority)
         $sql = "SELECT * FROM {$this->table} WHERE tenant_id IS NULL AND event_id IS NULL AND active = 1 ORDER BY created_at DESC LIMIT 1";
         $globalRule = $this->db->select($sql, []);
         

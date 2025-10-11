@@ -67,44 +67,61 @@ class SuperAdminController extends BaseController
     
     public function tenants()
     {
-        // Get tenants with comprehensive data
+        // Get tenants with comprehensive data using new subscription system
         $sql = "
             SELECT 
                 t.*,
-                t.plan as plan_name,
-                CASE 
-                    WHEN t.plan = 'free' THEN 0
-                    WHEN t.plan = 'basic' THEN 29.99
-                    WHEN t.plan = 'premium' THEN 99.99
-                    WHEN t.plan = 'enterprise' THEN 299.99
-                    ELSE 0
-                END as plan_price,
-                COUNT(DISTINCT e.id) as total_events,
-                COUNT(DISTINCT CASE WHEN e.status = 'active' THEN e.id END) as active_events,
-                COUNT(DISTINCT c.id) as total_contestants,
-                COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount END), 0) as total_revenue,
-                COALESCE(SUM(CASE WHEN tr.status = 'success' AND tr.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN tr.amount END), 0) as monthly_revenue,
-                COUNT(DISTINCT tr.id) as total_transactions,
-                MAX(tr.created_at) as last_transaction_date,
-                COUNT(DISTINCT u.id) as user_count
+                sp.name as plan_name,
+                sp.price as plan_price,
+                sp.billing_cycle,
+                ts.status as subscription_status,
+                ts.expires_at as subscription_expires,
+                
+                -- Event and contestant counts
+                (SELECT COUNT(*) FROM events WHERE tenant_id = t.id) as total_events,
+                (SELECT COUNT(*) FROM events WHERE tenant_id = t.id AND status = 'active') as active_events,
+                (SELECT COUNT(DISTINCT c.id) FROM events e JOIN contestants c ON e.id = c.event_id WHERE e.tenant_id = t.id AND c.active = 1) as total_contestants,
+                
+                -- Revenue calculations using subqueries for accuracy
+                COALESCE(tb.total_earned, 0) as total_revenue,
+                COALESCE((
+                    SELECT SUM(t_inner.amount - COALESCE(rs_inner.amount, 0))
+                    FROM transactions t_inner
+                    JOIN events e_inner ON t_inner.event_id = e_inner.id
+                    LEFT JOIN revenue_shares rs_inner ON t_inner.id = rs_inner.transaction_id
+                    WHERE e_inner.tenant_id = t.id 
+                    AND t_inner.status = 'success'
+                    AND t_inner.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                ), 0) as monthly_revenue,
+                
+                -- Transaction and user counts
+                (SELECT COUNT(*) FROM transactions tr JOIN events e ON tr.event_id = e.id WHERE e.tenant_id = t.id AND tr.status = 'success') as total_transactions,
+                (SELECT MAX(tr.created_at) FROM transactions tr JOIN events e ON tr.event_id = e.id WHERE e.tenant_id = t.id AND tr.status = 'success') as last_transaction_date,
+                (SELECT COUNT(*) FROM users WHERE tenant_id = t.id AND active = 1) as user_count,
+                
+                -- Balance information
+                tb.available,
+                tb.pending
             FROM tenants t
-            LEFT JOIN events e ON t.id = e.tenant_id
-            LEFT JOIN contestants c ON e.id = c.event_id AND c.active = 1
-            LEFT JOIN transactions tr ON e.id = tr.event_id
-            LEFT JOIN users u ON t.id = u.tenant_id AND u.active = 1
-            GROUP BY t.id, t.name, t.email, t.phone, t.website, t.address, t.plan, t.active, t.verified, t.created_at, t.updated_at
+            LEFT JOIN tenant_subscriptions ts ON t.id = ts.tenant_id AND ts.status = 'active'
+            LEFT JOIN subscription_plans sp ON ts.plan_id = sp.id
+            LEFT JOIN tenant_balances tb ON t.id = tb.tenant_id
             ORDER BY t.created_at DESC
         ";
         
         $tenants = $this->tenantModel->getDatabase()->select($sql);
         
-        // Available plans (from ENUM)
-        $availablePlans = [
-            ['name' => 'Free', 'value' => 'free', 'price' => 0],
-            ['name' => 'Basic', 'value' => 'basic', 'price' => 29.99],
-            ['name' => 'Premium', 'value' => 'premium', 'price' => 99.99],
-            ['name' => 'Enterprise', 'value' => 'enterprise', 'price' => 299.99]
-        ];
+        // Debug: Check tenant_balances data
+        error_log("=== TENANT REVENUE DEBUG ===");
+        foreach ($tenants as $tenant) {
+            if ($tenant['id']) {
+                error_log("Tenant {$tenant['id']} ({$tenant['name']}): total_revenue={$tenant['total_revenue']}, monthly_revenue={$tenant['monthly_revenue']}, available={$tenant['available']}");
+            }
+        }
+        
+        // Get available subscription plans from database
+        $planModel = new \SmartCast\Models\SubscriptionPlan();
+        $availablePlans = $planModel->findAll(['is_active' => 1], 'sort_order ASC, name ASC');
         
         $content = $this->renderView('superadmin/tenants/index', [
             'tenants' => $tenants,
@@ -911,9 +928,16 @@ class SuperAdminController extends BaseController
     {
         $fees = $this->getFeeRulesData();
         
+        // Get all tenants and plans for the selection dropdowns
+        $tenants = $this->tenantModel->findAll([], 'name ASC');
+        $planModel = new \SmartCast\Models\SubscriptionPlan();
+        $plans = $planModel->findAll(['is_active' => 1], 'sort_order ASC, name ASC');
+        
         $content = $this->renderView('superadmin/financial/fees', [
             'fees' => $fees,
-            'title' => 'Global Fee Rules'
+            'tenants' => $tenants,
+            'plans' => $plans,
+            'title' => 'Fee Rules Management'
         ]);
         
         echo $this->renderLayout('superadmin_layout', $content, [
@@ -1182,6 +1206,37 @@ class SuperAdminController extends BaseController
         }
     }
     
+    public function getFeeRulePlanAttachments()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+        
+        try {
+            $ruleId = intval($_GET['rule_id'] ?? 0);
+            
+            if (!$ruleId) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Fee rule ID is required']);
+                return;
+            }
+            
+            // Get plans that use this fee rule
+            $planModel = new \SmartCast\Models\SubscriptionPlan();
+            $plans = $planModel->findAll(['fee_rule_id' => $ruleId], 'name ASC');
+            
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'plans' => $plans]);
+            
+        } catch (\Exception $e) {
+            error_log('Fee rule plan attachments error: ' . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Error fetching plan attachments: ' . $e->getMessage()]);
+        }
+    }
+    
     public function createFeeRule()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -1200,11 +1255,25 @@ class SuperAdminController extends BaseController
             
             $feeRuleModel = new \SmartCast\Models\FeeRule();
             
+            // Determine rule scope and prepare data accordingly
+            $eventId = null;
+            if (isset($data['rule_scope']) && $data['rule_scope'] === 'event') {
+                if (empty($data['event_id'])) {
+                    $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Please select an event for event-specific rules', 'error');
+                    return;
+                }
+                $eventId = intval($data['event_id']);
+            }
+            
             // Prepare fee rule data
             $feeRuleData = [
-                'tenant_id' => null, // Global rule
-                'event_id' => null,  // Global rule
+                'name' => $data['name'],
+                'description' => $data['description'] ?? null,
+                'tenant_id' => null, // Always null - we use plan-based approach now
+                'event_id' => $eventId, // null for plan/global rules, event_id for event-specific
                 'rule_type' => $data['type'],
+                'min_amount' => !empty($data['min_amount']) ? floatval($data['min_amount']) : null,
+                'max_amount' => !empty($data['max_amount']) ? floatval($data['max_amount']) : null,
                 'active' => isset($data['active']) ? 1 : 0
             ];
             
@@ -1221,7 +1290,20 @@ class SuperAdminController extends BaseController
             $ruleId = $feeRuleModel->create($feeRuleData);
             
             if ($ruleId) {
-                $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Fee rule created successfully!', 'success');
+                // If this is a plan-based rule, attach it to selected plans
+                if (isset($data['rule_scope']) && $data['rule_scope'] === 'plan' && !empty($data['plan_ids'])) {
+                    $planModel = new \SmartCast\Models\SubscriptionPlan();
+                    $planIds = is_array($data['plan_ids']) ? $data['plan_ids'] : [$data['plan_ids']];
+                    
+                    foreach ($planIds as $planId) {
+                        $planModel->update(intval($planId), ['fee_rule_id' => $ruleId]);
+                    }
+                    
+                    $planCount = count($planIds);
+                    $this->redirect(SUPERADMIN_URL . '/financial/fees', "Fee rule created and attached to {$planCount} plan(s) successfully!", 'success');
+                } else {
+                    $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Fee rule created successfully!', 'success');
+                }
             } else {
                 $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Failed to create fee rule', 'error');
             }
@@ -1235,7 +1317,8 @@ class SuperAdminController extends BaseController
     public function updateFeeRule()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Invalid request method', 'error');
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
         
@@ -1243,16 +1326,34 @@ class SuperAdminController extends BaseController
             $data = $this->sanitizeInput($_POST);
             
             if (empty($data['rule_id'])) {
-                $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Fee rule ID is required', 'error');
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Fee rule ID is required']);
                 return;
             }
             
             $feeRuleModel = new \SmartCast\Models\FeeRule();
             $ruleId = intval($data['rule_id']);
             
+            // Determine rule scope and prepare data accordingly
+            $eventId = null;
+            if (isset($data['rule_scope']) && $data['rule_scope'] === 'event') {
+                if (empty($data['event_id'])) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Please select an event for event-specific rules']);
+                    return;
+                }
+                $eventId = intval($data['event_id']);
+            }
+            
             // Prepare update data
             $updateData = [
+                'name' => $data['name'],
+                'description' => $data['description'] ?? null,
+                'tenant_id' => null, // Always null - we use plan-based approach now
+                'event_id' => $eventId, // null for plan/global rules, event_id for event-specific
                 'rule_type' => $data['type'],
+                'min_amount' => !empty($data['min_amount']) ? floatval($data['min_amount']) : null,
+                'max_amount' => !empty($data['max_amount']) ? floatval($data['max_amount']) : null,
                 'active' => isset($data['active']) ? 1 : 0
             ];
             
@@ -1268,14 +1369,52 @@ class SuperAdminController extends BaseController
             $updated = $feeRuleModel->update($ruleId, $updateData);
             
             if ($updated) {
-                $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Fee rule updated successfully!', 'success');
+                // Handle plan attachments for plan-based rules
+                if (isset($data['rule_scope']) && $data['rule_scope'] === 'plan') {
+                    $planModel = new \SmartCast\Models\SubscriptionPlan();
+                    
+                    // First, remove this rule from all plans
+                    $sql = "UPDATE subscription_plans SET fee_rule_id = NULL WHERE fee_rule_id = :rule_id";
+                    $planModel->getDatabase()->query($sql, ['rule_id' => $ruleId]);
+                    
+                    // Then attach to selected plans
+                    if (!empty($data['plan_ids'])) {
+                        $planIds = is_array($data['plan_ids']) ? $data['plan_ids'] : [$data['plan_ids']];
+                        
+                        foreach ($planIds as $planId) {
+                            $planModel->update(intval($planId), ['fee_rule_id' => $ruleId]);
+                        }
+                        
+                        $planCount = count($planIds);
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => true, 'message' => "Fee rule updated and attached to {$planCount} plan(s) successfully!"]);
+                        return;
+                    } else {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => true, 'message' => 'Fee rule updated (not attached to any plans)']);
+                        return;
+                    }
+                } else {
+                    // For non-plan rules, remove from all plans
+                    $planModel = new \SmartCast\Models\SubscriptionPlan();
+                    $sql = "UPDATE subscription_plans SET fee_rule_id = NULL WHERE fee_rule_id = :rule_id";
+                    $planModel->getDatabase()->query($sql, ['rule_id' => $ruleId]);
+                    
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Fee rule updated successfully!']);
+                    return;
+                }
             } else {
-                $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Failed to update fee rule', 'error');
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Failed to update fee rule']);
+                return;
             }
             
         } catch (\Exception $e) {
             error_log('Fee rule update error: ' . $e->getMessage());
-            $this->redirect(SUPERADMIN_URL . '/financial/fees', 'Error updating fee rule: ' . $e->getMessage(), 'error');
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Error updating fee rule: ' . $e->getMessage()]);
+            return;
         }
     }
     
@@ -1649,10 +1788,32 @@ class SuperAdminController extends BaseController
                     'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
                 ]);
                 
-                $this->redirect(SUPERADMIN_URL . '/tenants/plans', 'Plan updated successfully and changes applied to all subscribers', 'success');
+                // Check if this is an AJAX request
+                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+                $isAjax = $isAjax || (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false);
+                
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Plan updated successfully and changes applied to all subscribers']);
+                    return;
+                } else {
+                    $this->redirect(SUPERADMIN_URL . '/tenants/plans', 'Plan updated successfully and changes applied to all subscribers', 'success');
+                }
                 
             } catch (\Exception $e) {
-                $this->redirect(SUPERADMIN_URL . '/tenants/plans', 'Failed to update plan: ' . $e->getMessage(), 'error');
+                error_log('Plan update error: ' . $e->getMessage());
+                
+                // Check if this is an AJAX request
+                $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+                $isAjax = $isAjax || (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false);
+                
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Failed to update plan: ' . $e->getMessage()]);
+                    return;
+                } else {
+                    $this->redirect(SUPERADMIN_URL . '/tenants/plans', 'Failed to update plan: ' . $e->getMessage(), 'error');
+                }
             }
         }
     }

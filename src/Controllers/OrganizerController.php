@@ -251,7 +251,7 @@ class OrganizerController extends BaseController
         
         // Get subscription limits
         $subscriptionModel = new \SmartCast\Models\TenantSubscription();
-        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId);
+        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId) ?? $this->getDefaultTenantLimits();
         
         $content = $this->renderView('organizer/events/index', [
             'events' => $events,
@@ -290,7 +290,7 @@ class OrganizerController extends BaseController
         
         // Get subscription limits for display
         $subscriptionModel = new \SmartCast\Models\TenantSubscription();
-        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId);
+        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId) ?? $this->getDefaultTenantLimits();
         
         // If editing an existing event, load its data
         if ($editEventId) {
@@ -398,11 +398,6 @@ class OrganizerController extends BaseController
     
     public function contestants()
     {
-        // Temporary: Enable error display for debugging
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 1);
-        error_reporting(E_ALL);
-        
         $tenantId = $this->session->getTenantId();
         
         // Get events with their contestants grouped by categories
@@ -432,21 +427,6 @@ class OrganizerController extends BaseController
                 // Get categories and contestants for each event
         $eventData = [];
         foreach ($events as $event) {
-            // Debug: Check total contestants for this event
-            $debugSql = "SELECT COUNT(*) as total FROM contestants WHERE event_id = :event_id AND active = 1";
-            $debugResult = $this->eventModel->getDatabase()->selectOne($debugSql, ['event_id' => $event['event_id']]);
-            error_log("Event {$event['event_id']} ({$event['event_name']}) has {$debugResult['total']} total active contestants");
-            
-            // Debug: Check contestant_categories relationships
-            $debugCcSql = "
-                SELECT COUNT(*) as total 
-                FROM contestant_categories cc 
-                INNER JOIN contestants c ON cc.contestant_id = c.id 
-                WHERE c.event_id = :event_id AND c.active = 1
-            ";
-            $debugCcResult = $this->eventModel->getDatabase()->selectOne($debugCcSql, ['event_id' => $event['event_id']]);
-            error_log("Event {$event['event_id']} has {$debugCcResult['total']} contestant-category relationships");
-            
             // Get categories for this event
             $categorySql = "
                 SELECT 
@@ -489,6 +469,7 @@ class OrganizerController extends BaseController
                             SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END) as revenue
                         FROM votes v
                         LEFT JOIN transactions t ON v.transaction_id = t.id
+                        WHERE v.category_id = :category_id_for_votes
                         GROUP BY v.contestant_id
                     ) vote_stats ON c.id = vote_stats.contestant_id
                     WHERE cc.category_id = :category_id
@@ -497,14 +478,13 @@ class OrganizerController extends BaseController
                 ";
                 
                 try {
-                    $category['contestants'] = $this->eventModel->getDatabase()->select($contestantSql, ['category_id' => $category['category_id']]);
-                    
-                    // Debug: Log query results
-                    error_log("Category {$category['category_id']} ({$category['category_name']}) has " . count($category['contestants']) . " contestants");
+                    $category['contestants'] = $this->eventModel->getDatabase()->select($contestantSql, [
+                        'category_id' => $category['category_id'],
+                        'category_id_for_votes' => $category['category_id']
+                    ]);
                     
                     // If no contestants found, try a simpler query without shortcode
                     if (empty($category['contestants'])) {
-                        error_log("No contestants found, trying simpler query...");
                         $simpleSql = "
                             SELECT 
                                 c.id,
@@ -522,11 +502,9 @@ class OrganizerController extends BaseController
                             ORDER BY c.name ASC
                         ";
                         $category['contestants'] = $this->eventModel->getDatabase()->select($simpleSql, ['category_id' => $category['category_id']]);
-                        error_log("Simple query returned " . count($category['contestants']) . " contestants");
                         
                         // If still no contestants, try getting all contestants for this event
                         if (empty($category['contestants'])) {
-                            error_log("Still no contestants, trying to get all contestants for event...");
                             $allContestantsSql = "
                                 SELECT 
                                     c.id,
@@ -543,7 +521,6 @@ class OrganizerController extends BaseController
                                 ORDER BY c.name ASC
                             ";
                             $allContestants = $this->eventModel->getDatabase()->select($allContestantsSql, ['event_id' => $event['event_id']]);
-                            error_log("Found " . count($allContestants) . " total contestants for event, assigning to category");
                             
                             // Assign all contestants to this category for display purposes
                             $category['contestants'] = $allContestants;
@@ -551,7 +528,6 @@ class OrganizerController extends BaseController
                     }
                     
                 } catch (\Exception $e) {
-                    error_log("Error fetching contestants for category {$category['category_id']}: " . $e->getMessage());
                     $category['contestants'] = [];
                 }
             }
@@ -562,23 +538,8 @@ class OrganizerController extends BaseController
             ];
         }
         
-        // Debug: Add debug info to the view
-        $debugInfo = [
-            'total_events' => count($events),
-            'total_event_data' => count($eventData),
-            'debug_messages' => []
-        ];
-        
-        foreach ($eventData as $data) {
-            $debugInfo['debug_messages'][] = "Event: {$data['event']['event_name']} has " . count($data['categories']) . " categories";
-            foreach ($data['categories'] as $cat) {
-                $debugInfo['debug_messages'][] = "  - Category: {$cat['category_name']} has " . count($cat['contestants']) . " contestants";
-            }
-        }
-        
         $content = $this->renderView('organizer/contestants/index', [
             'eventData' => $eventData,
-            'debugInfo' => $debugInfo,
             'title' => 'Contestants'
         ]);
         
@@ -921,45 +882,16 @@ class OrganizerController extends BaseController
                 v.quantity as vote_count,
                 COALESCE(rs.amount, 0) as platform_fee,
                 (t.amount - COALESCE(rs.amount, 0)) as net_amount,
-                -- Get fee percentage from revenue_shares or fee_rules table
-                COALESCE(rs.percentage_applied, 
-                    COALESCE(fr.percentage_rate,
-                        COALESCE((
-                            SELECT fr2.percentage_rate 
-                            FROM fee_rules fr2 
-                            WHERE fr2.tenant_id = e.tenant_id 
-                            AND fr2.active = 1
-                            ORDER BY fr2.created_at DESC 
-                            LIMIT 1
-                        ), 12.0)
-                    )
-                ) as calculated_fee_percentage,
-                -- Calculate platform fee amount
+                -- Calculate actual fee percentage based on platform fee amount
                 CASE 
-                    WHEN rs.amount IS NULL THEN 
-                        t.amount * (COALESCE((
-                            SELECT fr3.percentage_rate 
-                            FROM fee_rules fr3 
-                            WHERE fr3.tenant_id = e.tenant_id 
-                            AND fr3.active = 1
-                            ORDER BY fr3.created_at DESC 
-                            LIMIT 1
-                        ), 12.0) / 100)
-                    ELSE rs.amount
-                END as calculated_platform_fee,
-                -- Calculate net earnings
-                CASE 
-                    WHEN rs.amount IS NULL THEN 
-                        t.amount - (t.amount * (COALESCE((
-                            SELECT fr4.percentage_rate 
-                            FROM fee_rules fr4 
-                            WHERE fr4.tenant_id = e.tenant_id 
-                            AND fr4.active = 1
-                            ORDER BY fr4.created_at DESC 
-                            LIMIT 1
-                        ), 12.0) / 100))
-                    ELSE (t.amount - rs.amount)
-                END as calculated_net_amount
+                    WHEN t.amount > 0 AND COALESCE(rs.amount, 0) > 0 THEN 
+                        ROUND((COALESCE(rs.amount, 0) / t.amount) * 100, 1)
+                    ELSE 0
+                END as calculated_fee_percentage,
+                -- Use actual platform fee from revenue_shares table
+                COALESCE(rs.amount, 0) as calculated_platform_fee,
+                -- Use actual net amount
+                (t.amount - COALESCE(rs.amount, 0)) as calculated_net_amount
             FROM transactions t
             INNER JOIN events e ON t.event_id = e.id
             INNER JOIN contestants c ON t.contestant_id = c.id
@@ -1030,7 +962,7 @@ class OrganizerController extends BaseController
         
         // Get subscription limits for publish actions
         $subscriptionModel = new \SmartCast\Models\TenantSubscription();
-        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId);
+        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId) ?? $this->getDefaultTenantLimits();
         
         $content = $this->renderView('organizer/events/drafts', [
             'events' => $events,
@@ -1332,7 +1264,7 @@ class OrganizerController extends BaseController
         
         // Get subscription limits for actions
         $subscriptionModel = new \SmartCast\Models\TenantSubscription();
-        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId);
+        $tenantLimits = $subscriptionModel->getTenantLimits($tenantId) ?? $this->getDefaultTenantLimits();
         
         $content = $this->renderView('organizer/events/show', [
             'event' => $event,
@@ -1431,6 +1363,7 @@ class OrganizerController extends BaseController
                         MAX(v.created_at) as last_vote_at
                     FROM votes v
                     LEFT JOIN transactions t ON v.transaction_id = t.id
+                    WHERE v.category_id = :category_id_for_votes
                     GROUP BY v.contestant_id
                 ) vote_stats ON c.id = vote_stats.contestant_id
                 WHERE cc.category_id = :category_id
@@ -1438,7 +1371,10 @@ class OrganizerController extends BaseController
                 ORDER BY vote_stats.total_votes DESC, c.name ASC
             ";
             
-            $category['contestants'] = $this->eventModel->getDatabase()->select($contestantSql, ['category_id' => $category['category_id']]);
+            $category['contestants'] = $this->eventModel->getDatabase()->select($contestantSql, [
+                'category_id' => $category['category_id'],
+                'category_id_for_votes' => $category['category_id']
+            ]);
         }
         
         return $categories;
@@ -3081,5 +3017,25 @@ class OrganizerController extends BaseController
                 'failure_rate' => 0
             ];
         }
+    }
+    
+    /**
+     * Get default tenant limits when no subscription is active
+     */
+    private function getDefaultTenantLimits()
+    {
+        return [
+            'plan_name' => 'No Active Plan',
+            'max_events' => null,
+            'current_events' => 0,
+            'events_remaining' => 'Unlimited',
+            'max_contestants_per_event' => null,
+            'max_votes_per_event' => null,
+            'unlimited_events' => true,
+            'unlimited_contestants' => true,
+            'unlimited_votes' => true,
+            'expires_at' => null,
+            'status' => 'inactive'
+        ];
     }
 }

@@ -251,27 +251,34 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="appliesTo" class="form-label">Applies To</label>
-                        <select class="form-select" id="appliesTo" name="applies_to" required>
-                            <option value="all">All Transactions</option>
-                            <option value="subscriptions">Subscriptions Only</option>
-                            <option value="transactions">One-time Transactions</option>
-                            <option value="specific_plans">Specific Plans</option>
+                        <label for="ruleScope" class="form-label">Rule Scope</label>
+                        <select class="form-select" id="ruleScope" name="rule_scope" required onchange="toggleScopeSelection()">
+                            <option value="plan">Plan-Based Rule (attached to subscription plans)</option>
+                            <option value="event">Event-Specific Rule (overrides plan rules)</option>
+                            <option value="global">Global Fallback Rule (when no plan rule exists)</option>
                         </select>
+                        <small class="text-muted">Plan-based rules are the recommended approach for consistent fee management</small>
                     </div>
                     
-                    <div class="mb-3" id="specificPlansDiv" style="display: none;">
-                        <label for="specificPlans" class="form-label">Select Plans</label>
-                        <select class="form-select" id="specificPlans" name="specific_plans[]" multiple>
-                            <option value="basic">Basic Plan</option>
-                            <option value="professional">Professional Plan</option>
-                            <option value="enterprise">Enterprise Plan</option>
+                    <div class="mb-3" id="planSelectionDiv" style="display: block;">
+                        <label for="planSelection" class="form-label">Attach to Subscription Plans</label>
+                        <select class="form-select" id="planSelection" name="plan_ids[]" multiple>
+                            <?php if (isset($plans) && is_array($plans)): ?>
+                                <?php foreach ($plans as $plan): ?>
+                                    <option value="<?= $plan['id'] ?>"><?= htmlspecialchars($plan['name']) ?> - $<?= number_format($plan['price'], 2) ?>/<?= $plan['billing_cycle'] ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
+                        <small class="text-muted">Select which subscription plans should use this fee rule</small>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="conditions" class="form-label">Additional Conditions</label>
-                        <textarea class="form-control" id="conditions" name="conditions" rows="2" placeholder="Optional conditions for this rule..."></textarea>
+                    <div class="mb-3" id="eventSelectionDiv" style="display: none;">
+                        <label for="eventSelection" class="form-label">Select Specific Event</label>
+                        <select class="form-select" id="eventSelection" name="event_id">
+                            <option value="">Choose an event...</option>
+                            <!-- Events will be loaded dynamically -->
+                        </select>
+                        <small class="text-muted">This rule will only apply to the selected event</small>
                     </div>
                     
                     <div class="form-check">
@@ -296,8 +303,89 @@ function createFeeRule() {
     document.getElementById('feeRuleForm').reset();
     document.getElementById('feeRuleId').value = '';
     
+    // Reset to default scope (plan-based)
+    document.getElementById('ruleScope').value = 'plan';
+    toggleScopeSelection(); // This will show the plan selection div
+    
     const modal = new coreui.Modal(document.getElementById('feeRuleModal'));
     modal.show();
+}
+
+function checkRulePlanAttachments(ruleId) {
+    // Check if this rule is attached to any subscription plans
+    fetch(`<?= SUPERADMIN_URL ?>/financial/fees/plan-attachments?rule_id=${ruleId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.plans && data.plans.length > 0) {
+                // Rule is attached to plans
+                document.getElementById('ruleScope').value = 'plan';
+                const planSelect = document.getElementById('planSelection');
+                
+                // Select the attached plans
+                Array.from(planSelect.options).forEach(option => {
+                    option.selected = data.plans.some(plan => plan.id == option.value);
+                });
+                
+                toggleScopeSelection(); // Show plan selection div
+            } else {
+                // Rule is not attached to plans, must be global
+                document.getElementById('ruleScope').value = 'global';
+                toggleScopeSelection(); // Hide all selection divs
+            }
+        })
+        .catch(error => {
+            console.error('Error checking plan attachments:', error);
+            // Default to global if we can't determine
+            document.getElementById('ruleScope').value = 'global';
+            toggleScopeSelection();
+        });
+}
+
+function toggleScopeSelection() {
+    const ruleScope = document.getElementById('ruleScope').value;
+    const planDiv = document.getElementById('planSelectionDiv');
+    const eventDiv = document.getElementById('eventSelectionDiv');
+    const planSelect = document.getElementById('planSelection');
+    const eventSelect = document.getElementById('eventSelection');
+    
+    // Hide all divs first
+    planDiv.style.display = 'none';
+    eventDiv.style.display = 'none';
+    planSelect.required = false;
+    eventSelect.required = false;
+    
+    // Show relevant div based on scope
+    if (ruleScope === 'plan') {
+        planDiv.style.display = 'block';
+        planSelect.required = true;
+    } else if (ruleScope === 'event') {
+        eventDiv.style.display = 'block';
+        eventSelect.required = true;
+        loadEventsForSelection();
+    }
+    // Global rules don't need additional selections
+}
+
+function loadEventsForSelection() {
+    // Load events dynamically for event-specific rules
+    fetch(`<?= SUPERADMIN_URL ?>/api/events/active`)
+        .then(response => response.json())
+        .then(data => {
+            const eventSelect = document.getElementById('eventSelection');
+            eventSelect.innerHTML = '<option value="">Choose an event...</option>';
+            
+            if (data.success && data.events) {
+                data.events.forEach(event => {
+                    const option = document.createElement('option');
+                    option.value = event.id;
+                    option.textContent = `${event.name} (${event.tenant_name})`;
+                    eventSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading events:', error);
+        });
 }
 
 function editFeeRule(ruleId) {
@@ -311,19 +399,52 @@ function editFeeRule(ruleId) {
             if (data.success && data.rule) {
                 const rule = data.rule;
                 
-                // Populate form fields
-                document.getElementById('ruleName').value = rule.name || '';
-                document.getElementById('ruleType').value = rule.rule_type || 'percentage';
-                document.getElementById('ruleDescription').value = rule.description || '';
-                document.getElementById('ruleActive').checked = rule.active == 1;
+                // Populate form fields with error checking
+                const setFieldValue = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = value == 1;
+                        } else {
+                            element.value = value || '';
+                        }
+                    } else {
+                        console.warn(`Form field with ID '${id}' not found`);
+                    }
+                };
                 
-                // Set rate based on type
-                if (rule.rule_type === 'percentage') {
-                    document.getElementById('ruleRate').value = rule.percentage_rate || '';
-                    document.getElementById('rateUnit').textContent = '%';
-                } else if (rule.rule_type === 'fixed') {
-                    document.getElementById('ruleRate').value = rule.fixed_amount || '';
-                    document.getElementById('rateUnit').textContent = '$';
+                setFieldValue('ruleName', rule.name);
+                setFieldValue('ruleType', rule.rule_type || 'percentage');
+                setFieldValue('ruleDescription', rule.description);
+                setFieldValue('minAmount', rule.min_amount);
+                setFieldValue('maxAmount', rule.max_amount);
+                setFieldValue('ruleActive', rule.active);
+                
+                // Set rule scope based on rule type
+                if (rule.event_id) {
+                    // Event-specific rule
+                    document.getElementById('ruleScope').value = 'event';
+                    document.getElementById('eventSelection').value = rule.event_id;
+                    toggleScopeSelection(); // This will show the event selection div
+                } else {
+                    // Check if this rule is attached to any plans
+                    checkRulePlanAttachments(rule.id);
+                }
+                
+                // Set rate based on type with error checking
+                const rateElement = document.getElementById('ruleRate');
+                const unitElement = document.getElementById('rateUnit');
+                
+                if (rateElement && unitElement) {
+                    if (rule.rule_type === 'percentage') {
+                        rateElement.value = rule.percentage_rate || '';
+                        unitElement.textContent = '%';
+                    } else if (rule.rule_type === 'fixed') {
+                        rateElement.value = rule.fixed_amount || '';
+                        unitElement.textContent = '$';
+                    }
+                } else {
+                    console.warn('Rate or unit element not found');
                 }
                 
                 const modal = new coreui.Modal(document.getElementById('feeRuleModal'));
@@ -343,8 +464,16 @@ function saveFeeRule() {
     const formData = new FormData(form);
     const ruleId = document.getElementById('feeRuleId').value;
     
+    // Debug: Log form data
+    console.log('Saving fee rule with ID:', ruleId);
+    console.log('Form data entries:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value}`);
+    }
+    
     // Determine if this is create or update
     const url = ruleId ? '<?= SUPERADMIN_URL ?>/financial/fees/update' : '<?= SUPERADMIN_URL ?>/financial/fees/create';
+    console.log('Using URL:', url);
     
     // Show loading state
     const saveBtn = document.querySelector('#feeRuleModal .btn-primary');
@@ -357,14 +486,31 @@ function saveFeeRule() {
         body: formData
     })
     .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response redirected:', response.redirected);
+        
         if (response.redirected) {
             // Backend redirected, follow the redirect
+            console.log('Following redirect to:', response.url);
             window.location.href = response.url;
         } else {
-            return response.json();
+            // Check if response is actually JSON
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+            
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // Response is not JSON, likely an error page
+                return response.text().then(text => {
+                    console.error('Non-JSON response received:', text);
+                    throw new Error('Server returned an error page instead of JSON');
+                });
+            }
         }
     })
     .then(data => {
+        console.log('Response data:', data);
         if (data && data.success) {
             const modal = coreui.Modal.getInstance(document.getElementById('feeRuleModal'));
             modal.hide();
@@ -477,6 +623,20 @@ document.addEventListener('DOMContentLoaded', function() {
         appliesTo.addEventListener('change', function() {
             specificPlansDiv.style.display = this.value === 'specific_plans' ? 'block' : 'none';
         });
+    }
+});
+// Initialize tooltips safely
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips if CoreUI is available
+    try {
+        if (typeof coreui !== 'undefined' && coreui.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-coreui-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new coreui.Tooltip(tooltipTriggerEl);
+            });
+        }
+    } catch (error) {
+        console.warn('Tooltip initialization failed:', error);
     }
 });
 </script>

@@ -166,16 +166,31 @@
                             <td>
                                 <div>
                                     <div class="fw-semibold">
-                                        <?= htmlspecialchars($tenant['plan_name'] ?? 'No Plan') ?>
-                                        <?php if ($tenant['plan_price']): ?>
-                                            <span class="badge bg-info ms-1">$<?= number_format($tenant['plan_price'], 2) ?></span>
+                                        <?php if (!empty($tenant['plan_name'])): ?>
+                                            <?= htmlspecialchars($tenant['plan_name']) ?>
+                                            <?php if ($tenant['plan_price'] > 0): ?>
+                                                <span class="badge bg-info ms-1">
+                                                    $<?= number_format($tenant['plan_price'], 2) ?>/<?= $tenant['billing_cycle'] ?? 'month' ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-success ms-1">Free</span>
+                                            <?php endif; ?>
+                                            <?php if ($tenant['subscription_status'] === 'active'): ?>
+                                                <i class="fas fa-check-circle text-success ms-1" title="Active Subscription"></i>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <span class="text-muted">No Active Plan</span>
+                                            <span class="badge bg-warning ms-1">Unsubscribed</span>
                                         <?php endif; ?>
                                     </div>
                                     <small class="text-success">
                                         <i class="fas fa-dollar-sign me-1"></i>
-                                        Total: $<?= number_format($tenant['total_revenue'], 2) ?>
-                                        <?php if ($tenant['monthly_revenue'] > 0): ?>
+                                        Total: $<?= number_format($tenant['total_revenue'] ?? 0, 2) ?>
+                                        <?php if (($tenant['monthly_revenue'] ?? 0) > 0): ?>
                                             | Month: $<?= number_format($tenant['monthly_revenue'], 2) ?>
+                                        <?php endif; ?>
+                                        <?php if (isset($tenant['available']) && $tenant['available'] > 0): ?>
+                                            | Balance: $<?= number_format($tenant['available'], 2) ?>
                                         <?php endif; ?>
                                     </small>
                                 </div>
@@ -215,20 +230,22 @@
                             <td>
                                 <div>
                                     <div class="fw-semibold">
-                                        <?= number_format($tenant['total_events']) ?> events
-                                        <span class="badge bg-success ms-1"><?= number_format($tenant['active_events']) ?> active</span>
+                                        <?= number_format($tenant['total_events'] ?? 0) ?> events
+                                        <span class="badge bg-success ms-1"><?= number_format($tenant['active_events'] ?? 0) ?> active</span>
                                     </div>
                                     <small class="text-muted">
-                                        <i class="fas fa-users me-1"></i><?= number_format($tenant['total_contestants']) ?> contestants
-                                        <?php if ($tenant['last_transaction_date']): ?>
+                                        <i class="fas fa-users me-1"></i><?= number_format($tenant['total_contestants'] ?? 0) ?> contestants
+                                        <?php if (!empty($tenant['last_transaction_date'])): ?>
                                             <br><i class="fas fa-clock me-1"></i>Last activity: <?= date('M j', strtotime($tenant['last_transaction_date'])) ?>
+                                        <?php else: ?>
+                                            <br><i class="fas fa-clock me-1"></i>No recent activity
                                         <?php endif; ?>
                                     </small>
                                 </div>
                             </td>
                             <td>
                                 <div class="text-center">
-                                    <div class="fw-bold"><?= number_format($tenant['user_count']) ?></div>
+                                    <div class="fw-bold"><?= number_format($tenant['user_count'] ?? 0) ?></div>
                                     <small class="text-muted">users</small>
                                 </div>
                             </td>
@@ -347,38 +364,49 @@ function editTenant(tenantId) {
 }
 
 function changePlan(tenantId) {
-    // Show plan change modal or form
+    // Show plan change modal or form using new subscription system
     const availablePlans = <?= json_encode($availablePlans) ?>;
-    let options = '';
+    
+    // Build plan options string for prompt
+    let plansList = 'Available subscription plans:\n';
     availablePlans.forEach(plan => {
-        options += `<option value="${plan.value}">${plan.name} - $${plan.price}</option>`;
+        const price = plan.price > 0 ? `$${parseFloat(plan.price).toFixed(2)}/${plan.billing_cycle}` : 'Free';
+        plansList += `- ${plan.name}: ${price} (ID: ${plan.id})\n`;
     });
     
-    const newPlan = prompt(`Change plan for tenant ${tenantId}:\n\nAvailable plans:\n- Free: $0\n- Basic: $29.99\n- Premium: $99.99\n- Enterprise: $299.99\n\nEnter plan (free/basic/premium/enterprise):`);
+    const planId = prompt(`${plansList}\nEnter the Plan ID to assign to tenant ${tenantId}:`);
     
-    if (newPlan && ['free', 'basic', 'premium', 'enterprise'].includes(newPlan.toLowerCase())) {
-        if (confirm(`Change tenant ${tenantId} to ${newPlan} plan?`)) {
-            // Make API call to change plan
-            fetch(`<?= SUPERADMIN_URL ?>/tenants/${tenantId}/plan`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ plan: newPlan.toLowerCase() })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error changing plan: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error changing plan');
-            });
+    if (planId && !isNaN(planId)) {
+        const selectedPlan = availablePlans.find(p => p.id == planId);
+        if (selectedPlan) {
+            if (confirm(`Change tenant ${tenantId} to "${selectedPlan.name}" plan?`)) {
+                // Make API call to change plan using new subscription system
+                fetch(`<?= SUPERADMIN_URL ?>/tenants/${tenantId}/change-plan`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ plan_id: parseInt(planId) })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Plan changed successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error changing plan: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error changing plan');
+                });
+            }
+        } else {
+            alert('Invalid Plan ID. Please enter a valid Plan ID from the list.');
         }
+    } else if (planId !== null) {
+        alert('Please enter a valid numeric Plan ID.');
     }
 }
 

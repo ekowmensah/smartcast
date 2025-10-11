@@ -4,8 +4,8 @@
         <div class="col-12">
             <!-- Plan Limits Alert -->
             <?php 
-            $currentEventCount = $tenantLimits['current_events'] ?? 0;
-            $maxEvents = $tenantLimits['max_events'];
+            $currentEventCount = isset($tenantLimits['current_events']) ? $tenantLimits['current_events'] : 0;
+            $maxEvents = isset($tenantLimits['max_events']) ? $tenantLimits['max_events'] : null;
             $canCreateEvent = is_null($maxEvents) || $currentEventCount < $maxEvents;
             $isAtLimit = !is_null($maxEvents) && $currentEventCount >= $maxEvents;
             

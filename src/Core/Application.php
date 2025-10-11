@@ -60,6 +60,8 @@ class Application
         // Payment routes
         $this->router->get('/api/payment/status/{transactionId}', 'VoteController@checkPaymentStatus'); // Check payment status
         $this->router->get('/api/payment/test/{transactionId}', 'VoteController@testPaymentStatus'); // Test payment processing
+        $this->router->post('/api/payment/callback/{transactionId}', 'VoteController@handlePaymentCallback'); // Handle payment callbacks
+        $this->router->get('/api/payment/simulate/{transactionId}', 'VoteController@simulatePaymentCallback'); // Simulate payment callback for testing
         
         // Organizer routes (protected)
         $this->router->group(['middleware' => 'auth'], function($router) {
@@ -197,6 +199,7 @@ class Application
             $router->post('/financial/fees/toggle', 'SuperAdminController@toggleFeeRule');
             $router->post('/financial/fees/delete', 'SuperAdminController@deleteFeeRule');
             $router->get('/financial/fees/get', 'SuperAdminController@getFeeRule');
+            $router->get('/financial/fees/plan-attachments', 'SuperAdminController@getFeeRulePlanAttachments');
             
             // Security & Compliance
             $router->get('/security/overview', 'SuperAdminController@securityOverview');

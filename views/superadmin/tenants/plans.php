@@ -405,6 +405,7 @@ function createPlan() {
 
 function editPlan(planId) {
     console.log('Edit plan clicked for ID:', planId);
+    console.log('Testing with Pro plan (ID: 5)');
     
     if (!planId) {
         console.error('No plan ID provided');
@@ -572,6 +573,77 @@ function showEditPlanModal(plan) {
     setTimeout(() => {
         populateFeeRulesDropdown(plan.fee_rule_id);
     }, 100);
+    
+    // Add form submission handler
+    const form = document.getElementById('editPlanForm');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        
+        // Debug: Log form data
+        console.log('Form action:', form.action);
+        console.log('Form data entries:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+        
+        // Show loading state
+        submitBtn.textContent = 'Updating...';
+        submitBtn.disabled = true;
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response redirected:', response.redirected);
+            console.log('Response headers:', response.headers);
+            
+            if (response.redirected) {
+                // Follow redirect for success
+                console.log('Following redirect to:', response.url);
+                window.location.href = response.url;
+                return;
+            }
+            
+            // Check content type
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type:', contentType);
+            
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // Response is not JSON, likely an error page
+                return response.text().then(text => {
+                    console.error('Non-JSON response received:', text);
+                    throw new Error('Server returned an error page instead of JSON');
+                });
+            }
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            if (data && data.success) {
+                modal.hide();
+                showAlert(data.message || 'Plan updated successfully!', 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else if (data) {
+                showAlert(data.message || 'Failed to update plan', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating plan:', error);
+            showAlert('Error updating plan: ' + error.message, 'error');
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    });
 }
 
 function populateFeeRulesDropdown(selectedFeeRuleId) {
@@ -843,6 +915,12 @@ document.addEventListener('DOMContentLoaded', function() {
         delete: deleteButtons.length
     });
     
+    // Debug: Check can_delete values for each plan
+    console.log('Plan delete permissions:');
+    <?php foreach ($plans as $plan): ?>
+        console.log('Plan <?= $plan['id'] ?> (<?= htmlspecialchars($plan['name']) ?>): can_delete = <?= $plan['can_delete'] ? 'true' : 'false' ?>');
+    <?php endforeach; ?>
+    
     // Initialize tooltips if available
     try {
         if (typeof coreui !== 'undefined' && coreui.Tooltip) {
@@ -885,12 +963,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 maintainAspectRatio: false
             }
         });
+        } else {
+            console.warn('Chart.js not loaded, skipping trends chart');
+            trendsCtx.innerHTML = '<p class="text-center text-muted p-4">Chart.js not loaded</p>';
+        }
     }
     
     // Plan Distribution Chart
     const distributionCtx = document.getElementById('planDistributionChart');
-    if (distributionCtx && typeof Chart !== 'undefined') {
-        new Chart(distributionCtx, {
+    if (distributionCtx) {
+        if (typeof Chart !== 'undefined') {
+            new Chart(distributionCtx, {
             type: 'doughnut',
             data: {
                 labels: <?= json_encode(array_column($plans ?? [], 'name')) ?>,
@@ -910,6 +993,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 maintainAspectRatio: false
             }
         });
+        } else {
+            console.warn('Chart.js not loaded, skipping distribution chart');
+            distributionCtx.innerHTML = '<p class="text-center text-muted p-4">Chart.js not loaded</p>';
+        }
+    }
+    
+    // Initialize tooltips safely
+    try {
+        if (typeof coreui !== 'undefined' && coreui.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-coreui-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new coreui.Tooltip(tooltipTriggerEl);
+            });
+        }
+    } catch (error) {
+        console.warn('Tooltip initialization failed:', error);
     }
 });
 </script>

@@ -116,7 +116,7 @@ class SubscriptionPlan extends BaseModel
         
         foreach ($plans as &$plan) {
             $plan['plan_features'] = $this->getPlanFeatures($plan['id']);
-            $plan['features_json'] = json_decode($plan['features'], true) ?? [];
+            $plan['features_json'] = !empty($plan['features']) ? json_decode($plan['features'], true) : [];
             
             // Format price display
             if ($plan['price'] == 0) {
@@ -311,21 +311,26 @@ class SubscriptionPlan extends BaseModel
     
     /**
      * Update fee rules for all subscribers when plan fee rule changes
+     * Note: With the new plan-based fee system, we don't create tenant-specific rules anymore.
+     * The fee rules are automatically applied based on the tenant's active subscription plan.
      */
     private function updateSubscriberFeeRules($planId, $newFeeRuleId)
     {
-        if (!$newFeeRuleId) {
-            return;
+        // With the new plan-based fee system, we don't need to create tenant-specific fee rules
+        // The FeeRule::getApplicableFeeRule() method will automatically use the plan's fee rule
+        // for tenants subscribed to this plan.
+        
+        // Optional: Clean up any old tenant-specific rules that might exist from the previous system
+        if ($newFeeRuleId) {
+            $this->cleanupOldTenantSpecificRules($planId);
         }
-        
-        // Get the new fee rule details
-        $feeRuleModel = new \SmartCast\Models\FeeRule();
-        $newFeeRule = $feeRuleModel->find($newFeeRuleId);
-        
-        if (!$newFeeRule) {
-            return;
-        }
-        
+    }
+    
+    /**
+     * Clean up old tenant-specific fee rules for subscribers of this plan
+     */
+    private function cleanupOldTenantSpecificRules($planId)
+    {
         // Get all tenants subscribed to this plan
         $sql = "
             SELECT DISTINCT t.id as tenant_id
@@ -338,48 +343,14 @@ class SubscriptionPlan extends BaseModel
         $subscribers = $this->db->select($sql, ['plan_id' => $planId]);
         
         foreach ($subscribers as $subscriber) {
-            // Update or create tenant-specific fee rule
-            $existingRuleSql = "
-                SELECT id FROM fee_rules 
+            // Remove any old tenant-specific fee rules (from the old system)
+            $deleteSql = "
+                DELETE FROM fee_rules 
                 WHERE tenant_id = :tenant_id 
                 AND event_id IS NULL
-                LIMIT 1
             ";
             
-            $existingRule = $this->db->selectOne($existingRuleSql, ['tenant_id' => $subscriber['tenant_id']]);
-            
-            if ($existingRule) {
-                // Update existing rule
-                $updateRuleSql = "
-                    UPDATE fee_rules 
-                    SET rule_type = :rule_type,
-                        percentage_rate = :percentage_rate,
-                        fixed_amount = :fixed_amount,
-                        updated_at = NOW()
-                    WHERE id = :rule_id
-                ";
-                
-                $this->db->query($updateRuleSql, [
-                    'rule_type' => $newFeeRule['rule_type'],
-                    'percentage_rate' => $newFeeRule['percentage_rate'],
-                    'fixed_amount' => $newFeeRule['fixed_amount'],
-                    'rule_id' => $existingRule['id']
-                ]);
-            } else {
-                // Create new tenant-specific rule
-                $createRuleSql = "
-                    INSERT INTO fee_rules 
-                    (tenant_id, event_id, rule_type, percentage_rate, fixed_amount, active)
-                    VALUES (:tenant_id, NULL, :rule_type, :percentage_rate, :fixed_amount, 1)
-                ";
-                
-                $this->db->query($createRuleSql, [
-                    'tenant_id' => $subscriber['tenant_id'],
-                    'rule_type' => $newFeeRule['rule_type'],
-                    'percentage_rate' => $newFeeRule['percentage_rate'],
-                    'fixed_amount' => $newFeeRule['fixed_amount']
-                ]);
-            }
+            $this->db->query($deleteSql, ['tenant_id' => $subscriber['tenant_id']]);
         }
     }
     
@@ -391,12 +362,13 @@ class SubscriptionPlan extends BaseModel
         $sql = "
             INSERT INTO tenant_plan_history 
             (tenant_id, old_plan_id, new_plan_id, changed_by, change_reason, effective_date)
-            VALUES (:tenant_id, :plan_id, :plan_id, NULL, 'Automatic plan update', NOW())
+            VALUES (:tenant_id, :old_plan_id, :new_plan_id, NULL, 'Automatic plan update', NOW())
         ";
         
         $this->db->query($sql, [
             'tenant_id' => $tenantId,
-            'plan_id' => $planId
+            'old_plan_id' => $planId,
+            'new_plan_id' => $planId
         ]);
     }
 }

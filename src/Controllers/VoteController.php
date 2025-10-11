@@ -615,8 +615,6 @@ class VoteController extends BaseController
     private function processRevenueDistribution($transaction)
     {
         try {
-            error_log("Starting revenue distribution for transaction: " . $transaction['id']);
-            
             // Create revenue share record (this calculates platform fee)
             $revenueShare = $this->revenueShareModel->calculateAndCreateShare(
                 $transaction['id'],
@@ -775,6 +773,77 @@ class VoteController extends BaseController
         }
     }
     
+    public function handlePaymentCallback($transactionId)
+    {
+        try {
+            error_log("Payment callback received for transaction: " . $transactionId);
+            
+            // Get transaction
+            $transaction = $this->transactionModel->find($transactionId);
+            if (!$transaction) {
+                error_log("Transaction not found: " . $transactionId);
+                return $this->json(['success' => false, 'message' => 'Transaction not found'], 404);
+            }
+            
+            // Get callback data
+            $callbackData = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+            error_log("Callback data received: " . json_encode($callbackData));
+            
+            // Verify callback (in production, verify signature)
+            $verification = $this->paymentService->verifyCallback($callbackData);
+            
+            if (!$verification['valid']) {
+                error_log("Invalid callback signature for transaction: " . $transactionId);
+                return $this->json(['success' => false, 'message' => 'Invalid callback'], 400);
+            }
+            
+            // Check payment status
+            $paymentStatus = $callbackData['status'] ?? 'unknown';
+            error_log("Payment status from callback: " . $paymentStatus);
+            
+            if ($paymentStatus === 'success' || $paymentStatus === 'completed') {
+                // Payment successful - process the vote
+                error_log("Processing successful payment for transaction: " . $transactionId);
+                
+                $paymentDetails = [
+                    'status' => 'success',
+                    'receipt_number' => $callbackData['receipt_number'] ?? $callbackData['reference'] ?? 'CALLBACK_' . time(),
+                    'amount' => $callbackData['amount'] ?? $transaction['amount']
+                ];
+                
+                $this->processSuccessfulPayment($transaction, $paymentDetails);
+                error_log("Vote processing completed successfully for transaction: " . $transactionId);
+                
+                return $this->json(['success' => true, 'message' => 'Payment processed successfully']);
+                
+            } elseif ($paymentStatus === 'failed' || $paymentStatus === 'cancelled') {
+                // Payment failed
+                error_log("Payment failed for transaction: " . $transactionId);
+                
+                $this->transactionModel->update($transactionId, [
+                    'status' => 'failed',
+                    'failure_reason' => $callbackData['reason'] ?? 'Payment failed'
+                ]);
+                
+                return $this->json(['success' => true, 'message' => 'Payment failure recorded']);
+                
+            } else {
+                error_log("Unknown payment status for transaction: " . $transactionId . " - Status: " . $paymentStatus);
+                return $this->json(['success' => false, 'message' => 'Unknown payment status'], 400);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Payment callback error for transaction " . $transactionId . ": " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return $this->json([
+                'success' => false, 
+                'message' => 'Callback processing failed',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
     public function verifyReceipt()
     {
         $shortCode = $_GET['code'] ?? '';
@@ -783,13 +852,54 @@ class VoteController extends BaseController
             return $this->json(['success' => false, 'message' => 'Receipt code required'], 400);
         }
         
-        $verification = $this->receiptModel->verifyReceipt($shortCode);
+        $receipt = $this->receiptModel->findByShortCode($shortCode);
         
-        if ($verification['valid']) {
-            $details = $this->receiptModel->getReceiptDetails($shortCode);
-            return $this->json(['success' => true, 'receipt' => $details]);
-        } else {
-            return $this->json(['success' => false, 'message' => $verification['error']], 404);
+        if (!$receipt) {
+            return $this->json(['success' => false, 'message' => 'Receipt not found'], 404);
+        }
+        
+        return $this->json([
+            'success' => true,
+            'receipt' => $receipt
+        ]);
+    }
+
+    public function simulatePaymentCallback($transactionId)
+    {
+        try {
+            error_log("Simulating payment callback for transaction: " . $transactionId);
+            
+            // Check if transaction exists first
+            $transaction = $this->transactionModel->find($transactionId);
+            if (!$transaction) {
+                return $this->json(['success' => false, 'message' => 'Transaction not found: ' . $transactionId], 404);
+            }
+            
+            error_log("Transaction found: " . json_encode($transaction));
+            
+            // Test endpoint to simulate a successful payment callback
+            $simulatedCallback = [
+                'status' => 'success',
+                'transaction_id' => $transactionId,
+                'receipt_number' => 'SIM_' . time(),
+                'amount' => $transaction['amount'], // Use actual transaction amount
+                'reference' => 'VOTE_' . $transactionId,
+                'timestamp' => date('Y-m-d H:i:s')
+            ];
+            
+            error_log("Simulated callback data: " . json_encode($simulatedCallback));
+            
+            // Simulate the callback by calling our handler
+            $_POST = $simulatedCallback;
+            return $this->handlePaymentCallback($transactionId);
+            
+        } catch (\Exception $e) {
+            error_log("Simulation error: " . $e->getMessage());
+            return $this->json([
+                'success' => false, 
+                'message' => 'Simulation failed',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
