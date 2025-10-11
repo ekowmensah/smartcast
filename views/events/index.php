@@ -103,7 +103,7 @@
                         ?>
                     </div>
                     
-                    <div class="card-body p-3">
+                    <div class="card-body px-3 pt-3 pb-1 d-flex flex-column">
                         <!-- Event Header -->
                         <div class="event-header mb-2">
                             <h6 class="event-title mb-1">
@@ -133,7 +133,7 @@
                         </div>
                         
                         <!-- Minimal Dates -->
-                        <div class="mini-dates mb-3">
+                        <div class="mini-dates">
                             <div class="date-row">
                                 <span class="date-label">Started:</span> <?= date('M j', strtotime($event['start_date'])) ?>
                                 <span class="date-separator">|</span>
@@ -142,14 +142,12 @@
                         </div>
                         
                         <!-- Action Buttons -->
-                        <div class="mt-auto">
+                        <div class="mt-auto" style="margin-top: 8px !important; margin-bottom: 0 !important;">
                             <?php 
-
                             $canVote = (strtotime($event['start_date']) <= time() && 
                                        strtotime($event['end_date']) >= time() && 
                                        $event['status'] === 'active');
                             ?>
-                            
                             <div class="compact-actions">
                                 <?php if ($canVote): ?>
                                     <a href="<?= APP_URL ?>/events/<?= $eventSlug ?>/vote" 
@@ -320,18 +318,22 @@
     display: flex;
     gap: 1px;
     align-items: center;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 0 !important;
 }
 
 .vote-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 6px 14px;
+    border-radius: 18px;
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    line-height: 1.2;
 }
 
 .vote-btn:hover {
@@ -528,19 +530,19 @@
 /* Responsive optimizations */
 @media (min-width: 992px) {
     .event-card .card {
-        min-height: 520px;
+        min-height: auto;
     }
 }
 
 @media (min-width: 768px) and (max-width: 991px) {
     .event-card .card {
-        min-height: 480px;
+        min-height: auto;
     }
 }
 
 @media (max-width: 767px) {
     .event-card .card {
-        min-height: 420px;
+        min-height: auto;
     }
     
     .hero-section {
