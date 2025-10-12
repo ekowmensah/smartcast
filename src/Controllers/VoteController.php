@@ -908,13 +908,8 @@ class VoteController extends BaseController
      */
     public function showShortcodeVoting()
     {
-        $content = $this->renderView('voting/shortcode', [
-            'title' => 'Vote by Shortcode'
-        ]);
-        
-        echo $this->renderLayout('public_layout', $content, [
-            'title' => 'Vote by Shortcode - SmartCast',
-            'description' => 'Enter a nominee shortcode to quickly find and vote for your favorite contestant'
+        $this->view('voting/shortcode', [
+            'title' => 'Vote by Shortcode - SmartCast'
         ]);
     }
 
@@ -972,19 +967,14 @@ class VoteController extends BaseController
                 'category_id' => $categoryId
             ]);
 
-            $content = $this->renderView('voting/direct', [
+            $this->view('voting/direct', [
                 'event' => $event,
                 'contestant' => $contestant,
                 'category' => $category,
                 'contestantCategory' => $contestantCategory,
                 'bundles' => $bundles,
                 'source' => $source,
-                'title' => 'Vote for ' . $contestant['name']
-            ]);
-
-            echo $this->renderLayout('public_layout', $content, [
-                'title' => 'Vote for ' . $contestant['name'] . ' - ' . $event['name'],
-                'description' => 'Cast your vote for ' . $contestant['name'] . ' in ' . $event['name']
+                'title' => 'Vote for ' . $contestant['name'] . ' - ' . $event['name']
             ]);
 
         } catch (\Exception $e) {
