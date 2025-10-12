@@ -902,4 +902,254 @@ class VoteController extends BaseController
             ], 500);
         }
     }
+
+    /**
+     * Show shortcode voting page
+     */
+    public function showShortcodeVoting()
+    {
+        $content = $this->renderView('voting/shortcode', [
+            'title' => 'Vote by Shortcode'
+        ]);
+        
+        echo $this->renderLayout('public_layout', $content, [
+            'title' => 'Vote by Shortcode - SmartCast',
+            'description' => 'Enter a nominee shortcode to quickly find and vote for your favorite contestant'
+        ]);
+    }
+
+    /**
+     * Show direct voting page with parameters
+     */
+    public function showDirectVoting()
+    {
+        // Get parameters from URL
+        $contestantId = $_GET['contestant_id'] ?? null;
+        $categoryId = $_GET['category_id'] ?? null;
+        $eventId = $_GET['event_id'] ?? null;
+        $source = $_GET['source'] ?? 'direct';
+
+        if (!$contestantId || !$categoryId || !$eventId) {
+            $this->redirect(APP_URL . '/vote-shortcode', 'Invalid voting parameters', 'error');
+            return;
+        }
+
+        try {
+            // Get contestant details
+            $contestant = $this->contestantModel->find($contestantId);
+            if (!$contestant) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Contestant not found', 'error');
+                return;
+            }
+
+            // Get event details
+            $event = $this->eventModel->find($eventId);
+            if (!$event) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Event not found', 'error');
+                return;
+            }
+
+            // Get category details
+            $category = $this->categoryModel->find($categoryId);
+            if (!$category) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Category not found', 'error');
+                return;
+            }
+
+            // Check if voting is allowed
+            if (!$this->isVotingAllowed($event)) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Voting is not currently available for this event', 'error');
+                return;
+            }
+
+            // Get vote bundles
+            $bundles = $this->bundleModel->findAll(['active' => 1]);
+
+            // Get contestant category info for shortcode
+            $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+            $contestantCategory = $contestantCategoryModel->findOne([
+                'contestant_id' => $contestantId,
+                'category_id' => $categoryId
+            ]);
+
+            $content = $this->renderView('voting/direct', [
+                'event' => $event,
+                'contestant' => $contestant,
+                'category' => $category,
+                'contestantCategory' => $contestantCategory,
+                'bundles' => $bundles,
+                'source' => $source,
+                'title' => 'Vote for ' . $contestant['name']
+            ]);
+
+            echo $this->renderLayout('public_layout', $content, [
+                'title' => 'Vote for ' . $contestant['name'] . ' - ' . $event['name'],
+                'description' => 'Cast your vote for ' . $contestant['name'] . ' in ' . $event['name']
+            ]);
+
+        } catch (\Exception $e) {
+            error_log('Direct voting error: ' . $e->getMessage());
+            $this->redirect(APP_URL . '/vote-shortcode', 'An error occurred while loading the voting page', 'error');
+        }
+    }
+
+    /**
+     * Check if voting is allowed for an event
+     */
+    private function isVotingAllowed($event)
+    {
+        // Check if event is active
+        if ($event['status'] !== 'active') {
+            return false;
+        }
+
+        // Check if event is within voting period
+        $now = time();
+        $startTime = strtotime($event['start_date']);
+        $endTime = strtotime($event['end_date']);
+
+        if ($now < $startTime || $now > $endTime) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Process direct vote from shortcode voting
+     */
+    public function processDirectVote()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(APP_URL . '/vote-shortcode', 'Invalid request method', 'error');
+            return;
+        }
+
+        try {
+            // Get form data
+            $contestantId = $_POST['contestant_id'] ?? null;
+            $categoryId = $_POST['category_id'] ?? null;
+            $eventId = $_POST['event_id'] ?? null;
+            $voteQuantity = intval($_POST['vote_quantity'] ?? 1);
+            $bundleId = $_POST['bundle_id'] ?? null;
+            $voterName = trim($_POST['voter_name'] ?? '');
+            $voterPhone = trim($_POST['voter_phone'] ?? '');
+            $voterEmail = trim($_POST['voter_email'] ?? '');
+            $source = $_POST['source'] ?? 'direct';
+
+            // Validation
+            if (!$contestantId || !$categoryId || !$eventId) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Missing required parameters', 'error');
+                return;
+            }
+
+            if (empty($voterName) || empty($voterPhone)) {
+                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
+                    'Please fill in all required fields', 'error');
+                return;
+            }
+
+            if ($voteQuantity < 1) {
+                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
+                    'Please select at least 1 vote', 'error');
+                return;
+            }
+
+            // Get event details
+            $event = $this->eventModel->find($eventId);
+            if (!$event || !$this->isVotingAllowed($event)) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Voting is not available for this event', 'error');
+                return;
+            }
+
+            // Get contestant details
+            $contestant = $this->contestantModel->find($contestantId);
+            if (!$contestant) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Contestant not found', 'error');
+                return;
+            }
+
+            // Calculate total amount
+            $totalAmount = 0;
+            $bundleUsed = null;
+
+            if ($bundleId) {
+                $bundle = $this->bundleModel->find($bundleId);
+                if ($bundle && $bundle['active']) {
+                    $totalAmount = $bundle['price'];
+                    $voteQuantity = $bundle['votes']; // Override quantity with bundle votes
+                    $bundleUsed = $bundle;
+                }
+            }
+
+            if (!$bundleUsed) {
+                $totalAmount = $voteQuantity * $event['vote_price'];
+            }
+
+            // Create transaction
+            $transactionData = [
+                'tenant_id' => $event['tenant_id'],
+                'event_id' => $eventId,
+                'contestant_id' => $contestantId,
+                'category_id' => $categoryId,
+                'bundle_id' => $bundleId,
+                'voter_name' => $voterName,
+                'voter_phone' => $voterPhone,
+                'voter_email' => $voterEmail ?: null,
+                'vote_quantity' => $voteQuantity,
+                'amount' => $totalAmount,
+                'status' => 'pending',
+                'payment_method' => 'momo',
+                'source' => $source,
+                'metadata' => json_encode([
+                    'shortcode_voting' => true,
+                    'bundle_used' => $bundleUsed ? $bundleUsed['name'] : null
+                ])
+            ];
+
+            $transactionId = $this->transactionModel->create($transactionData);
+
+            if (!$transactionId) {
+                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
+                    'Failed to create transaction', 'error');
+                return;
+            }
+
+            // Initiate payment
+            $paymentData = [
+                'amount' => $totalAmount,
+                'phone' => $voterPhone,
+                'reference' => 'VOTE_' . $transactionId,
+                'description' => "Vote for {$contestant['name']} in {$event['name']}"
+            ];
+
+            $paymentResponse = $this->paymentService->initiatePayment($paymentData);
+
+            if ($paymentResponse['success']) {
+                // Update transaction with payment reference
+                $this->transactionModel->update($transactionId, [
+                    'payment_reference' => $paymentResponse['reference'] ?? null,
+                    'payment_status' => 'initiated'
+                ]);
+
+                // Redirect to payment status page
+                $this->redirect(APP_URL . "/payment/status/{$transactionId}", 
+                    'Payment initiated successfully', 'success');
+            } else {
+                // Update transaction status
+                $this->transactionModel->update($transactionId, [
+                    'status' => 'failed',
+                    'payment_status' => 'failed',
+                    'error_message' => $paymentResponse['message'] ?? 'Payment initiation failed'
+                ]);
+
+                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
+                    'Payment initiation failed: ' . ($paymentResponse['message'] ?? 'Unknown error'), 'error');
+            }
+
+        } catch (\Exception $e) {
+            error_log('Direct vote processing error: ' . $e->getMessage());
+            $this->redirect(APP_URL . '/vote-shortcode', 'An error occurred while processing your vote', 'error');
+        }
+    }
 }

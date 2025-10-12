@@ -38,6 +38,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="<?= PUBLIC_URL ?>/vote-shortcode">
+                        <i class="fas fa-hashtag me-1"></i>Vote by Code
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="<?= PUBLIC_URL ?>/about">
                         <i class="fas fa-info-circle me-1"></i>About
                     </a>

@@ -57,6 +57,11 @@ class Application
         $this->router->get('/events/{eventSlug}/vote/{contestantSlug}', 'VoteController@showVoteForm'); // Vote form for specific nominee
         $this->router->post('/events/{eventSlug}/vote/process', 'VoteController@processVote'); // Process the vote
         
+        // Shortcode voting
+        $this->router->get('/vote-shortcode', 'VoteController@showShortcodeVoting'); // Shortcode voting page
+        $this->router->get('/vote', 'VoteController@showDirectVoting'); // Direct voting with parameters
+        $this->router->post('/vote/process', 'VoteController@processDirectVote'); // Process direct vote
+        
         // Payment routes
         $this->router->get('/api/payment/status/{transactionId}', 'VoteController@checkPaymentStatus'); // Check payment status
         $this->router->get('/api/payment/test/{transactionId}', 'VoteController@testPaymentStatus'); // Test payment processing
@@ -233,6 +238,11 @@ class Application
             $router->get('/vote/verify', 'Api\\VoteController@verifyReceipt');
             $router->get('/vote/bundles', 'Api\\VoteController@getBundles');
             $router->get('/vote/contestants', 'Api\\VoteController@getContestants');
+            
+            // Shortcode API routes
+            $router->post('/shortcode-lookup', 'Api\\ShortcodeController@lookup');
+            $router->post('/shortcode-validate', 'Api\\ShortcodeController@validateShortcode');
+            $router->get('/events/{id}/shortcodes', 'Api\\ShortcodeController@getEventShortcodes');
         });
     }
     
