@@ -23,6 +23,19 @@ class ShortcodeController extends Controller
         $this->categoryModel = new Category();
         $this->eventModel = new Event();
     }
+    
+    /**
+     * Test endpoint to verify API is working
+     */
+    public function test()
+    {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'message' => 'Shortcode API is working',
+            'timestamp' => date('Y-m-d H:i:s')
+        ]);
+    }
 
     /**
      * Look up nominee by shortcode
@@ -31,6 +44,9 @@ class ShortcodeController extends Controller
     {
         // Set JSON response header
         header('Content-Type: application/json');
+        
+        // Disable error display to prevent HTML in JSON response
+        ini_set('display_errors', 0);
         
         // Only allow POST requests
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -115,15 +131,20 @@ class ShortcodeController extends Controller
             LIMIT 1
         ";
 
-        $result = $this->contestantCategoryModel->getDatabase()->selectOne($sql, [
-            'shortcode' => $shortcode
-        ]);
+        try {
+            $result = $this->contestantCategoryModel->getDatabase()->selectOne($sql, [
+                'shortcode' => $shortcode
+            ]);
+        } catch (\Exception $e) {
+            error_log('Database error in shortcode lookup: ' . $e->getMessage());
+            return null;
+        }
 
         if ($result) {
             // Format the image URL if it exists
             if ($result['image_url']) {
                 // Ensure the image URL is properly formatted
-                if (!str_starts_with($result['image_url'], 'http')) {
+                if (strpos($result['image_url'], 'http') !== 0) {
                     $result['image_url'] = APP_URL . $result['image_url'];
                 }
             }

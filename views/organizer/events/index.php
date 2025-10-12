@@ -250,41 +250,87 @@
                     </div>
                     
                     <div class="card-footer bg-transparent">
-                        <div class="btn-group w-100" role="group">
-                            <?php if ($event['status'] === 'draft'): ?>
-                                <?php 
-                                $currentEventCount = $tenantLimits['current_events'] ?? 0;
-                                $maxEvents = $tenantLimits['max_events'];
-                                $canPublish = is_null($maxEvents) || $currentEventCount < $maxEvents;
-                                ?>
-                                <a href="<?= ORGANIZER_URL ?>/events/wizard?edit=<?= $event['id'] ?>" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-magic me-1"></i>Edit Draft
-                                </a>
-                                <?php if ($canPublish): ?>
-                                    <button class="btn btn-outline-success btn-sm" onclick="publishEvent(<?= $event['id'] ?>)">
-                                        <i class="fas fa-play me-1"></i>Publish
-                                    </button>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="btn-group" role="group">
+                                <?php if ($event['status'] === 'draft'): ?>
+                                    <?php 
+                                    $currentEventCount = $tenantLimits['current_events'] ?? 0;
+                                    $maxEvents = $tenantLimits['max_events'];
+                                    $canPublish = is_null($maxEvents) || $currentEventCount < $maxEvents;
+                                    ?>
+                                    <a href="<?= ORGANIZER_URL ?>/events/wizard?edit=<?= $event['id'] ?>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-magic me-1"></i>Edit
+                                    </a>
+                                    <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/preview" class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-eye me-1"></i>Preview
+                                    </a>
+                                    <?php if ($canPublish): ?>
+                                        <button class="btn btn-outline-success btn-sm" onclick="publishEvent(<?= $event['id'] ?>)">
+                                            <i class="fas fa-play me-1"></i>Publish
+                                        </button>
+                                    <?php else: ?>
+                                        <a href="<?= ORGANIZER_URL ?>/switch-plan" class="btn btn-warning btn-sm" 
+                                           title="Upgrade plan to publish events (<?= $currentEventCount ?>/<?= $maxEvents ?> limit reached)">
+                                            <i class="fas fa-crown me-1"></i>Upgrade
+                                        </a>
+                                    <?php endif; ?>
+                                <?php elseif ($event['status'] === 'active'): ?>
+                                    <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <a href="<?= ORGANIZER_URL ?>/voting/live?event=<?= $event['id'] ?>" class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-chart-line me-1"></i>Live
+                                    </a>
                                 <?php else: ?>
-                                    <a href="<?= ORGANIZER_URL ?>/switch-plan" class="btn btn-warning btn-sm" 
-                                       title="Upgrade plan to publish events (<?= $currentEventCount ?>/<?= $maxEvents ?> limit reached)">
-                                        <i class="fas fa-crown me-1"></i>Upgrade to Publish
+                                    <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/edit" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-edit me-1"></i>Edit
                                     </a>
                                 <?php endif; ?>
-                            <?php elseif ($event['status'] === 'active'): ?>
-                                <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye me-1"></i>View
-                                </a>
-                                <a href="<?= ORGANIZER_URL ?>/voting/live?event=<?= $event['id'] ?>" class="btn btn-outline-info btn-sm">
-                                    <i class="fas fa-chart-line me-1"></i>Live
-                                </a>
-                            <?php else: ?>
-                                <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-eye me-1"></i>View
-                                </a>
-                                <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/edit" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-edit me-1"></i>Edit
-                                </a>
-                            <?php endif; ?>
+                            </div>
+                            
+                            <!-- Quick Status Actions -->
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><h6 class="dropdown-header">Status Actions</h6></li>
+                                    <?php if ($event['status'] !== 'draft'): ?>
+                                        <li>
+                                            <button class="dropdown-item" onclick="updateEventStatus(<?= $event['id'] ?>, 'draft', '<?= $event['visibility'] ?>')">
+                                                <i class="fas fa-file-alt text-warning me-2"></i>Set as Draft
+                                            </button>
+                                        </li>
+                                    <?php endif; ?>
+                                    <?php if ($event['status'] !== 'active'): ?>
+                                        <li>
+                                            <button class="dropdown-item" onclick="updateEventStatus(<?= $event['id'] ?>, 'active', '<?= $event['visibility'] ?>')">
+                                                <i class="fas fa-play text-success me-2"></i>Activate Event
+                                            </button>
+                                        </li>
+                                    <?php endif; ?>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><h6 class="dropdown-header">Visibility</h6></li>
+                                    <?php if ($event['visibility'] !== 'private'): ?>
+                                        <li>
+                                            <button class="dropdown-item" onclick="updateEventStatus(<?= $event['id'] ?>, '<?= $event['status'] ?>', 'private')">
+                                                <i class="fas fa-lock text-secondary me-2"></i>Make Private
+                                            </button>
+                                        </li>
+                                    <?php endif; ?>
+                                    <?php if ($event['visibility'] !== 'public'): ?>
+                                        <li>
+                                            <button class="dropdown-item" onclick="updateEventStatus(<?= $event['id'] ?>, '<?= $event['status'] ?>', 'public')">
+                                                <i class="fas fa-globe text-primary me-2"></i>Make Public
+                                            </button>
+                                        </li>
+                                    <?php endif; ?>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -408,4 +454,55 @@ function publishEvent(eventId) {
 document.getElementById('statusFilter').addEventListener('change', filterEvents);
 document.getElementById('visibilityFilter').addEventListener('change', filterEvents);
 document.getElementById('searchEvents').addEventListener('input', filterEvents);
+
+// Quick status update function
+function updateEventStatus(eventId, status, visibility) {
+    if (!confirm(`Are you sure you want to change this event to ${status} (${visibility})?`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('status', status);
+    formData.append('visibility', visibility);
+    
+    fetch(`<?= ORGANIZER_URL ?>/events/${eventId}/update-status`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            showAlert('Event status updated successfully!', 'success');
+            // Reload page to reflect changes
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showAlert(data.message || 'Failed to update event status', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('An error occurred while updating event status', 'error');
+    });
+}
+
+// Show alert function
+function showAlert(message, type) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas ${icon} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Insert at the top of the page
+    const container = document.querySelector('.container-fluid');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+}
 </script>

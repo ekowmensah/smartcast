@@ -90,11 +90,13 @@ class Application
             $router->post('/events/wizard', 'OrganizerController@storeEventWizard');
             // Parameterized routes MUST come last
             $router->get('/events/{id}', 'OrganizerController@showEvent');
+            $router->get('/events/{id}/preview', 'OrganizerController@previewEvent');
             $router->get('/events/{id}/edit', 'OrganizerController@editEvent');
             $router->post('/events/{id}/edit', 'OrganizerController@editEvent');
             $router->get('/events/{id}/export-pdf', 'OrganizerController@exportEventPDF');
             $router->post('/events/{id}/publish', 'OrganizerController@publishEvent');
             $router->post('/events/{id}/toggle-results', 'OrganizerController@toggleResults');
+            $router->post('/events/{id}/update-status', 'OrganizerController@updateEventStatus');
             
             // Contestants
             $router->get('/contestants', 'OrganizerController@contestants');
@@ -104,6 +106,9 @@ class Application
             // Categories
             $router->get('/categories', 'OrganizerController@categories');
             $router->post('/categories', 'OrganizerController@storeCategory');
+            
+            // API endpoints for organizer
+            $router->get('/api/events/{id}/categories', 'OrganizerController@getEventCategories');
             
             // Voting
             $router->get('/voting/live', 'OrganizerController@liveResults');
@@ -240,6 +245,7 @@ class Application
             $router->get('/vote/contestants', 'Api\\VoteController@getContestants');
             
             // Shortcode API routes
+            $router->get('/shortcode-test', 'Api\\ShortcodeController@test');
             $router->post('/shortcode-lookup', 'Api\\ShortcodeController@lookup');
             $router->post('/shortcode-validate', 'Api\\ShortcodeController@validateShortcode');
             $router->get('/events/{id}/shortcodes', 'Api\\ShortcodeController@getEventShortcodes');

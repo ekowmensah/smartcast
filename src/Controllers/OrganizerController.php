@@ -1286,6 +1286,56 @@ class OrganizerController extends BaseController
     }
     
     /**
+     * Preview event as it would appear to the public
+     */
+    public function previewEvent($id)
+    {
+        $tenantId = $this->session->getTenantId();
+        
+        // Get event details
+        $event = $this->eventModel->find($id);
+        if (!$event || $event['tenant_id'] != $tenantId) {
+            $this->redirect(ORGANIZER_URL . '/events', 'Event not found', 'error');
+            return;
+        }
+        
+        // Get event details similar to public view
+        $categories = $this->categoryModel->getCategoriesByEvent($event['id']);
+        $contestants = $this->contestantModel->getContestantsByEvent($event['id']);
+        $bundles = $this->bundleModel->getBundlesByEvent($event['id']);
+        
+        // Get category-specific leaderboards
+        $leaderboards = [];
+        foreach ($categories as $category) {
+            $leaderboards[$category['id']] = [
+                'category' => $category,
+                'leaderboard' => $this->leaderboardModel->getLeaderboard($event['id'], $category['id'], 10)
+            ];
+        }
+        
+        // For backward compatibility, get overall leaderboard (first category or empty)
+        $leaderboard = !empty($leaderboards) ? reset($leaderboards)['leaderboard'] : [];
+        
+        // Check if voting would be allowed (simulate public view)
+        $canVote = ($event['status'] === 'active' && 
+                   strtotime($event['start_date']) <= time() && 
+                   strtotime($event['end_date']) >= time());
+        
+        // Use the public event view but with preview context
+        $this->view('events/preview', [
+            'event' => $event,
+            'categories' => $categories,
+            'contestants' => $contestants,
+            'bundles' => $bundles,
+            'leaderboard' => $leaderboard,
+            'leaderboards' => $leaderboards,
+            'canVote' => $canVote,
+            'isPreview' => true,
+            'title' => 'Preview: ' . $event['name']
+        ]);
+    }
+    
+    /**
      * Get comprehensive event statistics
      */
     private function getEventStatistics($eventId)
@@ -2717,6 +2767,12 @@ class OrganizerController extends BaseController
         // Optimize image (optional - resize if too large)
         $this->optimizeImage($uploadPath, $type);
         
+        // Ensure the web path is properly formatted
+        $webPath = str_replace('//', '/', $webPath);
+        if (!str_starts_with($webPath, 'http')) {
+            $webPath = APP_URL . $webPath;
+        }
+        
         return $webPath;
     }
     
@@ -3037,5 +3093,130 @@ class OrganizerController extends BaseController
             'expires_at' => null,
             'status' => 'inactive'
         ];
+    }
+    
+    /**
+     * Update event status (draft, private, active)
+     */
+    public function updateEventStatus($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+            return;
+        }
+        
+        $tenantId = $this->session->getTenantId();
+        
+        // Get event details
+        $event = $this->eventModel->find($id);
+        if (!$event || $event['tenant_id'] != $tenantId) {
+            $this->json(['success' => false, 'message' => 'Event not found'], 404);
+            return;
+        }
+        
+        $newStatus = $_POST['status'] ?? '';
+        $newVisibility = $_POST['visibility'] ?? $event['visibility'];
+        
+        // Validate status
+        $validStatuses = ['draft', 'active', 'suspended', 'closed'];
+        $validVisibilities = ['private', 'public', 'unlisted'];
+        
+        if (!in_array($newStatus, $validStatuses)) {
+            $this->json(['success' => false, 'message' => 'Invalid status'], 400);
+            return;
+        }
+        
+        if (!in_array($newVisibility, $validVisibilities)) {
+            $this->json(['success' => false, 'message' => 'Invalid visibility'], 400);
+            return;
+        }
+        
+        try {
+            // Update event status
+            $updateData = [
+                'status' => $newStatus,
+                'visibility' => $newVisibility
+            ];
+            
+            // Add timestamps for specific status changes
+            if ($newStatus === 'active' && $event['status'] !== 'active') {
+                // Event is being activated
+                $updateData['admin_status'] = 'approved'; // Auto-approve for organizer changes
+            } elseif ($newStatus === 'suspended') {
+                $updateData['suspended_at'] = date('Y-m-d H:i:s');
+                $updateData['suspended_by'] = $this->session->getUserId();
+            } elseif ($newStatus === 'closed') {
+                $updateData['closed_at'] = date('Y-m-d H:i:s');
+            }
+            
+            $success = $this->eventModel->update($id, $updateData);
+            
+            if ($success) {
+                // Log the status change
+                $auditModel = new \SmartCast\Models\AuditLog();
+                $auditModel->log([
+                    'user_id' => $this->session->getUserId(),
+                    'tenant_id' => $tenantId,
+                    'action' => 'event_status_updated',
+                    'resource_type' => 'event',
+                    'resource_id' => $id,
+                    'details' => json_encode([
+                        'old_status' => $event['status'],
+                        'new_status' => $newStatus,
+                        'old_visibility' => $event['visibility'],
+                        'new_visibility' => $newVisibility
+                    ])
+                ]);
+                
+                $this->json([
+                    'success' => true, 
+                    'message' => 'Event status updated successfully',
+                    'status' => $newStatus,
+                    'visibility' => $newVisibility
+                ]);
+            } else {
+                $this->json(['success' => false, 'message' => 'Failed to update event status'], 500);
+            }
+            
+        } catch (\Exception $e) {
+            error_log('Event status update error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'An error occurred while updating event status'], 500);
+        }
+    }
+    
+    /**
+     * Get categories for a specific event (API endpoint)
+     */
+    public function getEventCategories($id)
+    {
+        header('Content-Type: application/json');
+        
+        $tenantId = $this->session->getTenantId();
+        
+        // Get event details to verify ownership
+        $event = $this->eventModel->find($id);
+        if (!$event || $event['tenant_id'] != $tenantId) {
+            $this->json(['success' => false, 'message' => 'Event not found'], 404);
+            return;
+        }
+        
+        try {
+            // Get categories for this event
+            $categories = $this->categoryModel->getCategoriesByEvent($id);
+            
+            $this->json([
+                'success' => true,
+                'categories' => $categories,
+                'event' => [
+                    'id' => $event['id'],
+                    'name' => $event['name'],
+                    'status' => $event['status']
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Get event categories error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'An error occurred while loading categories'], 500);
+        }
     }
 }
