@@ -2,13 +2,13 @@
 
 namespace SmartCast\Controllers\Api;
 
-use SmartCast\Core\Controller;
+use SmartCast\Controllers\BaseController;
 use SmartCast\Models\ContestantCategory;
 use SmartCast\Models\Contestant;
 use SmartCast\Models\Category;
 use SmartCast\Models\Event;
 
-class ShortcodeController extends Controller
+class ShortcodeController extends BaseController
 {
     private $contestantCategoryModel;
     private $contestantModel;
@@ -29,8 +29,7 @@ class ShortcodeController extends Controller
      */
     public function test()
     {
-        header('Content-Type: application/json');
-        echo json_encode([
+        $this->json([
             'success' => true,
             'message' => 'Shortcode API is working',
             'timestamp' => date('Y-m-d H:i:s')
@@ -42,37 +41,34 @@ class ShortcodeController extends Controller
      */
     public function lookup()
     {
-        // Set JSON response header
-        header('Content-Type: application/json');
-        
-        // Disable error display to prevent HTML in JSON response
-        ini_set('display_errors', 0);
-        
-        // Only allow POST requests
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            return;
-        }
-
         try {
+            // Disable error display to prevent HTML in JSON response
+            ini_set('display_errors', 0);
+            error_reporting(0);
+            
+            // Only allow POST requests
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                $this->json(['success' => false, 'message' => 'Method not allowed'], 405);
+                return;
+            }
+
             // Get JSON input
             $input = json_decode(file_get_contents('php://input'), true);
             
             if (!$input || !isset($input['shortcode'])) {
-                echo json_encode(['success' => false, 'message' => 'Shortcode is required']);
+                $this->json(['success' => false, 'message' => 'Shortcode is required']);
                 return;
             }
 
             $shortcode = trim(strtoupper($input['shortcode']));
             
             if (empty($shortcode)) {
-                echo json_encode(['success' => false, 'message' => 'Shortcode cannot be empty']);
+                $this->json(['success' => false, 'message' => 'Shortcode cannot be empty']);
                 return;
             }
 
             if (strlen($shortcode) < 2) {
-                echo json_encode(['success' => false, 'message' => 'Shortcode must be at least 2 characters long']);
+                $this->json(['success' => false, 'message' => 'Shortcode must be at least 2 characters long']);
                 return;
             }
 
@@ -80,24 +76,24 @@ class ShortcodeController extends Controller
             $nominee = $this->findNomineeByShortcode($shortcode);
             
             if (!$nominee) {
-                echo json_encode(['success' => false, 'message' => 'No nominee found with this shortcode']);
+                $this->json(['success' => false, 'message' => 'No nominee found with this shortcode']);
                 return;
             }
 
             // Check if the event is active and voting is allowed
             if (!$this->isVotingAllowed($nominee['event_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Voting is not currently available for this event']);
+                $this->json(['success' => false, 'message' => 'Voting is not currently available for this event']);
                 return;
             }
 
-            echo json_encode([
+            $this->json([
                 'success' => true,
                 'nominee' => $nominee
             ]);
 
         } catch (\Exception $e) {
             error_log('Shortcode lookup error: ' . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'An error occurred while searching']);
+            $this->json(['success' => false, 'message' => 'An error occurred while searching: ' . $e->getMessage()]);
         }
     }
 
@@ -132,7 +128,8 @@ class ShortcodeController extends Controller
         ";
 
         try {
-            $result = $this->contestantCategoryModel->getDatabase()->selectOne($sql, [
+            $database = new \SmartCast\Core\Database();
+            $result = $database->selectOne($sql, [
                 'shortcode' => $shortcode
             ]);
         } catch (\Exception $e) {
@@ -161,27 +158,33 @@ class ShortcodeController extends Controller
      */
     private function isVotingAllowed($eventId)
     {
-        $event = $this->eventModel->find($eventId);
-        
-        if (!$event) {
+        try {
+            $database = new \SmartCast\Core\Database();
+            $event = $database->selectOne("SELECT * FROM events WHERE id = :id", ['id' => $eventId]);
+            
+            if (!$event) {
+                return false;
+            }
+
+            // Check if event is active
+            if ($event['status'] !== 'active') {
+                return false;
+            }
+
+            // Check if event is within voting period
+            $now = time();
+            $startTime = strtotime($event['start_date']);
+            $endTime = strtotime($event['end_date']);
+
+            if ($now < $startTime || $now > $endTime) {
+                return false;
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            error_log('Error checking voting allowed: ' . $e->getMessage());
             return false;
         }
-
-        // Check if event is active
-        if ($event['status'] !== 'active') {
-            return false;
-        }
-
-        // Check if event is within voting period
-        $now = time();
-        $startTime = strtotime($event['start_date']);
-        $endTime = strtotime($event['end_date']);
-
-        if ($now < $startTime || $now > $endTime) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

@@ -63,6 +63,7 @@ class Application
         $this->router->post('/vote/process', 'VoteController@processDirectVote'); // Process direct vote
         
         // Payment routes
+        $this->router->get('/payment/status/{transactionId}', 'VoteController@showPaymentStatus'); // Payment status page
         $this->router->get('/api/payment/status/{transactionId}', 'VoteController@checkPaymentStatus'); // Check payment status
         $this->router->get('/api/payment/test/{transactionId}', 'VoteController@testPaymentStatus'); // Test payment processing
         $this->router->post('/api/payment/callback/{transactionId}', 'VoteController@handlePaymentCallback'); // Handle payment callbacks
@@ -84,8 +85,11 @@ class Application
             $router->get('/events', 'OrganizerController@events');
             $router->get('/events/create', 'OrganizerController@createEvent');
             $router->get('/events/wizard', 'OrganizerController@createEventWizard');
-            $router->get('/events/demo', 'OrganizerController@shortcodeDemo');
-            $router->get('/events/drafts', 'OrganizerController@draftEvents');
+            $router->get('/events/{id}/shortcode-demo', 'OrganizerController@shortcodeDemo');
+            $router->get('/shortcode-stats', 'OrganizerController@shortcodeStats');
+            $router->get('/migrate-shortcodes', 'OrganizerController@migrateShortcodes');
+            $router->post('/migrate-shortcodes', 'OrganizerController@migrateShortcodes');
+            $router->get('/events/{id}/categories', 'OrganizerController@getEventCategories');
             $router->post('/events', 'OrganizerController@storeEventWizard'); // Redirect old route to wizard
             $router->post('/events/wizard', 'OrganizerController@storeEventWizard');
             // Parameterized routes MUST come last

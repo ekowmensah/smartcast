@@ -86,6 +86,12 @@
                             Categories
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= ORGANIZER_URL ?>/shortcode-stats">
+                            <i class="nav-icon fas fa-hashtag"></i>
+                            Shortcode Stats
+                        </a>
+                    </li>
                 </ul>
             </li>
             

@@ -255,7 +255,7 @@
                                 </div>
                                 <div class="text-end">
                                     <div class="fw-bold text-success">$<?= number_format($bundle['price'], 2) ?></div>
-                                    <?php if ($bundle['discount'] > 0): ?>
+                                    <?php if (isset($bundle['discount']) && $bundle['discount'] > 0): ?>
                                         <small class="text-danger">Save <?= $bundle['discount'] ?>%</small>
                                     <?php endif; ?>
                                 </div>

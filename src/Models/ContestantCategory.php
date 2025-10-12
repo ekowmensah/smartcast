@@ -73,82 +73,155 @@ class ContestantCategory extends BaseModel
     }
     
     /**
-     * Generate globally unique shortcode for USSD voting
-     * Each nominee gets a unique shortcode for each category they're in
-     * Shortcodes are globally unique across all tenants and events
+     * Generate random shortcode in format: 2 letters + 2 numbers (e.g., AA87, BT14)
+     * Letters: ABCDEFGHJKLMNPQRSTUVWXYZ (24 chars, no I/O)
+     * Numbers: 0123456789 (10 chars)
+     * Total combinations: 24² × 10² = 57,600 unique codes
+     * Random generation makes codes difficult to guess
      */
     public function generateShortCode($categoryId, $contestantName, $contestantId = null)
     {
-        // Get tenant and event info for better uniqueness
-        $categoryInfo = $this->db->selectOne("
-            SELECT cat.event_id, e.tenant_id, e.code as event_code
-            FROM categories cat 
-            INNER JOIN events e ON cat.event_id = e.id 
-            WHERE cat.id = :category_id
-        ", ['category_id' => $categoryId]);
+        // Character sets (excluding I and O to avoid confusion)
+        $letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // 24 letters
+        $numbers = '0123456789'; // 10 numbers
         
-        $tenantId = $categoryInfo['tenant_id'] ?? 1;
-        $eventCode = $categoryInfo['event_code'] ?? 'EVT';
+        $maxAttempts = 100;
+        $attempts = 0;
         
-        // Clean contestant name for code generation
-        $cleanName = preg_replace('/[^A-Z]/', '', strtoupper($contestantName));
-        
-        // Generate tenant prefix (T1, T2, etc.) for global uniqueness
-        $tenantPrefix = 'T' . $tenantId;
-        
-        // Try different shortcode patterns with global uniqueness
-        $patterns = [
-            // Tenant + First 2 letters + number (T1SA01)
-            $tenantPrefix . substr($cleanName, 0, 2),
-            // Tenant + First 3 letters (T1SAR01)
-            $tenantPrefix . substr($cleanName, 0, 3),
-            // Tenant + First letter + last letter (T1SE01)
-            $tenantPrefix . substr($cleanName, 0, 1) . substr($cleanName, -1, 1),
-            // Event code + First 2 letters (GMA24SA01 if event code is GMA24)
-            substr($eventCode, 0, 4) . substr($cleanName, 0, 2),
-            // Simple patterns with higher numbers for global uniqueness
-            substr($cleanName, 0, 2),
-            substr($cleanName, 0, 3),
-            substr($cleanName, 0, 1) . substr($cleanName, -1, 1)
-        ];
-        
-        // Remove empty patterns and ensure reasonable length
-        $patterns = array_filter($patterns, function($p) { 
-            return !empty($p) && strlen($p) >= 2 && strlen($p) <= 8; 
-        });
-        
-        foreach ($patterns as $pattern) {
-            // Try with numbers 001-999 for better global uniqueness
-            for ($i = 1; $i <= 999; $i++) {
-                $shortCode = $pattern . str_pad($i, 3, '0', STR_PAD_LEFT);
-                
-                // Ensure shortcode is not too long for USSD (max 10 chars)
-                if (strlen($shortCode) > 10) {
-                    $shortCode = substr($shortCode, 0, 10);
-                }
-                
-                // Check global uniqueness
-                if (!$this->isShortCodeTakenGlobally($shortCode)) {
-                    return $shortCode;
-                }
-            }
-        }
-        
-        // Fallback: Use tenant + contestant ID + category ID for guaranteed uniqueness
-        if ($contestantId) {
-            $fallbackCode = 'T' . $tenantId . 'N' . $contestantId . 'C' . $categoryId;
-            if (!$this->isShortCodeTakenGlobally($fallbackCode)) {
-                return $fallbackCode;
-            }
-        }
-        
-        // Final fallback: UUID-like code with timestamp for absolute uniqueness
         do {
-            $timestamp = substr(time(), -4); // Last 4 digits of timestamp
-            $randomCode = 'U' . $timestamp . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-        } while ($this->isShortCodeTakenGlobally($randomCode));
+            // Generate random 2 letters + 2 numbers format
+            $shortCode = '';
+            
+            // Add 2 random letters
+            $shortCode .= $letters[random_int(0, strlen($letters) - 1)];
+            $shortCode .= $letters[random_int(0, strlen($letters) - 1)];
+            
+            // Add 2 random numbers
+            $shortCode .= $numbers[random_int(0, strlen($numbers) - 1)];
+            $shortCode .= $numbers[random_int(0, strlen($numbers) - 1)];
+            
+            $attempts++;
+            
+            // Check if this code is already taken globally
+            if (!$this->isShortCodeTakenGlobally($shortCode)) {
+                return strtoupper($shortCode);
+            }
+            
+        } while ($attempts < $maxAttempts);
         
-        return $randomCode;
+        // If we can't find a unique random code, try with extended format
+        $attempts = 0;
+        do {
+            // Fallback: 3 letters + 2 numbers for more combinations (24³ × 10² = 1,382,400)
+            $shortCode = '';
+            
+            // Add 3 random letters
+            $shortCode .= $letters[random_int(0, strlen($letters) - 1)];
+            $shortCode .= $letters[random_int(0, strlen($letters) - 1)];
+            $shortCode .= $letters[random_int(0, strlen($letters) - 1)];
+            
+            // Add 2 random numbers
+            $shortCode .= $numbers[random_int(0, strlen($numbers) - 1)];
+            $shortCode .= $numbers[random_int(0, strlen($numbers) - 1)];
+            
+            $attempts++;
+            
+        } while ($this->isShortCodeTakenGlobally($shortCode) && $attempts < $maxAttempts);
+        
+        // Final fallback with timestamp if all else fails
+        if ($this->isShortCodeTakenGlobally($shortCode)) {
+            $timestamp = substr(time(), -2);
+            $shortCode = $letters[random_int(0, strlen($letters) - 1)] . 
+                        $letters[random_int(0, strlen($letters) - 1)] . 
+                        $timestamp;
+        }
+        
+        return strtoupper($shortCode);
+    }
+    
+    /**
+     * Get shortcode generation statistics for random format
+     */
+    public function getShortCodeStats()
+    {
+        $letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // 24 letters
+        $numbers = '0123456789'; // 10 numbers
+        
+        // Calculate limits for different formats
+        $standardLimit = pow(24, 2) * pow(10, 2); // 57,600 (2 letters + 2 numbers)
+        $extendedLimit = pow(24, 3) * pow(10, 2); // 1,382,400 (3 letters + 2 numbers)
+        $totalLimit = $standardLimit + $extendedLimit; // 1,439,000
+        
+        // Get current counts
+        $standardCount = $this->db->selectOne("
+            SELECT COUNT(*) as count 
+            FROM contestant_categories 
+            WHERE short_code IS NOT NULL 
+            AND short_code != ''
+            AND LENGTH(short_code) = 4
+            AND short_code REGEXP '^[ABCDEFGHJKLMNPQRSTUVWXYZ]{2}[0-9]{2}$'
+        ")['count'] ?? 0;
+        
+        $extendedCount = $this->db->selectOne("
+            SELECT COUNT(*) as count 
+            FROM contestant_categories 
+            WHERE short_code IS NOT NULL 
+            AND short_code != ''
+            AND LENGTH(short_code) = 5
+            AND short_code REGEXP '^[ABCDEFGHJKLMNPQRSTUVWXYZ]{3}[0-9]{2}$'
+        ")['count'] ?? 0;
+        
+        $totalUsed = $standardCount + $extendedCount;
+        
+        return [
+            'format' => '2 Letters + 2 Numbers (e.g., AA87, BT14)',
+            'letters' => $letters,
+            'numbers' => $numbers,
+            'limits' => [
+                'standard' => $standardLimit,
+                'extended' => $extendedLimit,
+                'total' => $totalLimit
+            ],
+            'usage' => [
+                'standard_used' => $standardCount,
+                'extended_used' => $extendedCount,
+                'total_used' => $totalUsed
+            ],
+            'remaining' => [
+                'standard' => max(0, $standardLimit - $standardCount),
+                'extended' => max(0, $extendedLimit - $extendedCount),
+                'total' => max(0, $totalLimit - $totalUsed)
+            ],
+            'percentages' => [
+                'standard_used' => $standardLimit > 0 ? round(($standardCount / $standardLimit) * 100, 2) : 0,
+                'extended_used' => $extendedLimit > 0 ? round(($extendedCount / $extendedLimit) * 100, 4) : 0,
+                'total_used' => $totalLimit > 0 ? round(($totalUsed / $totalLimit) * 100, 4) : 0
+            ],
+            'current_mode' => $standardCount < $standardLimit ? 'Standard (2L+2N)' : 'Extended (3L+2N)',
+            'generation_type' => 'Random (Difficult to Guess)',
+            'sample_codes' => $this->generateSampleCodes()
+        ];
+    }
+    
+    /**
+     * Generate sample codes for demonstration
+     */
+    private function generateSampleCodes($count = 10)
+    {
+        $letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $numbers = '0123456789';
+        $samples = [];
+        
+        for ($i = 0; $i < $count; $i++) {
+            $code = '';
+            $code .= $letters[random_int(0, strlen($letters) - 1)];
+            $code .= $letters[random_int(0, strlen($letters) - 1)];
+            $code .= $numbers[random_int(0, strlen($numbers) - 1)];
+            $code .= $numbers[random_int(0, strlen($numbers) - 1)];
+            $samples[] = $code;
+        }
+        
+        return $samples;
     }
     
     /**
@@ -347,32 +420,4 @@ class ContestantCategory extends BaseModel
         return $results;
     }
     
-    /**
-     * Get shortcode usage statistics for debugging
-     */
-    public function getShortCodeStats($categoryId = null)
-    {
-        $sql = "
-            SELECT 
-                cc.category_id,
-                cat.name as category_name,
-                COUNT(cc.id) as total_assignments,
-                COUNT(DISTINCT cc.short_code) as unique_shortcodes,
-                COUNT(DISTINCT cc.contestant_id) as unique_contestants
-            FROM contestant_categories cc
-            INNER JOIN categories cat ON cc.category_id = cat.id
-            WHERE cc.active = 1
-        ";
-        
-        if ($categoryId) {
-            $sql .= " AND cc.category_id = :category_id";
-            $params = ['category_id' => $categoryId];
-        } else {
-            $params = [];
-        }
-        
-        $sql .= " GROUP BY cc.category_id ORDER BY cat.name ASC";
-        
-        return $this->db->select($sql, $params);
-    }
 }

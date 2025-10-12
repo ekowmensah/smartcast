@@ -4,11 +4,15 @@ namespace SmartCast\Controllers;
 
 use SmartCast\Models\Event;
 use SmartCast\Models\Contestant;
+use SmartCast\Models\Category;
 use SmartCast\Models\Vote;
 use SmartCast\Models\Transaction;
 use SmartCast\Models\TenantBalance;
 use SmartCast\Models\User;
 use SmartCast\Models\Tenant;
+use SmartCast\Models\VoteBundle;
+use SmartCast\Models\LeaderboardCache;
+use SmartCast\Core\Database;
 
 /**
  * Organizer Dashboard Controller
@@ -17,11 +21,15 @@ class OrganizerController extends BaseController
 {
     private $eventModel;
     private $contestantModel;
+    private $categoryModel;
     private $voteModel;
     private $transactionModel;
     private $balanceModel;
     private $userModel;
     private $tenantModel;
+    private $bundleModel;
+    private $leaderboardModel;
+    private $db;
     
     public function __construct()
     {
@@ -29,13 +37,17 @@ class OrganizerController extends BaseController
         $this->requireAuth();
         $this->requireRole(['owner', 'manager']);
         
+        $this->db = Database::getInstance();
         $this->eventModel = new Event();
         $this->contestantModel = new Contestant();
+        $this->categoryModel = new Category();
         $this->voteModel = new Vote();
         $this->transactionModel = new Transaction();
         $this->balanceModel = new TenantBalance();
         $this->userModel = new User();
         $this->tenantModel = new Tenant();
+        $this->bundleModel = new VoteBundle();
+        $this->leaderboardModel = new LeaderboardCache();
     }
     
     public function dashboard()
@@ -3217,6 +3229,127 @@ class OrganizerController extends BaseController
         } catch (\Exception $e) {
             error_log('Get event categories error: ' . $e->getMessage());
             $this->json(['success' => false, 'message' => 'An error occurred while loading categories'], 500);
+        }
+    }
+
+    /**
+     * Show shortcode generation statistics and test the new system
+     */
+    public function shortcodeStats()
+    {
+        try {
+            $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+            
+            // Get comprehensive statistics
+            $stats = $contestantCategoryModel->getShortCodeStats();
+            
+            $this->view('organizer/events/shortcode-stats', [
+                'stats' => $stats,
+                'title' => 'Random Shortcode Generation Statistics'
+            ]);
+
+        } catch (\Exception $e) {
+            error_log('Shortcode stats error: ' . $e->getMessage());
+            $this->redirect(ORGANIZER_URL . '/events', 'Error loading shortcode statistics', 'error');
+        }
+    }
+
+    /**
+     * Run shortcode migration to update existing codes to random format
+     */
+    public function migrateShortcodes()
+    {
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                // Run the migration
+                $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+                
+                // Get existing shortcodes
+                $existingCodes = $this->db->select("
+                    SELECT id, short_code, contestant_id, category_id 
+                    FROM contestant_categories 
+                    WHERE short_code IS NOT NULL 
+                    AND short_code != ''
+                    AND active = 1
+                    ORDER BY id ASC
+                ");
+                
+                if (empty($existingCodes)) {
+                    $this->redirect(ORGANIZER_URL . '/shortcode-stats', 'No shortcodes found to migrate.', 'info');
+                    return;
+                }
+                
+                $updated = 0;
+                $errors = 0;
+                
+                // Start transaction
+                $this->db->getConnection()->beginTransaction();
+                
+                foreach ($existingCodes as $record) {
+                    try {
+                        // Generate new random shortcode using the model method
+                        $newShortcode = $contestantCategoryModel->generateShortCode(
+                            $record['category_id'], 
+                            'Migration', 
+                            $record['contestant_id']
+                        );
+                        
+                        // Update the record
+                        $this->db->query("
+                            UPDATE contestant_categories 
+                            SET short_code = :short_code, updated_at = NOW()
+                            WHERE id = :id
+                        ", [
+                            'short_code' => $newShortcode,
+                            'id' => $record['id']
+                        ]);
+                        
+                        $updated++;
+                        
+                    } catch (\Exception $e) {
+                        error_log("Error updating shortcode ID {$record['id']}: " . $e->getMessage());
+                        $errors++;
+                    }
+                }
+                
+                // Commit transaction
+                $this->db->getConnection()->commit();
+                
+                $message = "Migration completed! Updated {$updated} shortcodes.";
+                if ($errors > 0) {
+                    $message .= " {$errors} errors occurred.";
+                }
+                
+                $this->redirect(ORGANIZER_URL . '/shortcode-stats', $message, 'success');
+                return;
+            }
+            
+            // Show migration confirmation page
+            $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+            $stats = $contestantCategoryModel->getShortCodeStats();
+            
+            // Get count of existing shortcodes that need migration
+            $existingCount = $this->db->selectOne("
+                SELECT COUNT(*) as count 
+                FROM contestant_categories 
+                WHERE short_code IS NOT NULL 
+                AND short_code != ''
+                AND active = 1
+                AND (
+                    LENGTH(short_code) != 4 
+                    OR short_code NOT REGEXP '^[ABCDEFGHJKLMNPQRSTUVWXYZ]{2}[0-9]{2}$'
+                )
+            ")['count'] ?? 0;
+            
+            $this->view('organizer/events/migrate-shortcodes', [
+                'stats' => $stats,
+                'existing_count' => $existingCount,
+                'title' => 'Migrate Shortcodes'
+            ]);
+
+        } catch (\Exception $e) {
+            error_log('Shortcode migration error: ' . $e->getMessage());
+            $this->redirect(ORGANIZER_URL . '/shortcode-stats', 'Migration failed: ' . $e->getMessage(), 'error');
         }
     }
 }

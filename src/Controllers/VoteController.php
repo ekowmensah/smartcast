@@ -962,10 +962,11 @@ class VoteController extends BaseController
 
             // Get contestant category info for shortcode
             $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
-            $contestantCategory = $contestantCategoryModel->findOne([
+            $contestantCategories = $contestantCategoryModel->findAll([
                 'contestant_id' => $contestantId,
                 'category_id' => $categoryId
             ]);
+            $contestantCategory = !empty($contestantCategories) ? $contestantCategories[0] : null;
 
             $this->view('voting/direct', [
                 'event' => $event,
@@ -1003,6 +1004,54 @@ class VoteController extends BaseController
         }
 
         return true;
+    }
+
+    /**
+     * Show payment status page
+     */
+    public function showPaymentStatus($transactionId)
+    {
+        try {
+            // Get transaction details
+            $transaction = $this->transactionModel->find($transactionId);
+            
+            if (!$transaction) {
+                $this->redirect(APP_URL . '/vote-shortcode', 'Transaction not found', 'error');
+                return;
+            }
+
+            // Get related data
+            $event = $this->eventModel->find($transaction['event_id']);
+            $contestant = $this->contestantModel->find($transaction['contestant_id']);
+            $category = null;
+            
+            if ($transaction['category_id']) {
+                $category = $this->categoryModel->find($transaction['category_id']);
+            }
+
+            // Get voter information from session if available (for shortcode voting)
+            $voterInfo = $_SESSION["transaction_{$transactionId}_voter_info"] ?? null;
+            
+            // Merge voter info into transaction for display
+            if ($voterInfo) {
+                $transaction['voter_name'] = $voterInfo['voter_name'];
+                $transaction['voter_email'] = $voterInfo['voter_email'];
+                $transaction['vote_quantity'] = $voterInfo['vote_quantity'];
+                $transaction['source'] = $voterInfo['source'];
+            }
+
+            $this->view('payment/status', [
+                'transaction' => $transaction,
+                'event' => $event,
+                'contestant' => $contestant,
+                'category' => $category,
+                'title' => 'Payment Status'
+            ]);
+
+        } catch (\Exception $e) {
+            error_log('Payment status error: ' . $e->getMessage());
+            $this->redirect(APP_URL . '/vote-shortcode', 'An error occurred while loading payment status', 'error');
+        }
     }
 
     /**
@@ -1076,65 +1125,75 @@ class VoteController extends BaseController
                 $totalAmount = $voteQuantity * $event['vote_price'];
             }
 
-            // Create transaction
-            $transactionData = [
-                'tenant_id' => $event['tenant_id'],
-                'event_id' => $eventId,
-                'contestant_id' => $contestantId,
-                'category_id' => $categoryId,
-                'bundle_id' => $bundleId,
-                'voter_name' => $voterName,
-                'voter_phone' => $voterPhone,
-                'voter_email' => $voterEmail ?: null,
-                'vote_quantity' => $voteQuantity,
-                'amount' => $totalAmount,
-                'status' => 'pending',
-                'payment_method' => 'momo',
-                'source' => $source,
-                'metadata' => json_encode([
-                    'shortcode_voting' => true,
-                    'bundle_used' => $bundleUsed ? $bundleUsed['name'] : null
-                ])
-            ];
+            // Start database transaction (matching normal voting)
+            $this->transactionModel->getDatabase()->getConnection()->beginTransaction();
 
-            $transactionId = $this->transactionModel->create($transactionData);
+            try {
+                // Create transaction (using only existing database columns)
+                $transactionData = [
+                    'tenant_id' => $event['tenant_id'],
+                    'event_id' => $eventId,
+                    'contestant_id' => $contestantId,
+                    'category_id' => $categoryId,
+                    'bundle_id' => $bundleId,
+                    'amount' => $totalAmount,
+                    'msisdn' => $voterPhone, // Use msisdn field like normal voting
+                    'status' => 'pending',
+                    'provider' => 'momo',
+                    'coupon_code' => null,
+                    'referral_code' => null
+                ];
 
-            if (!$transactionId) {
-                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
-                    'Failed to create transaction', 'error');
-                return;
-            }
+                $transactionId = $this->transactionModel->createTransaction($transactionData);
 
-            // Initiate payment
-            $paymentData = [
-                'amount' => $totalAmount,
-                'phone' => $voterPhone,
-                'reference' => 'VOTE_' . $transactionId,
-                'description' => "Vote for {$contestant['name']} in {$event['name']}"
-            ];
+                if (!$transactionId) {
+                    throw new \Exception('Failed to create transaction');
+                }
 
-            $paymentResponse = $this->paymentService->initiatePayment($paymentData);
+                // Initiate payment
+                $paymentData = [
+                    'amount' => $totalAmount,
+                    'phone' => $voterPhone,
+                    'reference' => 'VOTE_' . $transactionId,
+                    'description' => "Vote for {$contestant['name']} in {$event['name']}"
+                ];
 
-            if ($paymentResponse['success']) {
-                // Update transaction with payment reference
+                error_log('Initiating payment with data: ' . json_encode($paymentData));
+
+                $paymentResponse = $this->paymentService->initiatePayment($paymentData);
+                error_log('Payment response: ' . json_encode($paymentResponse));
+
+                if (!$paymentResponse['success']) {
+                    throw new \Exception('Payment initiation failed: ' . ($paymentResponse['message'] ?? 'Unknown error'));
+                }
+
+                // Update transaction with payment reference (matching normal voting)
                 $this->transactionModel->update($transactionId, [
-                    'payment_reference' => $paymentResponse['reference'] ?? null,
-                    'payment_status' => 'initiated'
+                    'provider_reference' => $paymentResponse['payment_reference'] ?? null
                 ]);
+
+                // Store voter information in session for display
+                $_SESSION["transaction_{$transactionId}_voter_info"] = [
+                    'voter_name' => $voterName,
+                    'voter_email' => $voterEmail,
+                    'vote_quantity' => $voteQuantity,
+                    'source' => $source
+                ];
+
+                // Commit the transaction
+                $this->transactionModel->getDatabase()->getConnection()->commit();
 
                 // Redirect to payment status page
                 $this->redirect(APP_URL . "/payment/status/{$transactionId}", 
                     'Payment initiated successfully', 'success');
-            } else {
-                // Update transaction status
-                $this->transactionModel->update($transactionId, [
-                    'status' => 'failed',
-                    'payment_status' => 'failed',
-                    'error_message' => $paymentResponse['message'] ?? 'Payment initiation failed'
-                ]);
 
+            } catch (\Exception $e) {
+                // Rollback the transaction
+                $this->transactionModel->getDatabase()->getConnection()->rollback();
+                
+                error_log('Payment processing error: ' . $e->getMessage());
                 $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
-                    'Payment initiation failed: ' . ($paymentResponse['message'] ?? 'Unknown error'), 'error');
+                    'Payment processing failed: ' . $e->getMessage(), 'error');
             }
 
         } catch (\Exception $e) {
@@ -1142,4 +1201,5 @@ class VoteController extends BaseController
             $this->redirect(APP_URL . '/vote-shortcode', 'An error occurred while processing your vote', 'error');
         }
     }
+
 }

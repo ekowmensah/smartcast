@@ -107,7 +107,7 @@
                                                     <div class="bundle-info">
                                                         <div class="bundle-votes"><?= $bundle['votes'] ?> Votes</div>
                                                         <div class="bundle-price">$<?= number_format($bundle['price'], 2) ?></div>
-                                                        <?php if ($bundle['discount'] > 0): ?>
+                                                        <?php if (isset($bundle['discount']) && $bundle['discount'] > 0): ?>
                                                             <div class="bundle-savings">Save <?= $bundle['discount'] ?>%</div>
                                                         <?php endif; ?>
                                                     </div>

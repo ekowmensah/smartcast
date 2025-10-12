@@ -225,6 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
         hideResults();
 
         // Make AJAX request
+        console.log('Making request to:', '<?= APP_URL ?>/api/shortcode-lookup');
         fetch('<?= APP_URL ?>/api/shortcode-lookup', {
             method: 'POST',
             headers: {
@@ -232,20 +233,33 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ shortcode: shortcode })
         })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            
-            if (data.success) {
-                showResults(data.nominee);
-            } else {
-                showError(data.message || 'Nominee not found');
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            return response.text(); // Get as text first to see what we're getting
+        })
+        .then(text => {
+            console.log('Raw response:', text);
+            try {
+                const data = JSON.parse(text);
+                hideLoading();
+                
+                if (data.success) {
+                    showResults(data.nominee);
+                } else {
+                    showError(data.message || 'Nominee not found');
+                }
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                console.error('Response was:', text);
+                hideLoading();
+                showError('Server returned invalid response. Check console for details.');
             }
         })
         .catch(error => {
             hideLoading();
             showError('An error occurred while searching. Please try again.');
-            console.error('Error:', error);
+            console.error('Fetch error:', error);
         });
     }
 

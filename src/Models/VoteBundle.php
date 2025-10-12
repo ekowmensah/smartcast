@@ -17,7 +17,8 @@ class VoteBundle extends BaseModel
         if ($tenantId) {
             // Ensure tenant isolation - only get bundles for events owned by the tenant
             $sql = "
-                SELECT vb.* 
+                SELECT vb.*, e.vote_price,
+                       ROUND(((vb.votes * e.vote_price - vb.price) / (vb.votes * e.vote_price)) * 100, 0) as discount
                 FROM vote_bundles vb
                 INNER JOIN events e ON vb.event_id = e.id
                 WHERE vb.event_id = :event_id 
@@ -32,10 +33,25 @@ class VoteBundle extends BaseModel
             ]);
         }
         
-        return $this->findAll([
+        // For non-tenant specific queries, we need to calculate discount manually
+        $bundles = $this->findAll([
             'event_id' => $eventId,
             'active' => 1
         ], 'price ASC');
+        
+        // Get event vote price to calculate discount
+        $eventModel = new Event();
+        $event = $eventModel->find($eventId);
+        $votePrice = $event ? $event['vote_price'] : 0;
+        
+        // Calculate discount for each bundle
+        foreach ($bundles as &$bundle) {
+            $regularPrice = $bundle['votes'] * $votePrice;
+            $savings = $regularPrice - $bundle['price'];
+            $bundle['discount'] = $regularPrice > 0 ? round(($savings / $regularPrice) * 100, 0) : 0;
+        }
+        
+        return $bundles;
     }
     
     public function getBundlesByTenant($tenantId)
