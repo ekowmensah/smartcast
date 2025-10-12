@@ -281,7 +281,7 @@ body {
             ?>
             <a href="<?= APP_URL ?>/events/<?= $eventSlug ?>/vote/<?= $contestantSlug ?>?category=<?= $category['id'] ?>" class="nominee-card">
                 <?php if ($contestant['image_url']): ?>
-                    <img src="<?= htmlspecialchars($contestant['image_url']) ?>" 
+                    <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                          alt="<?= htmlspecialchars($contestant['name']) ?>"
                          class="nominee-image">
                 <?php else: ?>

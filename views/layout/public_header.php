@@ -43,6 +43,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="<?= APP_URL ?>/verify-receipt">
+                        <i class="fas fa-shield-check me-1"></i>Verify Receipt
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="<?= PUBLIC_URL ?>/about">
                         <i class="fas fa-info-circle me-1"></i>About
                     </a>

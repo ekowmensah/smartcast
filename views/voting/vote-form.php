@@ -613,7 +613,7 @@ body {
     <div class="nominee-card">
         <div class="nominee-header">
             <?php if (!empty($contestant['image_url'])): ?>
-                <img src="<?= htmlspecialchars($contestant['image_url']) ?>" 
+                <img src="<?= htmlspecialchars(\SmartCast\Helpers\ImageHelper::getImageUrl($contestant['image_url'])) ?>" 
                      alt="<?= htmlspecialchars($contestant['name']) ?>"
                      class="nominee-avatar">
             <?php else: ?>
@@ -1002,9 +1002,14 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
                 </div>
             `, 'success');
             
-            // Redirect after 3 seconds
+            // Redirect to payment status page after 3 seconds
             setTimeout(() => {
-                window.location.href = '<?= APP_URL ?>/events/<?= $eventSlug ?>/vote';
+                if (data.transaction_id) {
+                    window.location.href = '<?= APP_URL ?>/payment/status/' + data.transaction_id;
+                } else {
+                    // Fallback to voting page if no transaction ID
+                    window.location.href = '<?= APP_URL ?>/events/<?= $eventSlug ?>/vote';
+                }
             }, 3000);
         } else {
             console.log('Vote failed:', data); // Debug log
@@ -1133,9 +1138,14 @@ function showPaymentSuccess(data) {
         </div>
     `, 'success');
     
-    // Redirect after 5 seconds
+    // Redirect to payment status page after 5 seconds
     setTimeout(() => {
-        window.location.href = '<?= APP_URL ?>/events/<?= $eventSlug ?>/vote';
+        if (data.transaction_id) {
+            window.location.href = '<?= APP_URL ?>/payment/status/' + data.transaction_id;
+        } else {
+            // Fallback to voting page if no transaction ID
+            window.location.href = '<?= APP_URL ?>/events/<?= $eventSlug ?>/vote';
+        }
     }, 5000);
 }
 

@@ -1,16 +1,26 @@
-<!-- Contestants Header -->
-<div class="d-flex justify-content-between align-items-center mb-4">
+<?php 
+$content = ob_start(); 
+?>
+
+<!-- Page Actions -->
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3">
     <div>
-        <h2 class="mb-1">
-            <i class="fas fa-users me-2"></i>
-            Contestants
-        </h2>
         <p class="text-muted mb-0">Manage contestants organized by events and categories</p>
     </div>
-    <div>
+    <div class="d-flex flex-wrap gap-2">
         <a href="<?= ORGANIZER_URL ?>/contestants/create" class="btn btn-primary">
-            <i class="fas fa-user-plus me-2"></i>Add Contestant
+            <i class="fas fa-user-plus me-2"></i>
+            <span class="d-none d-sm-inline">Add Contestant</span>
+            <span class="d-sm-none">Add</span>
         </a>
+        <button class="btn btn-outline-secondary" onclick="expandAll()" title="Expand All">
+            <i class="fas fa-expand-alt me-2"></i>
+            <span class="d-none d-md-inline">Expand All</span>
+        </button>
+        <button class="btn btn-outline-secondary" onclick="collapseAll()" title="Collapse All">
+            <i class="fas fa-compress-alt me-2"></i>
+            <span class="d-none d-md-inline">Collapse All</span>
+        </button>
     </div>
 </div>
 
@@ -83,8 +93,8 @@ foreach ($eventData as $data) {
             <?php $categories = $data['categories']; ?>
             <div class="accordion-item">
                 <h2 class="accordion-header" id="heading<?= $event['event_id'] ?>">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
-                            data-bs-target="#collapse<?= $event['event_id'] ?>" aria-expanded="false" 
+                    <button class="accordion-button collapsed" type="button" data-coreui-toggle="collapse" 
+                            data-coreui-target="#collapse<?= $event['event_id'] ?>" aria-expanded="false" 
                             aria-controls="collapse<?= $event['event_id'] ?>"
                             data-event-id="<?= $event['event_id'] ?>">
                         <div class="d-flex justify-content-between align-items-center w-100 me-3">
@@ -136,7 +146,7 @@ foreach ($eventData as $data) {
                                                                     <!-- Contestant Photo -->
                                                                     <div class="me-3">
                                                                         <?php if (!empty($contestant['image_url'])): ?>
-                                                                            <img src="<?= htmlspecialchars($contestant['image_url']) ?>" 
+                                                                            <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                                                                  alt="<?= htmlspecialchars($contestant['name']) ?>"
                                                                                  class="rounded-circle" 
                                                                                  style="width: 60px; height: 60px; object-fit: cover;">
@@ -175,21 +185,24 @@ foreach ($eventData as $data) {
                                                                         <?php endif; ?>
                                                                         
                                                                         <!-- Action Buttons -->
-                                                                        <div class="btn-group btn-group-sm" role="group">
-                                                                            <button class="btn btn-outline-primary" 
+                                                                        <div class="btn-group btn-group-sm d-flex d-md-inline-flex" role="group">
+                                                                            <button class="btn btn-outline-primary flex-fill flex-md-grow-0" 
                                                                                     onclick="viewContestant(<?= $contestant['id'] ?>)"
                                                                                     title="View Details">
-                                                                                <i class="fas fa-eye me-1"></i>View
+                                                                                <i class="fas fa-eye me-1"></i>
+                                                                                <span class="d-none d-sm-inline">View</span>
                                                                             </button>
-                                                                            <button class="btn btn-outline-secondary" 
+                                                                            <button class="btn btn-outline-secondary flex-fill flex-md-grow-0" 
                                                                                     onclick="editContestant(<?= $contestant['id'] ?>)"
                                                                                     title="Edit">
-                                                                                <i class="fas fa-edit me-1"></i>Edit
+                                                                                <i class="fas fa-edit me-1"></i>
+                                                                                <span class="d-none d-sm-inline">Edit</span>
                                                                             </button>
-                                                                            <button class="btn btn-outline-info" 
+                                                                            <button class="btn btn-outline-info flex-fill flex-md-grow-0" 
                                                                                     onclick="viewStats(<?= $contestant['id'] ?>)"
                                                                                     title="Statistics">
-                                                                                <i class="fas fa-chart-bar me-1"></i>Stats
+                                                                                <i class="fas fa-chart-bar me-1"></i>
+                                                                                <span class="d-none d-sm-inline">Stats</span>
                                                                             </button>
                                                                         </div>
                                                                     </div>
@@ -446,3 +459,107 @@ function searchContestants(query) {
     });
 }
 </script>
+
+<style>
+/* Custom styles for contestants page */
+.accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.list-group-item {
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+    border-left-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.contestant-image img {
+    transition: transform 0.3s ease;
+}
+
+.contestant-image:hover img {
+    transform: scale(1.05);
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.75rem;
+}
+
+/* Mobile improvements */
+@media (max-width: 768px) {
+    .accordion-button {
+        padding: 0.75rem;
+    }
+    
+    .accordion-button .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 0.5rem;
+    }
+    
+    .list-group-item {
+        padding: 1rem;
+    }
+    
+    .btn-group {
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        flex: 1;
+    }
+}
+
+/* Loading states */
+.accordion-item.loading {
+    opacity: 0.7;
+}
+
+.accordion-item.loading .accordion-button {
+    pointer-events: none;
+}
+
+/* Empty state styling */
+.text-center.py-5 {
+    padding: 3rem 1rem !important;
+}
+
+.text-center.py-5 i {
+    opacity: 0.5;
+}
+
+/* Stats cards improvements */
+.card.bg-primary,
+.card.bg-success,
+.card.bg-info,
+.card.bg-warning {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card.bg-primary:hover,
+.card.bg-success:hover,
+.card.bg-info:hover,
+.card.bg-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+</style>
+
+<?php 
+$content = ob_get_clean();
+include __DIR__ . '/../../layout/organizer_layout.php';
+?>

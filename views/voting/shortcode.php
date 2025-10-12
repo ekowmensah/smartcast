@@ -195,6 +195,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.getElementById('errorMessage');
     const errorText = document.getElementById('errorText');
 
+    // Helper function to get proper image URL
+    function getImageUrl(imagePath) {
+        if (!imagePath) return null;
+        
+        // If it's already a full URL, return as is
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+            return imagePath;
+        }
+        
+        // If it starts with APP_URL, return as is
+        if (imagePath.startsWith('<?= APP_URL ?>')) {
+            return imagePath;
+        }
+        
+        // If it's a relative path starting with /, add APP_URL
+        if (imagePath.startsWith('/')) {
+            return '<?= APP_URL ?>' + imagePath;
+        }
+        
+        // Otherwise, assume it's a relative path and add APP_URL with leading slash
+        return '<?= APP_URL ?>/' + imagePath.replace(/^\/+/, '');
+    }
+
     // Auto-uppercase input
     input.addEventListener('input', function() {
         this.value = this.value.toUpperCase();
@@ -281,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="row align-items-center">
                     <div class="col-md-3 text-center mb-3 mb-md-0">
                         ${nominee.image_url ? 
-                            `<img src="${nominee.image_url}" alt="${nominee.name}" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">` :
+                            `<img src="${getImageUrl(nominee.image_url)}" alt="${nominee.name}" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">` :
                             `<div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; margin: 0 auto;">
                                 <i class="fas fa-user fa-2x text-muted"></i>
                             </div>`

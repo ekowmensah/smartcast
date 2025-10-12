@@ -14,23 +14,53 @@ class VoteReceipt extends BaseModel
     
     public function generateReceipt($transactionId)
     {
-        // Generate unique short code
-        $shortCode = $this->generateShortCode();
-        
-        // Generate public hash for verification
-        $publicHash = $this->generatePublicHash($transactionId, $shortCode);
-        
-        $receiptId = $this->create([
-            'transaction_id' => $transactionId,
-            'short_code' => $shortCode,
-            'public_hash' => $publicHash
-        ]);
-        
-        return [
-            'id' => $receiptId,
-            'short_code' => $shortCode,
-            'public_hash' => $publicHash
-        ];
+        try {
+            error_log("VoteReceipt: Starting receipt generation for transaction: " . $transactionId);
+            
+            // Ensure table exists
+            $this->ensureTableExists();
+            
+            // Check if receipt already exists for this transaction
+            $existingReceipt = $this->getReceiptByTransaction($transactionId);
+            if ($existingReceipt) {
+                error_log("VoteReceipt: Receipt already exists for transaction: " . $transactionId);
+                return [
+                    'id' => $existingReceipt['id'],
+                    'short_code' => $existingReceipt['short_code'],
+                    'public_hash' => $existingReceipt['public_hash']
+                ];
+            }
+            
+            // Generate unique short code
+            error_log("VoteReceipt: Generating short code...");
+            $shortCode = $this->generateShortCode();
+            error_log("VoteReceipt: Generated short code: " . $shortCode);
+            
+            // Generate public hash for verification
+            error_log("VoteReceipt: Generating public hash...");
+            $publicHash = $this->generatePublicHash($transactionId, $shortCode);
+            error_log("VoteReceipt: Generated public hash: " . substr($publicHash, 0, 20) . "...");
+            
+            // Create receipt record
+            error_log("VoteReceipt: Creating receipt record...");
+            $receiptId = $this->create([
+                'transaction_id' => $transactionId,
+                'short_code' => $shortCode,
+                'public_hash' => $publicHash
+            ]);
+            error_log("VoteReceipt: Receipt created with ID: " . $receiptId);
+            
+            return [
+                'id' => $receiptId,
+                'short_code' => $shortCode,
+                'public_hash' => $publicHash
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("VoteReceipt: Error generating receipt: " . $e->getMessage());
+            error_log("VoteReceipt: Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
     }
     
     private function generateShortCode()
@@ -56,9 +86,10 @@ class VoteReceipt extends BaseModel
         return strtoupper(substr(uniqid(), -8));
     }
     
-    private function generatePublicHash($transactionId, $shortCode)
+    public function generatePublicHash($transactionId, $shortCode)
     {
-        $data = $transactionId . '|' . $shortCode . '|' . time() . '|' . mt_rand();
+        // Use deterministic data for consistent hash generation
+        $data = $transactionId . '|' . $shortCode . '|' . 'SMARTCAST_RECEIPT_SALT';
         return hash('sha256', $data);
     }
     
@@ -114,6 +145,16 @@ class VoteReceipt extends BaseModel
     public function getReceiptByTransaction($transactionId)
     {
         $receipt = $this->findAll(['transaction_id' => $transactionId], null, 1);
+        
+        return !empty($receipt) ? $receipt[0] : null;
+    }
+    
+    /**
+     * Find receipt by short code
+     */
+    public function findByShortCode($shortCode)
+    {
+        $receipt = $this->findAll(['short_code' => $shortCode], null, 1);
         
         return !empty($receipt) ? $receipt[0] : null;
     }
@@ -363,5 +404,45 @@ class VoteReceipt extends BaseModel
         $sql .= " ORDER BY vr.created_at DESC";
         
         return $this->db->select($sql, $params);
+    }
+    
+    /**
+     * Ensure the vote_receipts table exists
+     */
+    private function ensureTableExists()
+    {
+        try {
+            // Try to query the table to see if it exists
+            $this->db->selectOne("SELECT 1 FROM {$this->table} LIMIT 1");
+        } catch (\Exception $e) {
+            // Table doesn't exist, create it
+            error_log("VoteReceipt: Table doesn't exist, creating it...");
+            $this->createTable();
+        }
+    }
+    
+    /**
+     * Create the vote_receipts table
+     */
+    private function createTable()
+    {
+        $sql = "
+            CREATE TABLE IF NOT EXISTS `{$this->table}` (
+              `id` int(11) NOT NULL AUTO_INCREMENT,
+              `transaction_id` int(11) NOT NULL,
+              `short_code` varchar(8) NOT NULL,
+              `public_hash` varchar(255) NOT NULL,
+              `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              PRIMARY KEY (`id`),
+              UNIQUE KEY `unique_transaction` (`transaction_id`),
+              UNIQUE KEY `unique_short_code` (`short_code`),
+              KEY `idx_short_code` (`short_code`),
+              KEY `idx_transaction_id` (`transaction_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ";
+        
+        $this->db->query($sql);
+        error_log("VoteReceipt: Table created successfully");
     }
 }

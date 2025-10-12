@@ -68,6 +68,10 @@ class Application
         $this->router->get('/api/payment/test/{transactionId}', 'VoteController@testPaymentStatus'); // Test payment processing
         $this->router->post('/api/payment/callback/{transactionId}', 'VoteController@handlePaymentCallback'); // Handle payment callbacks
         $this->router->get('/api/payment/simulate/{transactionId}', 'VoteController@simulatePaymentCallback'); // Simulate payment callback for testing
+        $this->router->get('/api/payment/receipt/{transactionId}', 'VoteController@getPaymentReceipt'); // Get payment receipt
+        $this->router->get('/payment/receipt/{transactionId}', 'VoteController@showPaymentReceipt'); // Show payment receipt page
+        $this->router->get('/verify-receipt', 'VoteController@showReceiptVerification'); // Show receipt verification page
+        $this->router->post('/verify-receipt', 'VoteController@processReceiptVerification'); // Process receipt verification
         
         // Organizer routes (protected)
         $this->router->group(['middleware' => 'auth'], function($router) {
@@ -106,6 +110,10 @@ class Application
             $router->get('/contestants', 'OrganizerController@contestants');
             $router->get('/contestants/create', 'OrganizerController@createContestant');
             $router->post('/contestants', 'OrganizerController@storeContestant');
+            $router->get('/contestants/{id}', 'OrganizerController@showContestant');
+            $router->get('/contestants/{id}/edit', 'OrganizerController@editContestant');
+            $router->post('/contestants/{id}/edit', 'OrganizerController@updateContestant');
+            $router->get('/contestants/{id}/stats', 'OrganizerController@contestantStats');
             
             // Categories
             $router->get('/categories', 'OrganizerController@categories');

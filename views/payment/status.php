@@ -152,13 +152,33 @@
                     <!-- Receipt Download (for successful payments) -->
                     <?php if ($status === 'success'): ?>
                         <div class="mt-4 pt-3 border-top">
-                            <small class="text-muted">
-                                <i class="fas fa-receipt me-1"></i>
-                                Need a receipt? 
-                                <a href="<?= APP_URL ?>/api/payment/receipt/<?= $transaction['id'] ?? '' ?>" target="_blank" class="text-decoration-none">
-                                    Download Receipt
-                                </a>
-                            </small>
+                            <div class="receipt-section text-center">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-receipt me-2"></i>
+                                    Your Receipt
+                                </h6>
+                                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                                    <a href="<?= APP_URL ?>/payment/receipt/<?= $transaction['id'] ?? '' ?>" 
+                                       class="btn btn-outline-primary">
+                                        <i class="fas fa-download me-2"></i>
+                                        View Receipt
+                                    </a>
+                                    <button onclick="printReceipt(<?= $transaction['id'] ?? '' ?>)" 
+                                            class="btn btn-outline-secondary">
+                                        <i class="fas fa-print me-2"></i>
+                                        Print Receipt
+                                    </button>
+                                    <a href="<?= APP_URL ?>/verify-receipt" 
+                                       class="btn btn-outline-info"
+                                       target="_blank">
+                                        <i class="fas fa-shield-check me-2"></i>
+                                        Verify Receipt
+                                    </a>
+                                </div>
+                                <small class="text-muted mt-2 d-block">
+                                    Keep your receipt for verification and records
+                                </small>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -213,6 +233,20 @@ function simulatePayment() {
             alert('An error occurred during simulation');
         });
 }
+
+// Print receipt function
+function printReceipt(transactionId) {
+    // Open receipt in new window and print
+    const receiptWindow = window.open(
+        '<?= APP_URL ?>/payment/receipt/' + transactionId, 
+        'receipt', 
+        'width=800,height=600,scrollbars=yes,resizable=yes'
+    );
+    
+    receiptWindow.onload = function() {
+        receiptWindow.print();
+    };
+}
 </script>
 <?php endif; ?>
 
@@ -248,6 +282,36 @@ function simulatePayment() {
 
 .card {
     border-radius: 15px;
+}
+
+.receipt-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+.receipt-section .btn {
+    border-radius: 20px;
+    font-weight: 500;
+    min-width: 120px;
+}
+
+.receipt-section .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 576px) {
+    .receipt-section .d-flex {
+        gap: 0.5rem !important;
+    }
+    
+    .receipt-section .btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        min-width: auto;
+    }
 }
 </style>
 

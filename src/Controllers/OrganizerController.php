@@ -550,12 +550,8 @@ class OrganizerController extends BaseController
             ];
         }
         
-        $content = $this->renderView('organizer/contestants/index', [
+        $this->view('organizer/contestants/index', [
             'eventData' => $eventData,
-            'title' => 'Contestants'
-        ]);
-        
-        echo $this->renderLayout('organizer_layout', $content, [
             'title' => 'Contestants',
             'breadcrumbs' => [
                 ['title' => 'Contestants']
@@ -1649,13 +1645,505 @@ class OrganizerController extends BaseController
     
     public function createContestant()
     {
-        $content = $this->renderView('organizer/contestants/create', [
-            'title' => 'Add Contestant'
-        ]);
+        $tenantId = $this->session->getTenantId();
         
-        echo $this->renderLayout('organizer_layout', $content, [
+        // Get events for this tenant
+        $events = $this->eventModel->getEventsByTenant($tenantId);
+        
+        $this->view('organizer/contestants/create', [
+            'events' => $events,
             'title' => 'Add Contestant'
         ]);
+    }
+
+    /**
+     * Store new contestants with category assignments
+     */
+    public function storeContestant()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(ORGANIZER_URL . '/contestants/create', 'Invalid request method', 'error');
+            return;
+        }
+
+        try {
+            $tenantId = $this->session->getTenantId();
+            $eventId = $_POST['event_id'] ?? null;
+            $contestants = $_POST['contestants'] ?? [];
+
+            // Validation
+            if (!$eventId) {
+                $this->redirect(ORGANIZER_URL . '/contestants/create', 'Please select an event', 'error');
+                return;
+            }
+
+            if (empty($contestants)) {
+                $this->redirect(ORGANIZER_URL . '/contestants/create', 'Please add at least one contestant', 'error');
+                return;
+            }
+
+            // Verify event belongs to tenant
+            $event = $this->eventModel->find($eventId);
+            if (!$event || $event['tenant_id'] != $tenantId) {
+                $this->redirect(ORGANIZER_URL . '/contestants/create', 'Invalid event selected', 'error');
+                return;
+            }
+
+            // Start database transaction
+            $this->db->beginTransaction();
+
+            $createdCount = 0;
+            $errors = [];
+
+            foreach ($contestants as $contestantId => $contestantData) {
+                try {
+                    // Create contestant
+                    $contestantRecord = [
+                        'tenant_id' => $tenantId,
+                        'event_id' => $eventId,
+                        'name' => $contestantData['name'],
+                        'bio' => $contestantData['bio'] ?? '',
+                        'active' => 1
+                    ];
+
+                    // Handle photo upload
+                    $photoKey = "contestant_photo_{$contestantId}";
+                    if (isset($_FILES[$photoKey]) && $_FILES[$photoKey]['error'] === UPLOAD_ERR_OK) {
+                        $uploadResult = $this->handlePhotoUpload($_FILES[$photoKey], 'contestants');
+                        if ($uploadResult['success']) {
+                            $contestantRecord['image_url'] = $uploadResult['file_path'];
+                        } else {
+                            error_log("Photo upload failed for contestant {$contestantData['name']}: " . $uploadResult['error']);
+                            // Continue without photo - don't fail the entire contestant creation
+                        }
+                    } elseif (isset($_FILES[$photoKey]) && $_FILES[$photoKey]['error'] !== UPLOAD_ERR_NO_FILE) {
+                        // Log upload errors (but don't fail the creation)
+                        error_log("Photo upload error for contestant {$contestantData['name']}: " . $_FILES[$photoKey]['error']);
+                    }
+
+                    // Create contestant record
+                    $newContestantId = $this->contestantModel->create($contestantRecord);
+
+                    if ($newContestantId) {
+                        // Assign to categories with shortcode generation
+                        $categories = $contestantData['categories'] ?? [];
+                        if (!empty($categories)) {
+                            $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+                            
+                            foreach ($categories as $categoryId) {
+                                $contestantCategoryModel->assignContestantToCategory(
+                                    $newContestantId, 
+                                    $categoryId
+                                );
+                            }
+                        }
+
+                        $createdCount++;
+                    }
+
+                } catch (\Exception $e) {
+                    $errors[] = "Error creating contestant '{$contestantData['name']}': " . $e->getMessage();
+                    error_log("Contestant creation error: " . $e->getMessage());
+                }
+            }
+
+            // Commit transaction
+            $this->db->commit();
+
+            // Prepare success message
+            $message = "Successfully created {$createdCount} contestant(s)";
+            if (!empty($errors)) {
+                $message .= ". " . count($errors) . " error(s) occurred.";
+            }
+
+            $this->redirect(ORGANIZER_URL . '/contestants', $message, 'success');
+
+        } catch (\Exception $e) {
+            // Rollback transaction
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+            
+            error_log('Store contestant error: ' . $e->getMessage());
+            $this->redirect(ORGANIZER_URL . '/contestants/create', 'An error occurred while creating contestants: ' . $e->getMessage(), 'error');
+        }
+    }
+
+    /**
+     * Handle photo upload for contestants
+     */
+    private function handlePhotoUpload($file, $folder = 'contestants')
+    {
+        try {
+            // Basic validation
+            if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+                return ['success' => false, 'error' => 'Invalid upload file.'];
+            }
+
+            // Validate file type by extension (more reliable than MIME type)
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($extension, $allowedExtensions)) {
+                return ['success' => false, 'error' => 'Invalid file type. Only JPG, PNG, GIF, and WebP are allowed.'];
+            }
+
+            // Also check MIME type as secondary validation
+            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+            if (!in_array($file['type'], $allowedTypes)) {
+                return ['success' => false, 'error' => 'Invalid MIME type. Only image files are allowed.'];
+            }
+
+            // Check file size (2MB max)
+            if ($file['size'] > 2 * 1024 * 1024) {
+                return ['success' => false, 'error' => 'File too large. Maximum size is 2MB.'];
+            }
+
+            // Check if file is actually an image
+            $imageInfo = getimagesize($file['tmp_name']);
+            if ($imageInfo === false) {
+                return ['success' => false, 'error' => 'File is not a valid image.'];
+            }
+
+            // Create upload directory if it doesn't exist
+            $uploadDir = __DIR__ . '/../../public/uploads/' . $folder . '/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+
+            // Generate unique filename
+            $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = uniqid() . '_' . time() . '.' . $extension;
+            $filePath = $uploadDir . $filename;
+
+            // Move uploaded file
+            if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                // Verify file was actually moved and is readable
+                if (file_exists($filePath) && is_readable($filePath)) {
+                    return [
+                        'success' => true,
+                        'file_path' => '/public/uploads/' . $folder . '/' . $filename,
+                        'filename' => $filename
+                    ];
+                } else {
+                    return ['success' => false, 'error' => 'File was moved but is not accessible.'];
+                }
+            } else {
+                $error = error_get_last();
+                return ['success' => false, 'error' => 'Failed to move uploaded file: ' . ($error['message'] ?? 'Unknown error')];
+            }
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => 'Upload error: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Show individual contestant details
+     */
+    public function showContestant($id)
+    {
+        try {
+            $tenantId = $this->session->getTenantId();
+            
+            // Get contestant with event and category information
+            $sql = "
+                SELECT c.*, e.name as event_name, e.id as event_id,
+                       GROUP_CONCAT(DISTINCT cat.name) as categories,
+                       GROUP_CONCAT(DISTINCT cc.short_code) as shortcodes,
+                       COUNT(DISTINCT CASE WHEN t.status = 'success' THEN t.id END) as total_votes,
+                       COUNT(DISTINCT CASE WHEN t.status = 'success' THEN t.id END) as total_transactions
+                FROM contestants c
+                LEFT JOIN events e ON c.event_id = e.id
+                LEFT JOIN contestant_categories cc ON c.id = cc.contestant_id
+                LEFT JOIN categories cat ON cc.category_id = cat.id
+                LEFT JOIN transactions t ON c.id = t.contestant_id
+                WHERE c.id = :id AND c.tenant_id = :tenant_id
+                GROUP BY c.id
+            ";
+            
+            $contestant = $this->db->selectOne($sql, [
+                'id' => $id,
+                'tenant_id' => $tenantId
+            ]);
+            
+            if (!$contestant) {
+                $this->redirect(ORGANIZER_URL . '/contestants', 'Contestant not found', 'error');
+                return;
+            }
+            
+            $this->view('organizer/contestants/show', [
+                'contestant' => $contestant,
+                'title' => 'Contestant Details - ' . $contestant['name']
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Show contestant error: ' . $e->getMessage());
+            error_log('Show contestant stack trace: ' . $e->getTraceAsString());
+            $this->redirect(ORGANIZER_URL . '/contestants', 'Error loading contestant details: ' . $e->getMessage(), 'error');
+        }
+    }
+
+    /**
+     * Show contestant edit form
+     */
+    public function editContestant($id)
+    {
+        try {
+            $tenantId = $this->session->getTenantId();
+            
+            // Get contestant details
+            $contestant = $this->db->selectOne("
+                SELECT c.*, e.name as event_name 
+                FROM contestants c
+                LEFT JOIN events e ON c.event_id = e.id
+                WHERE c.id = :id AND c.tenant_id = :tenant_id
+            ", [
+                'id' => $id,
+                'tenant_id' => $tenantId
+            ]);
+            
+            if (!$contestant) {
+                $this->redirect(ORGANIZER_URL . '/contestants', 'Contestant not found', 'error');
+                return;
+            }
+            
+            // Get contestant's current categories (remove active column check)
+            $currentCategories = $this->db->select("
+                SELECT cc.category_id, cc.short_code, cat.name as category_name
+                FROM contestant_categories cc
+                INNER JOIN categories cat ON cc.category_id = cat.id
+                WHERE cc.contestant_id = :contestant_id
+            ", ['contestant_id' => $id]);
+            
+            // Get all categories for this event (remove active column check)
+            $allCategories = $this->db->select("
+                SELECT id, name
+                FROM categories
+                WHERE event_id = :event_id
+                ORDER BY name ASC
+            ", ['event_id' => $contestant['event_id']]);
+            
+            $this->view('organizer/contestants/edit', [
+                'contestant' => $contestant,
+                'current_categories' => $currentCategories,
+                'all_categories' => $allCategories,
+                'title' => 'Edit Contestant - ' . $contestant['name']
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Edit contestant error: ' . $e->getMessage());
+            error_log('Edit contestant stack trace: ' . $e->getTraceAsString());
+            $this->redirect(ORGANIZER_URL . '/contestants', 'Error loading contestant for editing: ' . $e->getMessage(), 'error');
+        }
+    }
+
+    /**
+     * Update contestant details
+     */
+    public function updateContestant($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(ORGANIZER_URL . "/contestants/{$id}/edit", 'Invalid request method', 'error');
+            return;
+        }
+
+        try {
+            $tenantId = $this->session->getTenantId();
+            
+            // Verify contestant belongs to tenant
+            $contestant = $this->db->selectOne("
+                SELECT * FROM contestants 
+                WHERE id = :id AND tenant_id = :tenant_id
+            ", [
+                'id' => $id,
+                'tenant_id' => $tenantId
+            ]);
+            
+            if (!$contestant) {
+                $this->redirect(ORGANIZER_URL . '/contestants', 'Contestant not found', 'error');
+                return;
+            }
+            
+            // Start transaction
+            $this->db->beginTransaction();
+            
+            // Update contestant basic info
+            $updateData = [
+                'name' => $_POST['name'] ?? $contestant['name'],
+                'bio' => $_POST['bio'] ?? '',
+                'active' => isset($_POST['active']) ? 1 : 0
+            ];
+            
+            // Handle photo upload if provided
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $uploadResult = $this->handlePhotoUpload($_FILES['photo'], 'contestants');
+                if ($uploadResult['success']) {
+                    $updateData['image_url'] = $uploadResult['file_path'];
+                }
+            }
+            
+            // Update contestant record
+            $this->db->query("
+                UPDATE contestants 
+                SET name = :name, bio = :bio, active = :active" . 
+                (isset($updateData['image_url']) ? ", image_url = :image_url" : "") . "
+                WHERE id = :id
+            ", array_merge($updateData, ['id' => $id]));
+            
+            // Update category assignments if provided
+            if (isset($_POST['categories'])) {
+                // Deactivate current assignments
+                $this->db->query("
+                    UPDATE contestant_categories 
+                    SET active = 0 
+                    WHERE contestant_id = :contestant_id
+                ", ['contestant_id' => $id]);
+                
+                // Add new assignments
+                $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+                foreach ($_POST['categories'] as $categoryId) {
+                    $contestantCategoryModel->assignContestantToCategory($id, $categoryId);
+                }
+            }
+            
+            $this->db->commit();
+            
+            $this->redirect(ORGANIZER_URL . "/contestants/{$id}", 'Contestant updated successfully', 'success');
+            
+        } catch (\Exception $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollback();
+            }
+            
+            error_log('Update contestant error: ' . $e->getMessage());
+            $this->redirect(ORGANIZER_URL . "/contestants/{$id}/edit", 'Error updating contestant: ' . $e->getMessage(), 'error');
+        }
+    }
+
+    /**
+     * Show contestant statistics
+     */
+    public function contestantStats($id)
+    {
+        try {
+            $tenantId = $this->session->getTenantId();
+            
+            // Get contestant basic info
+            $contestant = $this->db->selectOne("
+                SELECT c.*, e.name as event_name, e.id as event_id
+                FROM contestants c
+                LEFT JOIN events e ON c.event_id = e.id
+                WHERE c.id = :id AND c.tenant_id = :tenant_id
+            ", [
+                'id' => $id,
+                'tenant_id' => $tenantId
+            ]);
+            
+            if (!$contestant) {
+                $this->redirect(ORGANIZER_URL . '/contestants', 'Contestant not found', 'error');
+                return;
+            }
+            
+            // Get voting statistics (try with votes table first, fallback to transactions only)
+            try {
+                $voteStats = $this->db->selectOne("
+                    SELECT 
+                        COALESCE(SUM(CASE WHEN t.status = 'success' THEN 
+                            COALESCE(v.quantity, 1) 
+                        ELSE 0 END), 0) as total_votes,
+                        COUNT(DISTINCT CASE WHEN t.status = 'success' THEN t.id END) as total_transactions,
+                        COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as total_revenue,
+                        COUNT(DISTINCT CASE WHEN t.status = 'success' THEN DATE(t.created_at) END) as voting_days
+                    FROM transactions t
+                    LEFT JOIN votes v ON t.id = v.transaction_id
+                    WHERE t.contestant_id = :contestant_id
+                ", ['contestant_id' => $id]);
+            } catch (\Exception $e) {
+                error_log("Votes table query failed, using transactions only: " . $e->getMessage());
+                // Fallback to transactions table only
+                $voteStats = $this->db->selectOne("
+                    SELECT 
+                        COUNT(CASE WHEN t.status = 'success' THEN t.id END) as total_votes,
+                        COUNT(DISTINCT CASE WHEN t.status = 'success' THEN t.id END) as total_transactions,
+                        COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as total_revenue,
+                        COUNT(DISTINCT CASE WHEN t.status = 'success' THEN DATE(t.created_at) END) as voting_days
+                    FROM transactions t
+                    WHERE t.contestant_id = :contestant_id
+                ", ['contestant_id' => $id]);
+            }
+            
+            // Get category-wise breakdown (try with votes table first, fallback to transactions only)
+            try {
+                $categoryStats = $this->db->select("
+                    SELECT 
+                        cat.name as category_name,
+                        cc.short_code,
+                        COALESCE(SUM(CASE WHEN t.status = 'success' THEN 
+                            COALESCE(v.quantity, 1) 
+                        ELSE 0 END), 0) as votes,
+                        COUNT(DISTINCT CASE WHEN t.status = 'success' THEN t.id END) as transactions
+                    FROM contestant_categories cc
+                    INNER JOIN categories cat ON cc.category_id = cat.id
+                    LEFT JOIN transactions t ON cc.contestant_id = t.contestant_id AND cc.category_id = t.category_id
+                    LEFT JOIN votes v ON t.id = v.transaction_id
+                    WHERE cc.contestant_id = :contestant_id
+                    GROUP BY cc.id, cat.name, cc.short_code
+                    ORDER BY votes DESC
+                ", ['contestant_id' => $id]);
+            } catch (\Exception $e) {
+                error_log("Category stats with votes failed, using transactions only: " . $e->getMessage());
+                // Fallback to transactions table only
+                $categoryStats = $this->db->select("
+                    SELECT 
+                        cat.name as category_name,
+                        cc.short_code,
+                        COUNT(CASE WHEN t.status = 'success' THEN t.id END) as votes,
+                        COUNT(DISTINCT CASE WHEN t.status = 'success' THEN t.id END) as transactions
+                    FROM contestant_categories cc
+                    INNER JOIN categories cat ON cc.category_id = cat.id
+                    LEFT JOIN transactions t ON cc.contestant_id = t.contestant_id AND cc.category_id = t.category_id
+                    WHERE cc.contestant_id = :contestant_id
+                    GROUP BY cc.id, cat.name, cc.short_code
+                    ORDER BY votes DESC
+                ", ['contestant_id' => $id]);
+            }
+            
+            // Get recent voting activity (using both votes and transactions)
+            $recentVotes = $this->db->select("
+                SELECT 
+                    t.created_at,
+                    t.amount,
+                    COALESCE(v.quantity, 1) as quantity,
+                    cat.name as category_name,
+                    'Anonymous' as voter_name,
+                    t.msisdn
+                FROM transactions t
+                LEFT JOIN votes v ON t.id = v.transaction_id
+                LEFT JOIN categories cat ON t.category_id = cat.id
+                WHERE t.contestant_id = :contestant_id AND t.status = 'success'
+                ORDER BY t.created_at DESC
+                LIMIT 20
+            ", ['contestant_id' => $id]);
+            
+            // Debug logging to check what data we're getting
+            error_log("Contestant Stats Debug for ID {$id}:");
+            error_log("Vote Stats: " . json_encode($voteStats));
+            error_log("Category Stats: " . json_encode($categoryStats));
+            error_log("Recent Votes: " . json_encode($recentVotes));
+            
+            $this->view('organizer/contestants/stats', [
+                'contestant' => $contestant,
+                'vote_stats' => $voteStats,
+                'category_stats' => $categoryStats,
+                'recent_votes' => $recentVotes,
+                'title' => 'Statistics - ' . $contestant['name']
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Contestant stats error: ' . $e->getMessage());
+            error_log('Contestant stats stack trace: ' . $e->getTraceAsString());
+            $this->redirect(ORGANIZER_URL . '/contestants', 'Error loading contestant statistics: ' . $e->getMessage(), 'error');
+        }
     }
     
     public function categories()

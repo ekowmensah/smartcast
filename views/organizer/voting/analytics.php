@@ -295,7 +295,7 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <?php if ($contestant['image_url']): ?>
-                                                    <img src="<?= htmlspecialchars($contestant['image_url']) ?>" 
+                                                    <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                                          class="rounded-circle me-2" width="32" height="32"
                                                          style="object-fit: cover;">
                                                 <?php else: ?>
