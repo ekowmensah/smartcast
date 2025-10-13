@@ -187,7 +187,7 @@
                  data-name="<?= strtolower($event['name']) ?>">
                 <div class="card h-100 shadow-sm border-0">
                     <?php if (!empty($event['featured_image'])): ?>
-                        <img src="<?= htmlspecialchars($event['featured_image']) ?>" class="card-img-top" style="height: 160px; object-fit: cover;">
+                        <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" class="card-img-top" style="height: 160px; object-fit: cover;">
                     <?php else: ?>
                         <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center position-relative" style="height: 160px;">
                             <i class="fas fa-calendar-alt fa-2x text-white opacity-75"></i>
@@ -259,7 +259,7 @@
                                     $canPublish = is_null($maxEvents) || $currentEventCount < $maxEvents;
                                     ?>
                                     <a href="<?= ORGANIZER_URL ?>/events/wizard?edit=<?= $event['id'] ?>" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-magic me-1"></i>Edit
+                                        <i class="fas fa-magic me-1"></i>Edit Draft
                                     </a>
                                     <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/preview" class="btn btn-outline-info btn-sm">
                                         <i class="fas fa-eye me-1"></i>Preview

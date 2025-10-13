@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="app-url" content="<?= APP_URL ?>">
     <title><?= $title ?? 'SmartCast' ?> - <?= APP_NAME ?></title>
     
     <!-- CoreUI CSS -->

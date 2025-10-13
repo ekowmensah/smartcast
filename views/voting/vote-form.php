@@ -613,7 +613,7 @@ body {
     <div class="nominee-card">
         <div class="nominee-header">
             <?php if (!empty($contestant['image_url'])): ?>
-                <img src="<?= htmlspecialchars(\SmartCast\Helpers\ImageHelper::getImageUrl($contestant['image_url'])) ?>" 
+                <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                      alt="<?= htmlspecialchars($contestant['name']) ?>"
                      class="nominee-avatar">
             <?php else: ?>

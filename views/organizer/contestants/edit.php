@@ -58,8 +58,16 @@ $content = ob_start();
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="photo" class="form-label">Photo</label>
-                                <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                                <input type="file" class="form-control" id="photo" name="photo" accept="image/*" onchange="previewContestantImage(this)">
                                 <div class="form-text">JPG, PNG, GIF, WebP (max 2MB)</div>
+                                <div id="photo-preview" class="mt-2" style="display: none;">
+                                    <small class="text-info">New photo preview:</small>
+                                    <div class="mt-1">
+                                        <img id="preview-photo" src="" alt="Preview" 
+                                             style="max-width: 150px; max-height: 150px; object-fit: cover;" 
+                                             class="img-thumbnail">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -74,10 +82,10 @@ $content = ob_start();
                     </div>
                     
                     <?php if ($contestant['image_url']): ?>
-                        <div class="mb-3">
+                        <div class="mb-3" id="current-photo">
                             <label class="form-label">Current Photo:</label>
                             <div>
-                                <img src="<?= htmlspecialchars(\SmartCast\Helpers\ImageHelper::getImageUrl($contestant['image_url'])) ?>" 
+                                <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                      alt="Current photo" 
                                      class="img-thumbnail" 
                                      style="max-width: 150px; max-height: 150px; object-fit: cover;">
@@ -211,6 +219,56 @@ $content = ob_start();
         </div>
     </div>
 </form>
+
+<script>
+// Contestant photo preview
+function previewContestantImage(input) {
+    const previewDiv = document.getElementById('photo-preview');
+    const previewImg = document.getElementById('preview-photo');
+    const currentPhotoDiv = document.getElementById('current-photo');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate file size (2MB max for contestants)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Photo must be less than 2MB');
+            input.value = '';
+            previewDiv.style.display = 'none';
+            if (currentPhotoDiv) {
+                currentPhotoDiv.style.opacity = '1';
+            }
+            return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            input.value = '';
+            previewDiv.style.display = 'none';
+            if (currentPhotoDiv) {
+                currentPhotoDiv.style.opacity = '1';
+            }
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewDiv.style.display = 'block';
+            if (currentPhotoDiv) {
+                currentPhotoDiv.style.opacity = '0.5';
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewDiv.style.display = 'none';
+        if (currentPhotoDiv) {
+            currentPhotoDiv.style.opacity = '1';
+        }
+    }
+}
+</script>
 
 <?php 
 $content = ob_get_clean();

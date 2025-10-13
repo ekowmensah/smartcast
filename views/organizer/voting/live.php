@@ -612,7 +612,7 @@ function updateLeaderboard(contestants) {
         }
         
         const imageHtml = contestant.image_url ? 
-            `<img src="${contestant.image_url}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">` :
+            `<img src="${getImageUrl(contestant.image_url)}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">` :
             `<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
                 ${contestant.name.charAt(0).toUpperCase()}
             </div>`;
@@ -793,6 +793,30 @@ function updateChartPeriod(period) {
     
     // This would make an AJAX call to get data for different periods
     console.log('Updating chart period to:', period);
+}
+
+// Image URL helper function
+function getImageUrl(imagePath) {
+    if (!imagePath) return null;
+    
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+    }
+    
+    // If it starts with APP_URL, return as is
+    const appUrl = '<?= APP_URL ?>';
+    if (imagePath.startsWith(appUrl)) {
+        return imagePath;
+    }
+    
+    // If it's a relative path starting with /, add APP_URL
+    if (imagePath.startsWith('/')) {
+        return appUrl + imagePath;
+    }
+    
+    // Otherwise, assume it's a relative path and add APP_URL with leading slash
+    return appUrl + '/' + imagePath.replace(/^\/+/, '');
 }
 
 // Cleanup on page unload

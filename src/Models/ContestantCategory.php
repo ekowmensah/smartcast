@@ -302,11 +302,13 @@ class ContestantCategory extends BaseModel
         }
         
         if ($existing) {
-            // Update existing assignment with new shortcode
-            return $this->update($existing['id'], [
-                'short_code' => $shortCode,
-                'active' => 1
-            ]);
+            // Update existing assignment - preserve shortcode if custom one provided
+            $updateData = ['active' => 1];
+            if ($customShortCode || !$existing['short_code']) {
+                // Only update shortcode if custom one provided or existing is empty
+                $updateData['short_code'] = $shortCode;
+            }
+            return $this->update($existing['id'], $updateData);
         } else {
             // Create new assignment with unique shortcode
             return $this->create([

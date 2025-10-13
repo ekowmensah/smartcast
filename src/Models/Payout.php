@@ -192,7 +192,7 @@ class Payout extends BaseModel
         // Restore balance if not already processed
         if ($payout['status'] === self::STATUS_QUEUED) {
             $balanceModel = new TenantBalance();
-            $balanceModel->addEarnings($payout['tenant_id'], $payout['amount']);
+            $balanceModel->reversePayout($payout['tenant_id'], $payout['amount']);
         }
         
         return true;
@@ -209,36 +209,112 @@ class Payout extends BaseModel
         return $this->findAll($conditions, 'created_at DESC');
     }
     
-    public function getPayoutStats($tenantId = null)
+    /**
+     * Get payout statistics
+     */
+    public function getPayoutStats($tenantId)
     {
         $sql = "
             SELECT 
-                status,
-                COUNT(*) as count,
-                SUM(amount) as total_amount
-            FROM {$this->table}
+                COUNT(*) as total_count,
+                SUM(CASE WHEN status = 'success' THEN amount ELSE 0 END) as total_paid,
+                SUM(CASE WHEN status IN ('queued', 'processing') THEN amount ELSE 0 END) as pending_amount,
+                AVG(CASE WHEN status = 'success' THEN amount ELSE NULL END) as avg_amount
+            FROM payouts 
+            WHERE tenant_id = :tenant_id
         ";
         
-        $params = [];
+        return $this->db->selectOne($sql, ['tenant_id' => $tenantId]);
+    }
+    
+    /**
+     * Get pending payouts for super admin
+     */
+    public function getPendingPayouts()
+    {
+        $sql = "
+            SELECT 
+                p.*,
+                t.name as tenant_name,
+                t.email as tenant_email,
+                pm.method_name,
+                pm.account_details,
+                pm.method_type
+            FROM payouts p
+            INNER JOIN tenants t ON p.tenant_id = t.id
+            LEFT JOIN payout_methods pm ON p.payout_method_id = pm.id
+            WHERE p.status IN ('queued', 'processing')
+            ORDER BY p.created_at ASC
+        ";
         
-        if ($tenantId) {
-            $sql .= " WHERE tenant_id = :tenant_id";
-            $params['tenant_id'] = $tenantId;
-        }
+        return $this->db->select($sql);
+    }
+    
+    /**
+     * Get payout statistics for super admin
+     */
+    public function getPayoutStatistics()
+    {
+        $sql = "
+            SELECT 
+                SUM(CASE WHEN status = 'success' THEN amount ELSE 0 END) as total_paid,
+                SUM(CASE WHEN status IN ('queued', 'processing') THEN amount ELSE 0 END) as pending_amount,
+                COUNT(CASE WHEN status = 'success' AND MONTH(processed_at) = MONTH(NOW()) AND YEAR(processed_at) = YEAR(NOW()) THEN 1 END) as this_month_count,
+                AVG(CASE WHEN status = 'success' THEN amount ELSE NULL END) as avg_payout
+            FROM payouts
+        ";
         
-        $sql .= " GROUP BY status";
+        return $this->db->selectOne($sql);
+    }
+    
+    /**
+     * Get recent payouts for super admin
+     */
+    public function getRecentPayouts($limit = 50)
+    {
+        $sql = "
+            SELECT 
+                p.*,
+                t.name as tenant_name,
+                pm.method_name,
+                pm.method_type
+            FROM payouts p
+            INNER JOIN tenants t ON p.tenant_id = t.id
+            LEFT JOIN payout_methods pm ON p.payout_method_id = pm.id
+            ORDER BY p.created_at DESC
+            LIMIT :limit
+        ";
         
-        return $this->db->select($sql, $params);
+        return $this->db->select($sql, ['limit' => $limit]);
+    }
+    
+    /**
+     * Get payout with full details for super admin
+     */
+    public function getPayoutWithDetails($payoutId)
+    {
+        $sql = "
+            SELECT 
+                p.*,
+                t.name as tenant_name,
+                t.email as tenant_email,
+                t.phone as tenant_phone,
+                pm.method_name,
+                pm.method_type,
+                pm.account_details,
+                pm.is_verified as method_verified
+            FROM payouts p
+            INNER JOIN tenants t ON p.tenant_id = t.id
+            LEFT JOIN payout_methods pm ON p.payout_method_id = pm.id
+            WHERE p.id = :payout_id
+        ";
+        
+        return $this->db->selectOne($sql, ['payout_id' => $payoutId]);
     }
     
     private function generatePayoutId()
     {
         return 'PO_' . date('Ymd') . '_' . strtoupper(uniqid());
-    }
-    
-    public function getPendingPayouts()
-    {
-        return $this->findAll(['status' => self::STATUS_QUEUED], 'created_at ASC');
     }
     
     public function retryFailedPayout($payoutId)

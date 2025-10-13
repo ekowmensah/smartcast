@@ -165,7 +165,7 @@
                                             <div class="mt-2" id="current-image">
                                                 <small class="text-success">✓ Current image: <?= basename($eventData['featured_image']) ?></small>
                                                 <div class="mt-1">
-                                                    <img src="<?= htmlspecialchars($eventData['featured_image']) ?>" 
+                                                    <img src="<?= htmlspecialchars(image_url($eventData['featured_image'])) ?>" 
                                                          alt="Current featured image" 
                                                          style="max-width: 200px; max-height: 100px; object-fit: cover;" 
                                                          class="img-thumbnail">
@@ -944,7 +944,7 @@ function renderNominees() {
                                     <div class="mt-2" id="current-nominee-image-${nominee.id}">
                                         <small class="text-success">✓ Current photo</small>
                                         <div class="mt-1">
-                                            <img src="${nominee.image_url}" 
+                                            <img src="${getImageUrl(nominee.image_url)}" 
                                                  alt="Current nominee photo" 
                                                  style="width: 60px; height: 60px; object-fit: cover;" 
                                                  class="img-thumbnail">

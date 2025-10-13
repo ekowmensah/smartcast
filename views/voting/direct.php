@@ -31,7 +31,7 @@
                     <div class="row mb-4">
                         <div class="col-md-4 text-center mb-3 mb-md-0">
                             <?php if ($contestant['image_url']): ?>
-                                <img src="<?= htmlspecialchars(\SmartCast\Helpers\ImageHelper::getImageUrl($contestant['image_url'])) ?>" 
+                                <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                      alt="<?= htmlspecialchars($contestant['name']) ?>" 
                                      class="img-fluid rounded-circle nominee-image">
                             <?php else: ?>

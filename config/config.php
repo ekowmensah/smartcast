@@ -26,6 +26,14 @@ if (!function_exists('image_url')) {
             return null;
         }
         
+        // Fix malformed URLs (missing slash in http:/)
+        if (strpos($imagePath, 'http:/') === 0 && strpos($imagePath, 'http://') !== 0) {
+            $imagePath = str_replace('http:/', 'http://', $imagePath);
+        }
+        if (strpos($imagePath, 'https:/') === 0 && strpos($imagePath, 'https://') !== 0) {
+            $imagePath = str_replace('https:/', 'https://', $imagePath);
+        }
+        
         // If it's already a full URL, return as is
         if (strpos($imagePath, 'http://') === 0 || strpos($imagePath, 'https://') === 0) {
             return $imagePath;

@@ -132,6 +132,33 @@ class SubscriptionPlan extends BaseModel
             $plan['events_display'] = is_null($plan['max_events']) ? 'Unlimited' : $plan['max_events'];
             $plan['contestants_display'] = is_null($plan['max_contestants_per_event']) ? 'Unlimited' : number_format($plan['max_contestants_per_event']);
             $plan['votes_display'] = is_null($plan['max_votes_per_event']) ? 'Unlimited' : number_format($plan['max_votes_per_event']);
+            
+            // Get fee rule information
+            if ($plan['fee_rule_id']) {
+                $feeRule = $this->db->selectOne(
+                    "SELECT name, percentage_rate, fixed_amount, description FROM fee_rules WHERE id = :id AND active = 1",
+                    ['id' => $plan['fee_rule_id']]
+                );
+                
+                if ($feeRule) {
+                    $plan['fee_rule'] = $feeRule;
+                    
+                    // Format fee display
+                    if ($feeRule['percentage_rate'] > 0 && $feeRule['fixed_amount'] > 0) {
+                        $plan['fee_display'] = number_format($feeRule['percentage_rate'], 1) . '% + $' . number_format($feeRule['fixed_amount'], 2);
+                    } elseif ($feeRule['percentage_rate'] > 0) {
+                        $plan['fee_display'] = number_format($feeRule['percentage_rate'], 1) . '%';
+                    } elseif ($feeRule['fixed_amount'] > 0) {
+                        $plan['fee_display'] = '$' . number_format($feeRule['fixed_amount'], 2);
+                    } else {
+                        $plan['fee_display'] = 'No fees';
+                    }
+                } else {
+                    $plan['fee_display'] = 'Standard fees apply';
+                }
+            } else {
+                $plan['fee_display'] = 'Standard fees apply';
+            }
         }
         
         return $plans;

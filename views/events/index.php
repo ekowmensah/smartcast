@@ -77,7 +77,7 @@
                 <div class="card h-100 border-0 shadow-sm event-card-hover">
                     <div class="position-relative overflow-hidden">
                         <?php if ($event['featured_image']): ?>
-                            <img src="<?= htmlspecialchars($event['featured_image']) ?>" 
+                            <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
                                  class="card-img-top event-image" 
                                  alt="<?= htmlspecialchars($event['name']) ?>">
                         <?php else: ?>

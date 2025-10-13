@@ -197,7 +197,7 @@ $content = ob_start();
             </div>
             <div class="card-body text-center">
                 <?php if ($contestant['image_url']): ?>
-                    <img src="<?= htmlspecialchars(\SmartCast\Helpers\ImageHelper::getImageUrl($contestant['image_url'])) ?>" 
+                    <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                          alt="<?= htmlspecialchars($contestant['name']) ?>" 
                          class="img-thumbnail mb-3" 
                          style="max-width: 150px; max-height: 150px; object-fit: cover;">

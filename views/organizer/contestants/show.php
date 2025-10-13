@@ -59,7 +59,7 @@ $content = ob_start();
                     <div class="col-md-6">
                         <?php if ($contestant['image_url']): ?>
                             <div class="text-center">
-                                <img src="<?= htmlspecialchars(\SmartCast\Helpers\ImageHelper::getImageUrl($contestant['image_url'])) ?>" 
+                                <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                      alt="<?= htmlspecialchars($contestant['name']) ?>" 
                                      class="img-thumbnail" 
                                      style="max-width: 200px; max-height: 200px; object-fit: cover;">

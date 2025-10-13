@@ -60,6 +60,25 @@ class TenantBalance extends BaseModel
         ]);
     }
     
+    public function addToBalance($tenantId, $amount)
+    {
+        $balance = $this->getBalance($tenantId);
+        
+        return $this->update($balance['id'], [
+            'available' => $balance['available'] + $amount
+        ]);
+    }
+    
+    public function reversePayout($tenantId, $amount)
+    {
+        $balance = $this->getBalance($tenantId);
+        
+        return $this->update($balance['id'], [
+            'available' => $balance['available'] + $amount,
+            'total_paid' => max(0, $balance['total_paid'] - $amount)
+        ]);
+    }
+    
     public function addPendingAmount($tenantId, $amount)
     {
         $balance = $this->getBalance($tenantId);

@@ -32,6 +32,9 @@
     <script src="<?= COREUI_JS ?>"></script>
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/public.js"></script>
+    <!-- Image Helper -->
+    <script src="<?= APP_URL ?>/public/assets/js/image-helper.js"></script>
+    <script>window.APP_URL = '<?= APP_URL ?>';</script>
     
     <!-- Auto-hide alerts -->
     <script>

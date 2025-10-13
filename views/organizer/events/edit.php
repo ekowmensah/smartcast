@@ -54,13 +54,21 @@
                     <div class="mb-3">
                         <label for="featured_image" class="form-label">Featured Image</label>
                         <?php if (!empty($event['featured_image'])): ?>
-                            <div class="mb-2">
-                                <img src="<?= htmlspecialchars($event['featured_image']) ?>" alt="Current featured image" class="img-thumbnail" style="max-height: 100px;">
+                            <div class="mb-2" id="current-image">
+                                <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" alt="Current featured image" class="img-thumbnail" style="max-height: 100px;">
                                 <div class="small text-muted">Current image</div>
                             </div>
                         <?php endif; ?>
-                        <input type="file" class="form-control" id="featured_image" name="featured_image" accept="image/*">
+                        <input type="file" class="form-control" id="featured_image" name="featured_image" accept="image/*" onchange="previewEventImage(this)">
                         <div class="form-text">Upload a new banner image to replace the current one (JPG, PNG, max 5MB)</div>
+                        <div id="image-preview" class="mt-2" style="display: none;">
+                            <small class="text-info">New image preview:</small>
+                            <div class="mt-1">
+                                <img id="preview-img" src="" alt="Preview" 
+                                     style="max-width: 200px; max-height: 100px; object-fit: cover;" 
+                                     class="img-thumbnail">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -236,6 +244,54 @@ function publishEvent() {
         form.action = '<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/publish';
         document.body.appendChild(form);
         form.submit();
+    }
+}
+
+// Event image preview
+function previewEventImage(input) {
+    const previewDiv = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const currentImageDiv = document.getElementById('current-image');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image must be less than 5MB');
+            input.value = '';
+            previewDiv.style.display = 'none';
+            if (currentImageDiv) {
+                currentImageDiv.style.opacity = '1';
+            }
+            return;
+        }
+        
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            input.value = '';
+            previewDiv.style.display = 'none';
+            if (currentImageDiv) {
+                currentImageDiv.style.opacity = '1';
+            }
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewDiv.style.display = 'block';
+            if (currentImageDiv) {
+                currentImageDiv.style.opacity = '0.5';
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewDiv.style.display = 'none';
+        if (currentImageDiv) {
+            currentImageDiv.style.opacity = '1';
+        }
     }
 }
 </script>

@@ -188,7 +188,8 @@ abstract class BaseController
         $filePath = $uploadDir . $filename;
         
         if (move_uploaded_file($file['tmp_name'], $filePath)) {
-            return UPLOAD_URL . $directory . '/' . $filename;
+            // Return relative path instead of full URL for better portability
+            return 'public/uploads/' . $directory . '/' . $filename;
         } else {
             throw new \Exception('Failed to upload file');
         }

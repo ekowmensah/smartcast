@@ -38,7 +38,7 @@
                 <div class="col-lg-4">
                     <?php if (!empty($event['featured_image'])): ?>
                         <div class="hero-image">
-                            <img src="<?= htmlspecialchars($event['featured_image']) ?>" 
+                            <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
                                  alt="<?= htmlspecialchars($event['name']) ?>"
                                  class="img-fluid rounded-3 shadow-lg">
                         </div>

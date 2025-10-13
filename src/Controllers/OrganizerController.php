@@ -785,15 +785,14 @@ class OrganizerController extends BaseController
         
         $sql = "
             SELECT 
-                COALESCE(SUM(CASE WHEN t.created_at >= :this_week_start THEN t.amount END), 0) as this_week,
-                COALESCE(SUM(CASE WHEN t.created_at BETWEEN :last_week_start AND :last_week_end THEN t.amount END), 0) as last_week
-            FROM transactions t
-            INNER JOIN events e ON t.event_id = e.id
-            WHERE e.tenant_id = :tenant_id
-            AND t.status = 'success'
+                COALESCE(SUM(CASE WHEN rt.created_at >= :this_week_start THEN rt.net_tenant_amount END), 0) as this_week,
+                COALESCE(SUM(CASE WHEN rt.created_at BETWEEN :last_week_start AND :last_week_end THEN rt.net_tenant_amount END), 0) as last_week
+            FROM revenue_transactions rt
+            WHERE rt.tenant_id = :tenant_id
+            AND rt.distribution_status = 'completed'
         ";
         
-        $result = $this->eventModel->getDatabase()->selectOne($sql, [
+        $result = $this->balanceModel->getDatabase()->selectOne($sql, [
             'tenant_id' => $tenantId,
             'this_week_start' => $thisWeekStart,
             'last_week_start' => $lastWeekStart,
@@ -838,12 +837,11 @@ class OrganizerController extends BaseController
     {
         $today = date('Y-m-d');
         $sql = "
-            SELECT COALESCE(SUM(rs.amount), 0) as today_earnings
-            FROM revenue_shares rs
-            INNER JOIN transactions t ON rs.transaction_id = t.id
-            INNER JOIN events e ON t.event_id = e.id
-            WHERE e.tenant_id = :tenant_id
-            AND DATE(rs.created_at) = :today
+            SELECT COALESCE(SUM(rt.net_tenant_amount), 0) as today_earnings
+            FROM revenue_transactions rt
+            WHERE rt.tenant_id = :tenant_id
+            AND DATE(rt.created_at) = :today
+            AND rt.distribution_status = 'completed'
         ";
         
         $result = $this->balanceModel->getDatabase()->selectOne($sql, [
@@ -860,11 +858,10 @@ class OrganizerController extends BaseController
             SELECT 
                 e.id,
                 e.name,
-                COUNT(DISTINCT t.id) as transaction_count,
-                COALESCE(SUM(t.amount - rs.amount), 0) as total_revenue
+                COUNT(DISTINCT rt.id) as transaction_count,
+                COALESCE(SUM(rt.net_tenant_amount), 0) as total_revenue
             FROM events e
-            LEFT JOIN transactions t ON e.id = t.event_id AND t.status = 'success'
-            LEFT JOIN revenue_shares rs ON t.id = rs.transaction_id
+            LEFT JOIN revenue_transactions rt ON e.id = rt.event_id AND rt.distribution_status = 'completed'
             WHERE e.tenant_id = :tenant_id
             GROUP BY e.id, e.name
             HAVING total_revenue > 0
@@ -928,13 +925,11 @@ class OrganizerController extends BaseController
             $labels[] = date('M j', strtotime($date));
             
             $sql = "
-                SELECT COALESCE(SUM(t.amount - rs.amount), 0) as daily_revenue
-                FROM transactions t
-                INNER JOIN events e ON t.event_id = e.id
-                LEFT JOIN revenue_shares rs ON t.id = rs.transaction_id
-                WHERE e.tenant_id = :tenant_id
-                AND t.status = 'success'
-                AND DATE(t.created_at) = :date
+                SELECT COALESCE(SUM(rt.net_tenant_amount), 0) as daily_revenue
+                FROM revenue_transactions rt
+                WHERE rt.tenant_id = :tenant_id
+                AND rt.distribution_status = 'completed'
+                AND DATE(rt.created_at) = :date
             ";
             
             $result = $this->balanceModel->getDatabase()->selectOne($sql, [
@@ -1146,32 +1141,57 @@ class OrganizerController extends BaseController
             // Step 3: Handle Nominees and Assign to Categories
             $contestantModel = new \SmartCast\Models\Contestant();
             
+            // Get existing contestants for comparison if editing
+            $existingContestants = [];
             if ($isEditing) {
-                // Delete existing contestants for this event
                 $existingContestants = $contestantModel->findAll(['event_id' => $eventId]);
-                foreach ($existingContestants as $existingContestant) {
-                    $contestantModel->delete($existingContestant['id']);
+                error_log("DEBUG: Found " . count($existingContestants) . " existing contestants");
+                foreach ($existingContestants as $contestant) {
+                    error_log("DEBUG: Existing contestant ID: " . $contestant['id'] . ", name: " . $contestant['name'] . ", image: " . ($contestant['image_url'] ?? 'NULL'));
                 }
             }
             
-            // Create new nominees
+            // Handle nominees (update existing or create new)
             if (!empty($data['nominees']) && is_array($data['nominees']) && !empty($categoryIds)) {
+                $processedContestantIds = [];
+                
                 foreach ($data['nominees'] as $nomineeId => $nomineeData) {
                     if (!empty($nomineeData['name'])) {
+                        error_log("DEBUG: Processing nominee ID: $nomineeId, name: " . $nomineeData['name']);
+                        
+                        // Check if this is an existing contestant (when editing) - match by name
+                        $existingContestant = null;
+                        if ($isEditing) {
+                            foreach ($existingContestants as $contestant) {
+                                if ($contestant['name'] === $nomineeData['name']) {
+                                    $existingContestant = $contestant;
+                                    error_log("DEBUG: Found existing contestant by name match: " . $contestant['name'] . " with image: " . ($contestant['image_url'] ?? 'NULL'));
+                                    break;
+                                }
+                            }
+                            if (!$existingContestant) {
+                                error_log("DEBUG: No existing contestant found for name: " . $nomineeData['name']);
+                            }
+                        }
+                        
                         // Handle nominee photo upload
                         $nomineeImagePath = null;
                         $photoFieldName = "nominee_photo_{$nomineeId}";
                         if (isset($_FILES[$photoFieldName]) && $_FILES[$photoFieldName]['error'] === UPLOAD_ERR_OK) {
                             $nomineeImagePath = $this->handleImageUpload($_FILES[$photoFieldName], 'nominees');
+                        } elseif ($existingContestant && !empty($existingContestant['image_url'])) {
+                            // Preserve existing image if no new upload
+                            $nomineeImagePath = $existingContestant['image_url'];
+                            error_log("DEBUG: Preserving existing image for ID $nomineeId: $nomineeImagePath");
+                        } else {
+                            error_log("DEBUG: No image to preserve for ID $nomineeId");
                         }
                         
-                        // Create contestant (nominee)
                         $contestantData = [
                             'tenant_id' => $this->session->getTenantId(),
                             'event_id' => $eventId,
                             'name' => $nomineeData['name'],
                             'bio' => $nomineeData['bio'] ?? '',
-                            'contestant_code' => $contestantModel->generateContestantCode($this->session->getTenantId(), $eventId),
                             'created_by' => $this->session->getUserId(),
                             'active' => 1
                         ];
@@ -1180,7 +1200,17 @@ class OrganizerController extends BaseController
                             $contestantData['image_url'] = $nomineeImagePath;
                         }
                         
-                        $contestantId = $contestantModel->create($contestantData);
+                        if ($existingContestant) {
+                            // Update existing contestant
+                            $contestantData['contestant_code'] = $existingContestant['contestant_code']; // Preserve code
+                            $contestantModel->update($existingContestant['id'], $contestantData);
+                            $contestantId = $existingContestant['id'];
+                            $processedContestantIds[] = $existingContestant['id'];
+                        } else {
+                            // Create new contestant
+                            $contestantData['contestant_code'] = $contestantModel->generateContestantCode($this->session->getTenantId(), $eventId);
+                            $contestantId = $contestantModel->create($contestantData);
+                        }
                         
                         // Assign to categories with auto-generated shortcodes
                         if (!empty($nomineeData['categories']) && is_array($nomineeData['categories'])) {
@@ -1190,6 +1220,17 @@ class OrganizerController extends BaseController
                                     $contestantCategoryModel->assignContestantToCategory($contestantId, $newCategoryId);
                                 }
                             }
+                        }
+                    }
+                }
+                
+                // Clean up contestants that were removed (only when editing)
+                if ($isEditing) {
+                    foreach ($existingContestants as $existingContestant) {
+                        if (!in_array($existingContestant['id'], $processedContestantIds)) {
+                            // This contestant was removed from the form, delete it
+                            error_log("DEBUG: Deleting removed contestant: " . $existingContestant['name']);
+                            $contestantModel->delete($existingContestant['id']);
                         }
                     }
                 }
@@ -1992,6 +2033,19 @@ class OrganizerController extends BaseController
             
             // Update category assignments if provided
             if (isset($_POST['categories'])) {
+                // Get current active assignments to preserve existing shortcodes
+                $currentAssignments = $this->db->select("
+                    SELECT category_id, short_code 
+                    FROM contestant_categories 
+                    WHERE contestant_id = :contestant_id AND active = 1
+                ", ['contestant_id' => $id]);
+                
+                $currentCategoryIds = array_column($currentAssignments, 'category_id');
+                $currentShortCodes = [];
+                foreach ($currentAssignments as $assignment) {
+                    $currentShortCodes[$assignment['category_id']] = $assignment['short_code'];
+                }
+                
                 // Deactivate current assignments
                 $this->db->query("
                     UPDATE contestant_categories 
@@ -1999,10 +2053,17 @@ class OrganizerController extends BaseController
                     WHERE contestant_id = :contestant_id
                 ", ['contestant_id' => $id]);
                 
-                // Add new assignments
+                // Process category assignments
                 $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
                 foreach ($_POST['categories'] as $categoryId) {
-                    $contestantCategoryModel->assignContestantToCategory($id, $categoryId);
+                    if (in_array($categoryId, $currentCategoryIds)) {
+                        // Existing category - preserve shortcode
+                        $existingShortCode = $currentShortCodes[$categoryId];
+                        $contestantCategoryModel->assignContestantToCategory($id, $categoryId, $existingShortCode);
+                    } else {
+                        // New category - generate new shortcode
+                        $contestantCategoryModel->assignContestantToCategory($id, $categoryId);
+                    }
                 }
             }
             
@@ -3257,7 +3318,6 @@ class OrganizerController extends BaseController
         }
         
         $uploadPath = $uploadDir . $filename;
-        $webPath = UPLOAD_URL . $type . '/' . $filename;
         
         // Move uploaded file
         if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
@@ -3267,13 +3327,8 @@ class OrganizerController extends BaseController
         // Optimize image (optional - resize if too large)
         $this->optimizeImage($uploadPath, $type);
         
-        // Ensure the web path is properly formatted
-        $webPath = str_replace('//', '/', $webPath);
-        if (!str_starts_with($webPath, 'http')) {
-            $webPath = APP_URL . $webPath;
-        }
-        
-        return $webPath;
+        // Return relative path instead of full URL for better portability
+        return 'public/uploads/' . $type . '/' . $filename;
     }
     
     /**

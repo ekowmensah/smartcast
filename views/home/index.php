@@ -68,7 +68,7 @@
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card">
                         <?php if ($event['featured_image']): ?>
-                            <img src="<?= htmlspecialchars($event['featured_image']) ?>" 
+                            <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
                                  class="card-img-top" 
                                  style="height: 200px; object-fit: cover;"
                                  alt="<?= htmlspecialchars($event['name']) ?>">

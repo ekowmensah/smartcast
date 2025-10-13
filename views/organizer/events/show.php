@@ -101,7 +101,7 @@
             <div class="card-body">
                 <?php if (!empty($event['featured_image'])): ?>
                     <div class="mb-3">
-                        <img src="<?= htmlspecialchars($event['featured_image']) ?>" class="img-fluid rounded" style="max-height: 300px; width: 100%; object-fit: cover;">
+                        <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" class="img-fluid rounded" style="max-height: 300px; width: 100%; object-fit: cover;">
                     </div>
                 <?php endif; ?>
                 

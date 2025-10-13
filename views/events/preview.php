@@ -28,7 +28,7 @@
     <div class="col-lg-8">
         <div class="card shadow-sm mb-4">
             <?php if ($event['featured_image']): ?>
-                <img src="<?= htmlspecialchars($event['featured_image']) ?>" 
+                <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
                      class="card-img-top" 
                      style="height: 300px; object-fit: cover;"
                      alt="<?= htmlspecialchars($event['name']) ?>">
@@ -134,7 +134,7 @@
                                         <div class="col-md-6 col-lg-4">
                                             <div class="card border h-100">
                                                 <?php if ($contestant['image_url']): ?>
-                                                    <img src="<?= htmlspecialchars($contestant['image_url']) ?>" 
+                                                    <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                                          class="card-img-top" 
                                                          style="height: 200px; object-fit: cover;"
                                                          alt="<?= htmlspecialchars($contestant['name']) ?>">

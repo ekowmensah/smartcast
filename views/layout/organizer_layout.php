@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="app-url" content="<?= APP_URL ?>">
     <title><?= $title ?? 'Organizer Dashboard' ?> - <?= APP_NAME ?></title>
     
     <!-- CoreUI CSS -->
@@ -149,7 +150,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?= ORGANIZER_URL ?>/financial/payouts">
+                        <a class="nav-link" href="<?= ORGANIZER_URL ?>/payouts">
                             <i class="nav-icon fas fa-money-check-alt"></i>
                             Payouts
                         </a>
@@ -381,5 +382,8 @@
     <script src="<?= COREUI_JS ?>"></script>
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/organizer.js"></script>
+    <!-- Image Helper -->
+    <script src="<?= APP_URL ?>/public/assets/js/image-helper.js"></script>
+    <script>window.APP_URL = '<?= APP_URL ?>';</script>
 </body>
 </html>

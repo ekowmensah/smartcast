@@ -9,6 +9,9 @@ use SmartCast\Models\Transaction;
 use SmartCast\Models\AuditLog;
 use SmartCast\Models\FraudEvent;
 use SmartCast\Models\RevenueShare;
+use SmartCast\Models\Payout;
+use SmartCast\Models\TenantBalance;
+use SmartCast\Services\PayoutService;
 
 /**
  * Super Admin Dashboard Controller
@@ -22,6 +25,9 @@ class SuperAdminController extends BaseController
     private $auditModel;
     private $fraudModel;
     private $revenueModel;
+    private $payoutModel;
+    private $balanceModel;
+    private $payoutService;
     
     public function __construct()
     {
@@ -36,6 +42,9 @@ class SuperAdminController extends BaseController
         $this->auditModel = new AuditLog();
         $this->fraudModel = new FraudEvent();
         $this->revenueModel = new RevenueShare();
+        $this->payoutModel = new Payout();
+        $this->balanceModel = new TenantBalance();
+        $this->payoutService = new PayoutService();
     }
     
     public function dashboard()
@@ -922,6 +931,170 @@ class SuperAdminController extends BaseController
                 ['title' => 'Payouts']
             ]
         ]);
+    }
+    
+    /**
+     * Approve a payout request
+     */
+    public function approvePayout($payoutId)
+    {
+        try {
+            $result = $this->payoutService->approvePayout($payoutId);
+            
+            if ($result['success']) {
+                $this->auditModel->logAction(
+                    $this->session->getUserId(),
+                    'payout_approved',
+                    'payout',
+                    $payoutId,
+                    "Payout approved: {$result['payout_id']}"
+                );
+                
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Payout approved successfully',
+                    'payout_id' => $result['payout_id']
+                ]);
+            } else {
+                return $this->json([
+                    'success' => false,
+                    'error' => $result['error']
+                ], 400);
+            }
+            
+        } catch (\Exception $e) {
+            error_log('Payout approval error: ' . $e->getMessage());
+            return $this->json([
+                'success' => false,
+                'error' => 'Failed to approve payout'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Reject a payout request
+     */
+    public function rejectPayout($payoutId)
+    {
+        try {
+            $reason = $_POST['reason'] ?? 'No reason provided';
+            $result = $this->payoutService->rejectPayout($payoutId, $reason);
+            
+            if ($result['success']) {
+                $this->auditModel->logAction(
+                    $this->session->getUserId(),
+                    'payout_rejected',
+                    'payout',
+                    $payoutId,
+                    "Payout rejected: {$reason}"
+                );
+                
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Payout rejected successfully'
+                ]);
+            } else {
+                return $this->json([
+                    'success' => false,
+                    'error' => $result['error']
+                ], 400);
+            }
+            
+        } catch (\Exception $e) {
+            error_log('Payout rejection error: ' . $e->getMessage());
+            return $this->json([
+                'success' => false,
+                'error' => 'Failed to reject payout'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Process multiple payouts at once
+     */
+    public function processBatchPayouts()
+    {
+        try {
+            $payoutIds = $_POST['payout_ids'] ?? [];
+            
+            if (empty($payoutIds)) {
+                return $this->json([
+                    'success' => false,
+                    'error' => 'No payouts selected'
+                ], 400);
+            }
+            
+            $results = [];
+            $successCount = 0;
+            $failCount = 0;
+            
+            foreach ($payoutIds as $payoutId) {
+                $result = $this->payoutService->approvePayout($payoutId);
+                $results[] = [
+                    'payout_id' => $payoutId,
+                    'success' => $result['success'],
+                    'error' => $result['error'] ?? null
+                ];
+                
+                if ($result['success']) {
+                    $successCount++;
+                } else {
+                    $failCount++;
+                }
+            }
+            
+            $this->auditModel->logAction(
+                $this->session->getUserId(),
+                'batch_payout_processing',
+                'payout',
+                null,
+                "Processed {$successCount} payouts successfully, {$failCount} failed"
+            );
+            
+            return $this->json([
+                'success' => true,
+                'message' => "Processed {$successCount} payouts successfully" . ($failCount > 0 ? ", {$failCount} failed" : ""),
+                'results' => $results,
+                'success_count' => $successCount,
+                'fail_count' => $failCount
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Batch payout processing error: ' . $e->getMessage());
+            return $this->json([
+                'success' => false,
+                'error' => 'Failed to process batch payouts'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get payout details for modal view
+     */
+    public function getPayoutDetails($payoutId)
+    {
+        try {
+            $payout = $this->payoutModel->getPayoutWithDetails($payoutId);
+            
+            if (!$payout) {
+                return $this->json([
+                    'success' => false,
+                    'error' => 'Payout not found'
+                ], 404);
+            }
+            
+            return $this->json([
+                'success' => true,
+                'payout' => $payout
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Get payout details error: ' . $e->getMessage());
+            return $this->json([
+                'success' => false,
+                'error' => 'Failed to get payout details'
+            ], 500);
+        }
     }
     
     public function globalFeeRules()
@@ -1892,14 +2065,42 @@ class SuperAdminController extends BaseController
     
     private function getPayoutData()
     {
-        return [
-            'total_paid' => 85000,
-            'pending_amount' => 5500,
-            'this_month' => 25,
-            'avg_payout' => 2200,
-            'pending' => [],
-            'history' => []
-        ];
+        try {
+            // Get pending payouts
+            $pendingPayouts = $this->payoutModel->getPendingPayouts();
+            
+            // Get payout statistics
+            $stats = $this->payoutModel->getPayoutStatistics();
+            
+            // Get recent payout history
+            $history = $this->payoutModel->getRecentPayouts(50);
+            
+            // Calculate totals
+            $totalPaid = $stats['total_paid'] ?? 0;
+            $pendingAmount = $stats['pending_amount'] ?? 0;
+            $thisMonth = $stats['this_month_count'] ?? 0;
+            $avgPayout = $stats['avg_payout'] ?? 0;
+            
+            return [
+                'total_paid' => $totalPaid,
+                'pending_amount' => $pendingAmount,
+                'this_month' => $thisMonth,
+                'avg_payout' => $avgPayout,
+                'pending' => $pendingPayouts,
+                'history' => $history
+            ];
+            
+        } catch (\Exception $e) {
+            error_log('Super admin payout data error: ' . $e->getMessage());
+            return [
+                'total_paid' => 0,
+                'pending_amount' => 0,
+                'this_month' => 0,
+                'avg_payout' => 0,
+                'pending' => [],
+                'history' => []
+            ];
+        }
     }
     
     private function getFeeRulesData()

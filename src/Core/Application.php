@@ -115,6 +115,23 @@ class Application
             $router->post('/contestants/{id}/edit', 'OrganizerController@updateContestant');
             $router->get('/contestants/{id}/stats', 'OrganizerController@contestantStats');
             
+            // Payout routes
+            $router->get('/payouts', 'PayoutController@dashboard');
+            $router->get('/payouts/request', 'PayoutController@requestPayout');
+            $router->post('/payouts/request', 'PayoutController@requestPayout');
+            $router->get('/payouts/history', 'PayoutController@history');
+            $router->get('/payouts/methods', 'PayoutController@methods');
+            $router->post('/payouts/methods', 'PayoutController@methods');
+            $router->get('/payouts/add-method', 'PayoutController@addMethod');
+            $router->post('/payouts/add-method', 'PayoutController@addMethod');
+            $router->get('/payouts/settings', 'PayoutController@settings');
+            $router->post('/payouts/settings', 'PayoutController@settings');
+            $router->post('/payouts/{id}/cancel', 'PayoutController@cancelPayout');
+            
+            // Payout API routes
+            $router->get('/api/payouts/balance', 'PayoutController@apiGetBalance');
+            $router->post('/api/payouts/calculate-fees', 'PayoutController@apiCalculateFees');
+            
             // Categories
             $router->get('/categories', 'OrganizerController@categories');
             $router->post('/categories', 'OrganizerController@storeCategory');
@@ -215,6 +232,10 @@ class Application
             $router->get('/financial/distribution', 'SuperAdminController@revenueDistribution');
             $router->get('/financial/transactions', 'SuperAdminController@allTransactions');
             $router->get('/financial/payouts', 'SuperAdminController@platformPayouts');
+            $router->post('/financial/payouts/{id}/approve', 'SuperAdminController@approvePayout');
+            $router->post('/financial/payouts/{id}/reject', 'SuperAdminController@rejectPayout');
+            $router->post('/financial/payouts/batch-process', 'SuperAdminController@processBatchPayouts');
+            $router->get('/financial/payouts/{id}/details', 'SuperAdminController@getPayoutDetails');
             $router->get('/financial/fees', 'SuperAdminController@globalFeeRules');
             $router->post('/financial/fees/create', 'SuperAdminController@createFeeRule');
             $router->post('/financial/fees/update', 'SuperAdminController@updateFeeRule');

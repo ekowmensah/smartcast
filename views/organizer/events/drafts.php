@@ -21,7 +21,7 @@
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="card h-100">
                     <?php if (!empty($event['featured_image'])): ?>
-                        <img src="<?= htmlspecialchars($event['featured_image']) ?>" class="card-img-top" style="height: 200px; object-fit: cover;">
+                        <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" class="card-img-top" style="height: 200px; object-fit: cover;">
                     <?php else: ?>
                         <div class="card-img-top bg-gradient-warning d-flex align-items-center justify-content-center" style="height: 200px;">
                             <i class="fas fa-file-alt fa-3x text-white opacity-50"></i>

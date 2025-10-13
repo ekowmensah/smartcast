@@ -85,16 +85,26 @@
                                 </li>
                                 <?php endforeach; ?>
                             <?php endif; ?>
-                            
-                            <?php if ($plan['trial_days'] > 0): ?>
-                            <li class="mb-1">
-                                <i class="fas fa-gift text-warning me-2"></i>
-                                <strong><?= $plan['trial_days'] ?> days free trial</strong>
-                            </li>
-                            <?php endif; ?>
                         </ul>
                         
                         <div class="mt-auto">
+                            <div class="border-top pt-3 mb-3">
+                                <!-- Highlighted Platform Fee Information -->
+                                <div class="alert alert-info py-2 mb-2">
+                                    <div class="text-center">
+                                        <i class="fas fa-percentage me-2"></i>
+                                        <strong>Platform Fee: <?= $plan['fee_display'] ?></strong>
+                                    </div>
+                                </div>
+                                
+                                <?php if ($plan['trial_days'] > 0): ?>
+                                    <div class="text-center">
+                                        <small class="text-success">
+                                            <i class="fas fa-gift me-1"></i><?= $plan['trial_days'] ?> days free trial
+                                        </small>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                             <a href="<?= APP_URL ?>/register?plan=<?= $plan['id'] ?>" class="btn btn-<?= $plan['is_popular'] ? 'warning' : 'primary' ?> btn-sm w-100">
                                 Get Started
                             </a>

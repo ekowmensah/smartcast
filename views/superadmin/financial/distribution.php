@@ -196,8 +196,8 @@
                             <small class="text-muted"><?= $rule['usage_count'] ?> transactions</small>
                         </div>
                         <div class="text-end">
-                            <div class="fw-bold text-primary">$<?= number_format($rule['total_collected'], 2) ?></div>
-                            <small class="text-muted">avg: $<?= number_format($rule['avg_fee'], 2) ?></small>
+                            <div class="fw-bold text-primary">$<?= number_format($rule['total_collected'] ?? 0, 2) ?></div>
+                            <small class="text-muted">avg: $<?= number_format($rule['avg_fee_amount'] ?? 0, 2) ?></small>
                         </div>
                     </div>
                     <?php endforeach; ?>

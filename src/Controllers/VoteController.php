@@ -945,11 +945,8 @@ class VoteController extends BaseController
             return $this->json($receiptData);
             
         } catch (\Exception $e) {
-            error_log('Get payment receipt error: ' . $e->getMessage());
-            return $this->json([
-                'success' => false,
-                'message' => 'Error retrieving receipt: ' . $e->getMessage()
-            ], 500);
+            error_log('Receipt API error: ' . $e->getMessage());
+            return $this->json(['success' => false, 'error' => 'Receipt not found'], 404);
         }
     }
 
