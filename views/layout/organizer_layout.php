@@ -367,9 +367,9 @@
                         <span class="text-medium-emphasis">&copy; <?= date('Y') ?> <?= APP_NAME ?>. All rights reserved.</span>
                     </div>
                     <div class="col-md-6">
-                        <div class="text-end">
+                    <!--    <div class="text-end">
                             <span class="text-medium-emphasis">Version <?= APP_VERSION ?></span>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>

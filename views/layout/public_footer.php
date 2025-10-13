@@ -12,7 +12,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="text-center text-md-end">
-                        <span class="text-muted">Version <?= APP_VERSION ?></span>
+                    <!--    <span class="text-muted">Version <?= APP_VERSION ?></span> -->
                         <span class="mx-2 text-muted">|</span>
                         <a href="<?= PUBLIC_URL ?>/privacy" class="text-decoration-none">Privacy</a>
                         <span class="mx-2 text-muted">|</span>
