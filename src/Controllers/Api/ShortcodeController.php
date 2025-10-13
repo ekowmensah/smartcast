@@ -138,9 +138,12 @@ class ShortcodeController extends BaseController
         }
 
         if ($result) {
-            // Format the image URL if it exists using the proper helper function
+            // Format the image URL if it exists
             if ($result['image_url']) {
-                $result['image_url'] = image_url($result['image_url']);
+                // Ensure the image URL is properly formatted
+                if (strpos($result['image_url'], 'http') !== 0) {
+                    $result['image_url'] = APP_URL . $result['image_url'];
+                }
             }
 
             // Format vote price

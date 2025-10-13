@@ -376,14 +376,36 @@
         </footer>
     </div>
 
-    <!-- Bootstrap JavaScript (required for accordions and other components) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- CoreUI JavaScript -->
     <script src="<?= COREUI_JS ?>"></script>
+    <!-- Bootstrap JavaScript (required for dropdowns and other components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/organizer.js"></script>
     <!-- Image Helper -->
     <script src="<?= APP_URL ?>/public/assets/js/image-helper.js"></script>
     <script>window.APP_URL = '<?= APP_URL ?>';</script>
+    
+    <!-- Fix CoreUI dropdowns -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all dropdowns with Bootstrap
+        var dropdownElementList = [].slice.call(document.querySelectorAll('[data-coreui-toggle="dropdown"]'));
+        var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
+        
+        // Fix sidebar toggle
+        const sidebarToggler = document.querySelector('.header-toggler');
+        if (sidebarToggler) {
+            sidebarToggler.addEventListener('click', function() {
+                const sidebar = document.querySelector('#sidebar');
+                if (sidebar) {
+                    sidebar.classList.toggle('sidebar-show');
+                }
+            });
+        }
+    });
+    </script>
 </body>
 </html>
