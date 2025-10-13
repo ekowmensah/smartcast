@@ -35,7 +35,7 @@
         <div class="card stats-card text-white bg-success">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($transactions['total_volume'] ?? 0) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($transactions['total_volume'] ?? 0) ?></div>
                     <div>Total Volume</div>
                     <div class="small">All transactions</div>
                 </div>
@@ -154,9 +154,9 @@
                                 <span class="badge <?= $typeClass ?>"><?= ucfirst(str_replace('_', ' ', $type)) ?></span>
                             </td>
                             <td>
-                                <div class="fw-bold">$<?= number_format($transaction['amount'] ?? 0, 2) ?></div>
+                                <div class="fw-bold">GH₵<?= number_format($transaction['amount'] ?? 0, 2) ?></div>
                                 <?php if (!empty($transaction['fee'])): ?>
-                                    <small class="text-muted">Fee: $<?= number_format($transaction['fee'], 2) ?></small>
+                                    <small class="text-muted">Fee: GH₵<?= number_format($transaction['fee'], 2) ?></small>
                                 <?php endif; ?>
                             </td>
                             <td>

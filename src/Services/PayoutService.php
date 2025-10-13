@@ -85,6 +85,9 @@ class PayoutService
                 throw new \Exception('No payout method available');
             }
             
+            // Debug logging
+            error_log("Payout method found: " . json_encode($payoutMethod));
+            
             // Check payout eligibility
             $schedule = $this->payoutScheduleModel->getScheduleByTenant($tenantId);
             $eligibility = $this->payoutScheduleModel->canRequestPayout($tenantId, $amount);
@@ -116,8 +119,8 @@ class PayoutService
                 'status' => Payout::STATUS_QUEUED
             ]);
             
-            // Reserve the amount from available balance
-            $this->balanceModel->processPayout($tenantId, $amount);
+            // Reserve the amount from available balance (move to pending, not paid)
+            $this->balanceModel->reserveForPayout($tenantId, $amount);
             
             return [
                 'success' => true,
@@ -338,14 +341,99 @@ class PayoutService
             'stripe' => ['percentage' => 2.9, 'fixed' => 0.30]
         ];
         
+        // Default to bank_transfer if method type is null or not found
+        $methodType = $methodType ?? 'bank_transfer';
         $fees = $feeStructure[$methodType] ?? $feeStructure['bank_transfer'];
         
-        return round(($amount * $fees['percentage'] / 100) + $fees['fixed'], 2);
+        // Log for debugging
+        error_log("Calculating fee for method: $methodType, amount: $amount");
+        
+        $calculatedFee = round(($amount * $fees['percentage'] / 100) + $fees['fixed'], 2);
+        error_log("Calculated fee: $calculatedFee");
+        
+        return $calculatedFee;
     }
     
     private function generatePayoutId()
     {
         return 'PO_' . date('Ymd') . '_' . strtoupper(uniqid());
+    }
+    
+    /**
+     * Recalculate processing fee for existing payout
+     */
+    public function recalculateProcessingFee($payoutId)
+    {
+        try {
+            $payout = $this->payoutModel->find($payoutId);
+            error_log("Recalculate: Found payout: " . json_encode($payout));
+            
+            if (!$payout) {
+                throw new \Exception('Payout not found');
+            }
+            
+            // Get payout method
+            $payoutMethod = null;
+            if (!empty($payout['payout_method_id'])) {
+                $payoutMethod = $this->payoutMethodModel->find($payout['payout_method_id']);
+                error_log("Recalculate: Found payout method by ID: " . json_encode($payoutMethod));
+            }
+            
+            if (!$payoutMethod) {
+                // Try to get default method for tenant
+                $payoutMethod = $this->payoutMethodModel->getDefaultMethod($payout['tenant_id']);
+                error_log("Recalculate: Found default payout method: " . json_encode($payoutMethod));
+            }
+            
+            if (!$payoutMethod) {
+                // Try to get any active method for tenant
+                $methods = $this->payoutMethodModel->getMethodsByTenant($payout['tenant_id']);
+                if (!empty($methods)) {
+                    $payoutMethod = $methods[0];
+                    error_log("Recalculate: Using first available method: " . json_encode($payoutMethod));
+                }
+            }
+            
+            if (!$payoutMethod) {
+                throw new \Exception('No payout method available for fee calculation');
+            }
+            
+            // Recalculate processing fee
+            $methodType = $payoutMethod['method_type'] ?? 'bank_transfer';
+            error_log("Recalculate: Using method type: $methodType for amount: {$payout['amount']}");
+            
+            $processingFee = $this->calculateProcessingFee($payout['amount'], $methodType);
+            $netAmount = $payout['amount'] - $processingFee;
+            
+            error_log("Recalculate: Calculated fee: $processingFee, net: $netAmount");
+            
+            // Update payout with correct fees
+            $updateResult = $this->payoutModel->update($payoutId, [
+                'processing_fee' => $processingFee,
+                'net_amount' => $netAmount,
+                'payout_method' => $methodType
+            ]);
+            
+            error_log("Recalculate: Update result: " . ($updateResult ? 'success' : 'failed'));
+            
+            // Verify the update worked
+            $updatedPayout = $this->payoutModel->find($payoutId);
+            error_log("Recalculate: Updated payout: " . json_encode($updatedPayout));
+            
+            return [
+                'success' => true,
+                'processing_fee' => $processingFee,
+                'net_amount' => $netAmount,
+                'method_type' => $methodType
+            ];
+            
+        } catch (\Exception $e) {
+            error_log('Recalculate processing fee error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
     }
     
     /**

@@ -80,4 +80,16 @@ class Session
     {
         return $this->get('user_role');
     }
+    
+    public function isSuperAdmin()
+    {
+        $role = $this->get('user_role') ?? $this->get('role');
+        return $role === 'platform_admin';
+    }
+    
+    public function isAdmin()
+    {
+        $role = $this->get('user_role') ?? $this->get('role');
+        return in_array($role, ['platform_admin', 'admin']);
+    }
 }

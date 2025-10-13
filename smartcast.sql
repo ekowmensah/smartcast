@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 10, 2025 at 03:09 PM
+-- Generation Time: Oct 13, 2025 at 01:07 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -41,175 +41,77 @@ CREATE TABLE `audit_logs` (
 --
 
 INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `details`, `ip_address`, `created_at`) VALUES
-(1, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-03 12:00:03'),
-(2, 1, 'logout', '[]', '::1', '2025-10-03 12:02:40'),
-(3, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-03 12:02:42'),
-(4, 1, 'logout', '[]', '::1', '2025-10-03 13:02:27'),
-(5, 3, 'login', '{\"email\":\"platform@votesaas.com\",\"success\":true}', '::1', '2025-10-03 13:03:01'),
-(6, 3, 'logout', '[]', '::1', '2025-10-03 13:07:41'),
-(7, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-03 13:07:43'),
-(8, 1, 'logout', '[]', '::1', '2025-10-03 13:07:59'),
-(9, 3, 'login', '{\"email\":\"platform@votesaas.com\",\"success\":true}', '::1', '2025-10-03 13:08:14'),
-(10, 3, 'logout', '[]', '::1', '2025-10-03 13:13:57'),
-(11, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-03 13:14:08'),
-(12, 1, 'logout', '[]', '::1', '2025-10-03 13:14:38'),
-(13, 2, 'login', '{\"email\":\"manager@demo.com\",\"success\":true}', '::1', '2025-10-03 13:14:49'),
-(14, 2, 'logout', '[]', '::1', '2025-10-03 13:15:15'),
-(15, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-03 13:15:22'),
-(16, 1, 'logout', '[]', '::1', '2025-10-03 13:21:05'),
-(17, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-03 13:43:13'),
-(18, 1, 'logout', '[]', '::1', '2025-10-03 14:28:29'),
-(19, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-03 14:31:18'),
-(20, 4, 'logout', '[]', '::1', '2025-10-03 14:37:14'),
-(21, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-03 14:46:16'),
-(22, 4, 'logout', '[]', '::1', '2025-10-03 14:50:23'),
-(23, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-03 14:50:31'),
-(24, 4, 'logout', '[]', '::1', '2025-10-03 15:34:41'),
-(25, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-03 15:34:48'),
-(26, 1, 'event_created', '{\"event_id\":\"3\",\"name\":\"Ghana Music Awards\"}', '::1', '2025-10-03 15:51:10'),
-(27, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-05 03:20:54'),
-(28, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-05 03:21:00'),
-(29, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-05 04:12:33'),
-(30, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-05 04:12:38'),
-(31, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-05 04:12:41'),
-(32, 4, 'contestant_created', '{\"contestant_id\":\"5\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-05 04:20:10'),
-(33, 4, 'contestant_deleted', '{\"contestant_id\":\"4\",\"name\":\"Sarah Wilson\"}', '::1', '2025-10-05 04:20:33'),
-(34, 4, 'contestant_created', '{\"contestant_id\":\"6\",\"name\":\"Sean Paull\"}', '::1', '2025-10-05 04:20:48'),
-(35, 1, 'contestant_deleted', '{\"contestant_id\":\"3\",\"name\":\"Mike Johnson\"}', '::1', '2025-10-05 04:21:38'),
-(36, 1, 'contestant_deleted', '{\"contestant_id\":\"3\",\"name\":\"Mike Johnson\"}', '::1', '2025-10-05 04:23:26'),
-(37, 1, 'contestant_created', '{\"contestant_id\":\"7\",\"name\":\"Ekow Mensah\"}', '::1', '2025-10-05 04:23:38'),
-(38, 1, 'contestant_updated', '{\"contestant_id\":\"7\",\"name\":\"Ekow Mensah\"}', '::1', '2025-10-05 04:23:46'),
-(39, 1, 'contestant_updated', '{\"contestant_id\":\"3\",\"name\":\"Mike Johnson\"}', '::1', '2025-10-05 04:23:52'),
-(40, 1, 'contestant_created', '{\"contestant_id\":\"8\",\"name\":\"Event Two Nominee\"}', '::1', '2025-10-05 04:26:16'),
-(41, 1, 'contestant_updated', '{\"contestant_id\":\"2\",\"name\":\"Jane Smith\"}', '::1', '2025-10-05 04:26:31'),
-(42, 1, 'contestant_updated', '{\"contestant_id\":\"2\",\"name\":\"Jane Smith\"}', '::1', '2025-10-05 04:26:40'),
-(43, 1, 'contestant_updated', '{\"contestant_id\":\"1\",\"name\":\"John Doe\"}', '::1', '2025-10-05 04:26:53'),
-(44, 1, 'contestant_updated', '{\"contestant_id\":\"3\",\"name\":\"Mike Johnson\"}', '::1', '2025-10-05 04:27:01'),
-(45, 1, 'contestant_deactivated', '{\"contestant_id\":\"2\",\"name\":\"Jane Smith\"}', '::1', '2025-10-05 04:28:04'),
-(46, 1, 'event_updated', '{\"event_id\":\"1\",\"name\":\"Music Voting Event 2024\"}', '::1', '2025-10-05 04:52:03'),
-(47, 1, 'event_updated', '{\"event_id\":\"3\",\"name\":\"Music Awards 2025\"}', '::1', '2025-10-05 04:54:19'),
-(48, 1, 'event_deleted', '{\"event_id\":\"1\",\"name\":\"Music Voting Event 2024\"}', '::1', '2025-10-05 04:54:26'),
-(49, 1, 'event_deleted', '{\"event_id\":\"3\",\"name\":\"Music Awards 2025\"}', '::1', '2025-10-05 04:54:30'),
-(50, 1, 'event_deleted', '{\"event_id\":\"1\",\"name\":\"Music Voting Event 2024\"}', '::1', '2025-10-05 04:55:18'),
-(51, 1, 'event_updated', '{\"event_id\":\"3\",\"name\":\"Music Awards 2025\"}', '::1', '2025-10-05 04:55:26'),
-(52, 1, 'event_updated', '{\"event_id\":\"3\",\"name\":\"Music Awards 2024\"}', '::1', '2025-10-05 04:55:36'),
-(53, 1, 'contestant_created', '{\"contestant_id\":\"10\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-05 05:01:39'),
-(54, 1, 'contestant_created', '{\"contestant_id\":\"11\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-05 05:01:59'),
-(55, 1, 'event_created', '{\"event_id\":\"4\",\"name\":\"Ghana Music Awards 2025\"}', '::1', '2025-10-05 05:07:33'),
-(56, 1, 'contestant_created', '{\"contestant_id\":\"12\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-05 05:11:36'),
-(57, 4, 'contestant_created', '{\"contestant_id\":\"13\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-05 05:12:05'),
-(58, 1, 'event_updated', '{\"event_id\":\"4\",\"name\":\"Ghana Music Awards 2025\"}', '::1', '2025-10-05 05:13:28'),
-(59, 4, 'event_created', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-05 05:14:44'),
-(60, 1, 'event_updated', '{\"event_id\":\"4\",\"name\":\"Ghana Music Awards 2025\"}', '::1', '2025-10-05 05:20:18'),
-(61, 4, 'contestant_reactivated', '{\"contestant_id\":\"13\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-05 05:22:54'),
-(62, 1, 'contestant_reactivated', '{\"contestant_id\":\"12\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-05 05:23:02'),
-(63, 4, 'event_created', '{\"event_id\":\"6\",\"name\":\"Breman Excellence Awards\"}', '::1', '2025-10-05 05:40:43'),
-(64, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-05 05:46:38'),
-(65, 4, 'event_updated', '{\"event_id\":\"6\",\"name\":\"Breman Excellence Awards\"}', '::1', '2025-10-05 05:46:46'),
-(66, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-05 05:47:56'),
-(67, 1, 'event_updated', '{\"event_id\":\"4\",\"name\":\"Ghana Music Awards 2025\"}', '::1', '2025-10-05 06:56:43'),
-(68, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-05 07:13:22'),
-(69, 4, 'event_updated', '{\"event_id\":\"6\",\"name\":\"Breman Excellence Awards\"}', '::1', '2025-10-05 07:15:43'),
-(70, 1, 'event_updated', '{\"event_id\":\"4\",\"name\":\"Ghana Music Awards 2025\"}', '::1', '2025-10-05 09:23:20'),
-(71, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-06 12:08:10'),
-(72, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-06 12:08:14'),
-(73, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-06 12:15:26'),
-(74, 4, 'event_status_changed', '{\"event_id\":\"6\",\"active\":false}', '::1', '2025-10-06 12:17:07'),
-(75, 4, 'event_status_changed', '{\"event_id\":\"6\",\"active\":true}', '::1', '2025-10-06 12:17:15'),
-(76, 4, 'event_status_changed', '{\"event_id\":\"6\",\"active\":false}', '::1', '2025-10-06 12:17:20'),
-(77, 4, 'event_status_changed', '{\"event_id\":\"6\",\"active\":true}', '::1', '2025-10-06 12:17:38'),
-(78, 4, 'event_results_visibility_changed', '{\"event_id\":\"5\",\"results_visible\":true}', '::1', '2025-10-06 12:28:25'),
-(79, 4, 'event_results_visibility_changed', '{\"event_id\":\"6\",\"results_visible\":false}', '::1', '2025-10-06 12:28:44'),
-(80, 4, 'event_results_visibility_changed', '{\"event_id\":\"5\",\"results_visible\":false}', '::1', '2025-10-06 12:28:56'),
-(81, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-06 12:38:26'),
-(82, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-06 12:44:45'),
-(83, 4, 'event_activated', '{\"event_id\":\"5\",\"event_name\":\"Ghana Music Awards 25\",\"previous_status\":\"draft\"}', '::1', '2025-10-06 12:45:10'),
-(84, 4, 'event_status_changed', '{\"event_id\":\"5\",\"active\":false}', '::1', '2025-10-06 12:45:15'),
-(85, 4, 'event_created', '{\"event_id\":\"7\",\"name\":\"Ghana&#039;s Most Beautiful\"}', '::1', '2025-10-06 12:51:55'),
-(86, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 12:52:07'),
-(87, 3, 'logout', '[]', '::1', '2025-10-06 12:57:43'),
-(88, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-06 12:57:45'),
-(89, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-06 12:57:50'),
-(90, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-06 13:03:52'),
-(91, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 13:06:45'),
-(92, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&#039;s Most Beautiful\"}', '::1', '2025-10-06 13:16:26'),
-(93, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&#039;s Most Beautiful\"}', '::1', '2025-10-06 13:16:51'),
-(94, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 13:17:32'),
-(95, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 13:19:58'),
-(96, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;amp;amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 13:21:12'),
-(97, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-06 13:21:22'),
-(98, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-06 13:21:45'),
-(99, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;amp;amp;amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 13:22:17'),
-(100, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;amp;amp;amp;amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 13:25:06'),
-(101, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&#039;s Most Beautiful\"}', '::1', '2025-10-06 13:27:17'),
-(102, 4, 'bundle_created', '{\"bundle_id\":\"7\",\"name\":\"Premium\"}', '::1', '2025-10-06 13:30:34'),
-(103, 4, 'bundle_updated', '{\"bundle_id\":\"7\",\"name\":\"Premium\"}', '::1', '2025-10-06 13:30:43'),
-(104, 4, 'bundle_updated', '{\"bundle_id\":\"7\",\"name\":\"Premium\"}', '::1', '2025-10-06 13:31:30'),
-(105, 4, 'event_updated', '{\"event_id\":\"7\",\"name\":\"Ghana&amp;#039;s Most Beautiful\"}', '::1', '2025-10-06 13:32:28'),
-(106, 4, 'event_updated', '{\"event_id\":\"6\",\"name\":\"Breman Excellence Awards\"}', '::1', '2025-10-06 13:33:48'),
-(107, 4, 'event_updated', '{\"event_id\":\"5\",\"name\":\"Ghana Music Awards 25\"}', '::1', '2025-10-06 13:36:36'),
-(108, 4, 'event_results_visibility_changed', '{\"event_id\":\"5\",\"results_visible\":true}', '::1', '2025-10-06 13:40:23'),
-(109, 4, 'event_results_visibility_changed', '{\"event_id\":\"6\",\"results_visible\":true}', '::1', '2025-10-06 13:49:38'),
-(110, 4, 'contestant_updated', '{\"contestant_id\":\"13\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-06 14:00:30'),
-(111, 4, 'contestant_quick_created', '{\"contestant_id\":\"17\",\"name\":\"Susubiribi\",\"via_wizard\":true}', '::1', '2025-10-08 08:22:36'),
-(112, 4, 'contestant_updated', '{\"contestant_id\":\"13\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-08 08:23:17'),
-(113, 4, 'contestant_updated', '{\"contestant_id\":\"13\",\"name\":\"Kofi Weather\"}', '::1', '2025-10-08 09:58:35'),
-(114, NULL, 'login_failed', '{\"email\":\"admin@demo.com\",\"ip\":\"::1\"}', '::1', '2025-10-08 10:39:09'),
-(115, 1, 'login', '{\"email\":\"admin@demo.com\",\"success\":true}', '::1', '2025-10-08 10:39:41'),
-(116, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-08 17:25:53'),
-(117, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-08 17:25:58'),
-(118, 4, 'logout', '[]', '::1', '2025-10-08 19:13:27'),
-(119, 5, 'user_registered', '{\"tenant_id\":\"3\"}', '::1', '2025-10-08 19:16:34'),
-(120, 5, 'login', '{\"email\":\"ekowmeee@gmail.com\",\"success\":true}', '::1', '2025-10-08 19:20:15'),
-(121, 5, 'login', '{\"email\":\"ekowmeee@gmail.com\",\"success\":true}', '::1', '2025-10-08 19:20:26'),
-(122, 5, 'logout', '[]', '::1', '2025-10-08 19:20:34'),
-(123, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-08 19:20:43'),
-(124, 4, 'logout', '[]', '::1', '2025-10-08 19:20:53'),
-(125, 5, 'login', '{\"email\":\"ekowmeee@gmail.com\",\"success\":true}', '::1', '2025-10-08 19:20:59'),
-(126, 5, 'logout', '[]', '::1', '2025-10-08 19:21:08'),
-(127, 3, 'login', '{\"email\":\"ekowme@gmail.comm\",\"success\":true}', '::1', '2025-10-08 19:21:32'),
-(128, 3, 'logout', '[]', '::1', '2025-10-08 19:23:41'),
-(129, 5, 'login', '{\"email\":\"ekowmeee@gmail.com\",\"success\":true}', '::1', '2025-10-08 19:23:44'),
-(130, 5, 'logout', '[]', '::1', '2025-10-08 19:24:10'),
-(131, 2, 'login', '{\"email\":\"manager@demo.com\",\"success\":true}', '::1', '2025-10-08 19:24:48'),
-(132, 2, 'logout', '[]', '::1', '2025-10-08 19:27:38'),
-(133, 3, 'login', '{\"email\":\"ekowme@gmail.comm\",\"success\":true}', '::1', '2025-10-08 19:27:52'),
-(134, 3, 'logout', '[]', '::1', '2025-10-08 19:38:46'),
-(135, 3, 'login', '{\"email\":\"ekowme@gmail.comm\",\"success\":true}', '::1', '2025-10-08 19:39:22'),
-(136, 3, 'logout', '[]', '::1', '2025-10-08 19:41:56'),
-(137, 5, 'login', '{\"email\":\"ekowmeee@gmail.com\",\"success\":true}', '::1', '2025-10-08 19:41:59'),
-(138, 3, 'login', '{\"email\":\"ekowme@gmail.comm\",\"success\":true}', '::1', '2025-10-08 20:10:45'),
-(139, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-08 20:19:42'),
-(140, 5, 'logout', '[]', '::1', '2025-10-09 01:06:16'),
-(141, 5, 'login', '{\"email\":\"ekowmeee@gmail.com\",\"success\":true}', '::1', '2025-10-09 05:28:59'),
-(142, NULL, 'vote_cast', '{\"transaction_id\":13,\"event_id\":23,\"contestant_id\":41,\"amount\":\"80.00\"}', '::1', '2025-10-09 07:13:48'),
-(143, NULL, 'vote_cast', '{\"transaction_id\":14,\"event_id\":23,\"contestant_id\":40,\"amount\":\"300.00\"}', '::1', '2025-10-09 07:16:05'),
-(144, NULL, 'vote_cast', '{\"transaction_id\":15,\"event_id\":23,\"contestant_id\":40,\"amount\":\"600.00\"}', '::1', '2025-10-09 07:16:58'),
-(145, NULL, 'vote_cast', '{\"transaction_id\":16,\"event_id\":23,\"contestant_id\":39,\"amount\":\"1800.00\"}', '::1', '2025-10-09 07:24:55'),
-(146, NULL, 'vote_cast', '{\"transaction_id\":17,\"event_id\":23,\"contestant_id\":39,\"amount\":\"1800.00\"}', '::1', '2025-10-09 07:27:16'),
-(147, NULL, 'vote_cast', '{\"transaction_id\":18,\"event_id\":23,\"contestant_id\":41,\"amount\":\"300.00\"}', '::1', '2025-10-09 07:28:20'),
-(148, NULL, 'vote_cast', '{\"transaction_id\":19,\"event_id\":23,\"contestant_id\":41,\"amount\":\"1200.00\"}', '::1', '2025-10-09 07:39:07'),
-(149, NULL, 'vote_cast', '{\"transaction_id\":20,\"event_id\":23,\"contestant_id\":41,\"amount\":\"3600.00\"}', '::1', '2025-10-09 07:42:58'),
-(150, NULL, 'vote_cast', '{\"transaction_id\":22,\"event_id\":23,\"contestant_id\":41,\"amount\":\"600.00\"}', '::1', '2025-10-09 07:44:27'),
-(151, NULL, 'vote_cast', '{\"transaction_id\":23,\"event_id\":23,\"contestant_id\":39,\"amount\":\"1800.00\"}', '::1', '2025-10-09 07:47:29'),
-(152, NULL, 'vote_cast', '{\"transaction_id\":24,\"event_id\":22,\"contestant_id\":36,\"amount\":\"90.00\"}', '::1', '2025-10-09 08:23:10'),
-(153, NULL, 'vote_cast', '{\"transaction_id\":25,\"event_id\":24,\"contestant_id\":42,\"amount\":\"14.00\"}', '::1', '2025-10-09 08:23:59'),
-(154, NULL, 'vote_cast', '{\"transaction_id\":28,\"event_id\":24,\"contestant_id\":42,\"amount\":\"2.40\"}', '::1', '2025-10-09 08:52:57'),
-(155, NULL, 'vote_cast', '{\"transaction_id\":29,\"event_id\":24,\"contestant_id\":42,\"amount\":\"16.00\"}', '::1', '2025-10-09 09:06:11'),
-(156, NULL, 'vote_cast', '{\"transaction_id\":30,\"event_id\":24,\"contestant_id\":42,\"amount\":\"80.00\"}', '::1', '2025-10-09 09:09:31'),
-(157, NULL, 'vote_cast', '{\"transaction_id\":32,\"event_id\":24,\"contestant_id\":46,\"amount\":\"6.40\"}', '::1', '2025-10-09 09:12:53'),
-(158, NULL, 'vote_cast', '{\"transaction_id\":33,\"event_id\":24,\"contestant_id\":46,\"amount\":\"6.40\"}', '::1', '2025-10-09 09:13:40'),
-(159, NULL, 'vote_cast', '{\"transaction_id\":34,\"event_id\":24,\"contestant_id\":43,\"amount\":\"90.00\"}', '::1', '2025-10-09 09:22:17'),
-(160, NULL, 'vote_cast', '{\"transaction_id\":36,\"event_id\":24,\"contestant_id\":44,\"amount\":\"7200.00\"}', '::1', '2025-10-09 09:50:32'),
-(161, 3, 'login', '{\"email\":\"ekowme@gmail.comm\",\"success\":true}', '::1', '2025-10-09 09:54:03'),
-(162, NULL, 'vote_cast', '{\"transaction_id\":37,\"event_id\":22,\"contestant_id\":37,\"amount\":\"1.00\"}', '::1', '2025-10-09 12:06:08'),
-(163, NULL, 'vote_cast', '{\"transaction_id\":38,\"event_id\":23,\"contestant_id\":40,\"amount\":\"35.00\"}', '::1', '2025-10-09 12:09:44'),
-(164, NULL, 'vote_cast', '{\"transaction_id\":39,\"event_id\":23,\"contestant_id\":41,\"amount\":\"10.00\"}', '::1', '2025-10-09 12:11:26'),
-(165, 5, 'logout', '[]', '::1', '2025-10-10 11:46:39'),
-(166, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.comm\",\"ip\":\"::1\"}', '::1', '2025-10-10 11:46:47'),
-(167, 3, 'login', '{\"email\":\"ekowme@gmail.comm\",\"success\":true}', '::1', '2025-10-10 11:46:51'),
-(168, 4, 'logout', '[]', '::1', '2025-10-10 12:58:16'),
-(169, 4, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-10 12:58:23');
+(196, NULL, 'login_failed', '{\"email\":\"ekowmee@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-10 20:15:59'),
+(197, NULL, 'user_registered', '{\"tenant_id\":\"20\",\"plan_id\":4,\"plan_name\":\"Enterprise\"}', '::1', '2025-10-10 20:17:31'),
+(198, 3, 'tenant_rejected', '{\"tenant_id\":\"21\",\"tenant_name\":\"Pending Organization 202330\",\"tenant_email\":\"pending202330@example.com\",\"reason\":\"suspicious_activity: Suspect\"}', '::1', '2025-10-10 20:24:23'),
+(199, 3, 'tenant_rejected', '{\"tenant_id\":\"20\",\"tenant_name\":\"Hope For All\",\"tenant_email\":\"ekowmee@gmail.com\",\"reason\":\"business_not_eligible: Paaa\"}', '::1', '2025-10-10 20:25:56'),
+(200, 3, 'tenant_approved', '{\"tenant_id\":\"19\",\"tenant_name\":\"Pending Organization 201340\",\"tenant_email\":\"pending201340@example.com\"}', '::1', '2025-10-10 20:26:44'),
+(201, 3, 'logout', '[]', '::1', '2025-10-10 20:27:40'),
+(202, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.comm\",\"ip\":\"::1\"}', '::1', '2025-10-10 20:27:43'),
+(203, NULL, 'login', '{\"email\":\"ekowme@gmail.comm\",\"success\":true}', '::1', '2025-10-10 20:28:05'),
+(204, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-10 20:31:21'),
+(205, NULL, 'login_failed', '{\"email\":\"ekowmee@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-10 20:31:30'),
+(206, 17, 'user_registered', '{\"tenant_id\":\"22\",\"plan_id\":1,\"plan_name\":\"Free Starter\"}', '::1', '2025-10-10 20:31:58'),
+(207, 3, 'tenant_approved', '{\"tenant_id\":\"22\",\"tenant_name\":\"Hope For All\",\"tenant_email\":\"ekowmee@gmail.com\"}', '::1', '2025-10-10 20:32:28'),
+(208, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '::1', '2025-10-10 20:32:41'),
+(209, NULL, 'vote_cast', '{\"transaction_id\":53,\"event_id\":38,\"contestant_id\":85,\"amount\":\"1.00\"}', '::1', '2025-10-10 20:51:10'),
+(210, NULL, 'vote_cast', '{\"transaction_id\":54,\"event_id\":38,\"contestant_id\":85,\"amount\":\"1.00\"}', '::1', '2025-10-10 21:27:20'),
+(211, NULL, 'vote_cast', '{\"transaction_id\":56,\"event_id\":38,\"contestant_id\":79,\"amount\":\"1.00\"}', '::1', '2025-10-10 21:38:07'),
+(212, NULL, 'vote_cast', '{\"transaction_id\":57,\"event_id\":38,\"contestant_id\":79,\"amount\":\"1.00\"}', '::1', '2025-10-10 21:44:20'),
+(213, NULL, 'vote_cast', '{\"transaction_id\":58,\"event_id\":38,\"contestant_id\":78,\"amount\":\"100.00\"}', '::1', '2025-10-10 21:50:48'),
+(214, NULL, 'vote_cast', '{\"transaction_id\":59,\"event_id\":38,\"contestant_id\":76,\"amount\":\"1000.00\"}', '::1', '2025-10-10 22:17:48'),
+(215, NULL, 'vote_cast', '{\"transaction_id\":60,\"event_id\":38,\"contestant_id\":76,\"amount\":\"1.00\"}', '::1', '2025-10-10 22:36:22'),
+(216, 3, 'logout', '[]', '::1', '2025-10-10 22:43:28'),
+(217, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '::1', '2025-10-10 22:43:35'),
+(218, 17, 'logout', '[]', '::1', '2025-10-10 22:44:45'),
+(219, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-10 22:44:48'),
+(220, NULL, 'vote_cast', '{\"transaction_id\":62,\"event_id\":38,\"contestant_id\":76,\"amount\":\"1.00\"}', '::1', '2025-10-10 22:52:15'),
+(221, NULL, 'vote_cast', '{\"transaction_id\":66,\"event_id\":38,\"contestant_id\":76,\"amount\":\"1.00\"}', '::1', '2025-10-10 23:38:21'),
+(222, NULL, 'vote_cast', '{\"transaction_id\":67,\"event_id\":38,\"contestant_id\":85,\"amount\":\"8.00\"}', '::1', '2025-10-10 23:41:45'),
+(223, 3, 'plan_updated', '{\"plan_id\":\"5\",\"plan_name\":\"Pro\",\"changes_applied_to_subscribers\":true}', '::1', '2025-10-11 00:01:44'),
+(224, NULL, 'vote_cast', '{\"transaction_id\":68,\"event_id\":38,\"contestant_id\":86,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:14:21'),
+(225, NULL, 'vote_cast', '{\"transaction_id\":69,\"event_id\":38,\"contestant_id\":79,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:16:53'),
+(226, NULL, 'vote_cast', '{\"transaction_id\":68,\"event_id\":38,\"contestant_id\":86,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:21:27'),
+(227, NULL, 'vote_cast', '{\"transaction_id\":68,\"event_id\":38,\"contestant_id\":86,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:21:48'),
+(228, NULL, 'vote_cast', '{\"transaction_id\":68,\"event_id\":38,\"contestant_id\":86,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:22:13'),
+(229, NULL, 'vote_cast', '{\"transaction_id\":68,\"event_id\":38,\"contestant_id\":86,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:22:48'),
+(230, NULL, 'vote_cast', '{\"transaction_id\":71,\"event_id\":38,\"contestant_id\":76,\"amount\":\"2.00\"}', '::1', '2025-10-11 00:28:08'),
+(231, NULL, 'vote_cast', '{\"transaction_id\":72,\"event_id\":38,\"contestant_id\":85,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:30:27'),
+(232, NULL, 'vote_cast', '{\"transaction_id\":73,\"event_id\":38,\"contestant_id\":79,\"amount\":\"1.00\"}', '::1', '2025-10-11 00:35:46'),
+(233, 3, 'logout', '[]', '::1', '2025-10-12 10:33:19'),
+(234, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-12 10:33:21'),
+(235, 3, 'logout', '[]', '::1', '2025-10-12 10:33:25'),
+(236, NULL, 'login_failed', '{\"email\":\"ekowmee@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-12 10:33:30'),
+(237, NULL, 'login_failed', '{\"email\":\"ekowmee@gmail.com\",\"ip\":\"::1\"}', '::1', '2025-10-12 10:33:40'),
+(238, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '::1', '2025-10-12 10:33:47'),
+(239, NULL, 'vote_cast', '{\"transaction_id\":79,\"event_id\":38,\"contestant_id\":76,\"amount\":\"4.50\"}', '::1', '2025-10-12 11:32:28'),
+(240, NULL, 'vote_cast', '{\"transaction_id\":80,\"event_id\":38,\"contestant_id\":76,\"amount\":\"8.00\"}', '::1', '2025-10-12 11:38:38'),
+(241, NULL, 'vote_cast', '{\"transaction_id\":81,\"event_id\":38,\"contestant_id\":76,\"amount\":\"8.00\"}', '::1', '2025-10-12 11:39:56'),
+(242, NULL, 'vote_cast', '{\"transaction_id\":82,\"event_id\":39,\"contestant_id\":88,\"amount\":\"17.50\"}', '::1', '2025-10-12 12:09:34'),
+(243, NULL, 'vote_cast', '{\"transaction_id\":83,\"event_id\":39,\"contestant_id\":89,\"amount\":\"8.00\"}', '::1', '2025-10-12 12:52:44'),
+(244, NULL, 'vote_cast', '{\"transaction_id\":84,\"event_id\":39,\"contestant_id\":89,\"amount\":\"10.00\"}', '::1', '2025-10-12 13:01:16'),
+(245, NULL, 'vote_cast', '{\"transaction_id\":85,\"event_id\":39,\"contestant_id\":88,\"amount\":\"1.00\"}', '::1', '2025-10-12 13:21:03'),
+(246, NULL, 'vote_cast', '{\"transaction_id\":86,\"event_id\":38,\"contestant_id\":86,\"amount\":\"1.00\"}', '::1', '2025-10-12 13:25:21'),
+(247, NULL, 'vote_cast', '{\"transaction_id\":87,\"event_id\":39,\"contestant_id\":89,\"amount\":\"26.00\"}', '::1', '2025-10-12 13:27:22'),
+(248, NULL, 'vote_cast', '{\"transaction_id\":89,\"event_id\":38,\"contestant_id\":76,\"amount\":\"1.00\"}', '::1', '2025-10-12 13:47:01'),
+(249, NULL, 'vote_cast', '{\"transaction_id\":90,\"event_id\":39,\"contestant_id\":88,\"amount\":\"1.00\"}', '::1', '2025-10-12 13:56:59'),
+(250, NULL, 'vote_cast', '{\"transaction_id\":92,\"event_id\":39,\"contestant_id\":88,\"amount\":\"1.00\"}', '::1', '2025-10-12 13:59:57'),
+(251, NULL, 'vote_cast', '{\"transaction_id\":93,\"event_id\":39,\"contestant_id\":88,\"amount\":\"1.00\"}', '::1', '2025-10-12 14:01:17'),
+(252, NULL, 'vote_cast', '{\"transaction_id\":94,\"event_id\":39,\"contestant_id\":88,\"amount\":\"1.00\"}', '::1', '2025-10-12 14:05:12'),
+(253, NULL, 'vote_cast', '{\"transaction_id\":95,\"event_id\":38,\"contestant_id\":78,\"amount\":\"17.50\"}', '::1', '2025-10-12 14:06:13'),
+(254, NULL, 'vote_cast', '{\"transaction_id\":96,\"event_id\":38,\"contestant_id\":76,\"amount\":\"9.00\"}', '::1', '2025-10-12 14:11:40'),
+(255, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-12 14:27:24'),
+(256, 3, 'plan_updated', '{\"plan_id\":\"5\",\"plan_name\":\"Free\",\"changes_applied_to_subscribers\":true}', '::1', '2025-10-12 14:54:07'),
+(257, 3, 'plan_updated', '{\"plan_id\":\"8\",\"plan_name\":\"Diamond Plan\",\"changes_applied_to_subscribers\":true}', '::1', '2025-10-12 15:01:08'),
+(258, 3, 'plan_updated', '{\"plan_id\":\"6\",\"plan_name\":\"Silver Plan\",\"changes_applied_to_subscribers\":true}', '::1', '2025-10-12 15:08:07'),
+(259, 3, 'plan_updated', '{\"plan_id\":\"6\",\"plan_name\":\"Silver Plan\",\"changes_applied_to_subscribers\":true}', '::1', '2025-10-12 15:08:50'),
+(260, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-13 05:14:56'),
+(261, 3, 'plan_updated', '{\"plan_id\":\"6\",\"plan_name\":\"Silver Plan\",\"changes_applied_to_subscribers\":true}', '::1', '2025-10-13 05:48:41'),
+(262, NULL, 'vote_cast', '{\"transaction_id\":97,\"event_id\":39,\"contestant_id\":89,\"amount\":\"5.00\"}', '::1', '2025-10-13 06:33:27'),
+(263, NULL, 'vote_cast', '{\"transaction_id\":98,\"event_id\":39,\"contestant_id\":89,\"amount\":\"1.00\"}', '::1', '2025-10-13 06:51:58'),
+(264, 3, 'logout', '[]', '::1', '2025-10-13 09:17:16'),
+(265, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-13 09:19:27'),
+(266, NULL, 'vote_cast', '{\"transaction_id\":100,\"event_id\":41,\"contestant_id\":207,\"amount\":\"7.00\"}', '::1', '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -234,18 +136,12 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `event_id`, `tenant_id`, `name`, `description`, `created_by`, `display_order`, `created_at`, `updated_at`) VALUES
-(40, 22, 3, 'BEST RAPPER', '', 5, 0, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(41, 22, 3, 'BEST SINGER', '', 5, 0, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(42, 23, 2, 'Contestants', '', 4, 0, '2025-10-09 06:14:31', '2025-10-09 06:14:31'),
-(43, 24, 2, 'English Teacher', '', 4, 0, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(44, 24, 2, 'Maths Teacher', '', 4, 0, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(45, 24, 2, 'Science Teacher', '', 4, 0, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(46, 24, 2, 'Class Teacher', '', 4, 0, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(47, 24, 2, 'Computer Teacher', '', 4, 0, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(48, 25, 2, 'General', '', 4, 0, '2025-10-09 10:19:58', '2025-10-09 10:19:58'),
-(49, 26, 2, 'FACE MODEL / BEAUTY QUEEN', '', 4, 0, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(50, 26, 2, 'BEST STUDENT PHOTO MODEL (MALE)', '', 4, 0, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(51, 26, 2, 'OUTSTANDING ENTERTAINMENT PREFECT (FEMALE)', '', 4, 0, '2025-10-09 12:34:10', '2025-10-09 12:34:10');
+(161, 41, 22, 'Best Music Group', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(162, 41, 22, 'Hiplife Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(163, 41, 22, 'Gospel Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(164, 41, 22, 'Reggae Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(165, 41, 22, 'Hilife Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(166, 43, 22, 'CONTESTANTS', 'ALL CONTESTANTS', 17, 0, '2025-10-13 09:52:28', '2025-10-13 09:52:28');
 
 -- --------------------------------------------------------
 
@@ -273,26 +169,20 @@ CREATE TABLE `contestants` (
 --
 
 INSERT INTO `contestants` (`id`, `tenant_id`, `event_id`, `name`, `contestant_code`, `image_url`, `bio`, `display_order`, `active`, `created_by`, `created_at`, `updated_at`) VALUES
-(36, 3, 22, 'SARKODIE', 'T301', '/uploads/nominees/nominees_68e7081f7ba9e.jpg', '', 0, 1, 5, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(37, 3, 22, 'OBRAFOUR', 'T302', '/uploads/nominees/nominees_68e7081f8137c.png', '', 0, 1, 5, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(38, 3, 22, 'DJ FLASH', 'T303', '/uploads/nominees/nominees_68e7081f84b3e.jpg', '', 0, 1, 5, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(39, 2, 23, 'Nana Adjoa', 'T201', '/uploads/nominees/nominees_68e752c76911e.jpg', '', 0, 1, 4, '2025-10-09 06:14:31', '2025-10-09 06:14:31'),
-(40, 2, 23, 'Ewurabena', 'T202', '/uploads/nominees/nominees_68e752c772807.png', '', 0, 1, 4, '2025-10-09 06:14:31', '2025-10-09 06:14:31'),
-(41, 2, 23, 'Kwame Sakyi', 'T203', '/uploads/nominees/nominees_68e752c774c31.jpg', '', 0, 1, 4, '2025-10-09 06:14:31', '2025-10-09 06:14:31'),
-(42, 2, 24, 'John Bongo', 'T204', '/uploads/nominees/nominees_68e76fd57e168.png', '', 0, 1, 4, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(43, 2, 24, 'Agenda', 'T205', '/uploads/nominees/nominees_68e76fd58b4c9.jpg', '', 0, 1, 4, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(44, 2, 24, 'Bigboss', 'T206', '/uploads/nominees/nominees_68e76fd593eb1.jpg', '', 0, 1, 4, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(45, 2, 24, 'Vigour', 'T207', '/uploads/nominees/nominees_68e76fd599b6b.jpeg', '', 0, 1, 4, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(46, 2, 24, 'Emma Boakye Danquah', 'T208', '/uploads/nominees/nominees_68e76fd5aaa69.jpeg', '', 0, 1, 4, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(47, 2, 25, 'Yaw Mensah', 'T209', '/uploads/nominees/nominees_68e78c4ea8ee3.jpeg', '', 0, 1, 4, '2025-10-09 10:19:58', '2025-10-09 10:19:58'),
-(48, 2, 25, 'Kwame Amponsah', 'T210', '/uploads/nominees/nominees_68e78c4ec34fb.jpeg', '', 0, 1, 4, '2025-10-09 10:19:58', '2025-10-09 10:19:58'),
-(49, 2, 26, 'KUKKY ARTHUR', 'T211', NULL, '', 0, 1, 4, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(50, 2, 26, 'JOAN MENSAH', 'T212', NULL, '', 0, 1, 4, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(51, 2, 26, 'GEORGE BOATENG', 'T213', NULL, '', 0, 1, 4, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(52, 2, 26, 'JAMES ANNAN', 'T214', NULL, '', 0, 1, 4, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(53, 2, 26, 'ERICKA AKWEI', 'T215', NULL, '', 0, 1, 4, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(54, 2, 26, 'EKUA MANU', 'T216', NULL, '', 0, 1, 4, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(55, 2, 26, 'NORBERT MENSAH', 'T217', NULL, '', 0, 1, 4, '2025-10-09 12:34:10', '2025-10-09 12:34:10');
+(202, 22, 41, 'Sarkodie', 'T2217', 'public/uploads/nominees/nominees_68ecc06a5863d.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(203, 22, 41, 'Kofi Kinaata', 'T2218', 'public/uploads/nominees/nominees_68ecc06a7ef31.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(204, 22, 41, 'Obrafour', 'T2219', 'public/uploads/nominees/nominees_68ecc06a9a105.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(205, 22, 41, 'Lord Kenya', 'T2220', 'public/uploads/nominees/nominees_68ecc06a9e3fa.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(206, 22, 41, 'Medikal', 'T2221', 'public/uploads/nominees/nominees_68ecc06aac5c2.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(207, 22, 41, 'Dadie Opanka', 'T2222', 'public/uploads/nominees/nominees_68ecbff310b2c.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(208, 22, 41, 'Shatta Wale', 'T2223', 'public/uploads/nominees/nominees_68ecbfda50617.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(209, 22, 41, 'Stonebwoy', 'T2224', 'public/uploads/nominees/nominees_68ecbe00308f3.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
+(210, 22, 43, 'NANA ADJOA', 'T2225', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(211, 22, 43, 'ROSEMARY', 'T2226', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(212, 22, 43, 'KING PALUTA', 'T2227', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(213, 22, 43, 'JOHN DOE', 'T2228', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(214, 22, 43, 'JESSICA', 'T2229', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(215, 22, 43, 'MANSAH', 'T2230', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28');
 
 -- --------------------------------------------------------
 
@@ -316,46 +206,34 @@ CREATE TABLE `contestant_categories` (
 --
 
 INSERT INTO `contestant_categories` (`id`, `contestant_id`, `category_id`, `short_code`, `display_order`, `active`, `created_at`, `updated_at`) VALUES
-(39, 36, 40, 'T3SA001', 0, 1, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(40, 36, 41, 'T3SA002', 0, 1, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(41, 37, 40, 'T3OB001', 0, 1, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(42, 37, 41, 'T3OB002', 0, 1, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(43, 38, 40, 'T3DJ001', 0, 1, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(44, 38, 41, 'T3DJ002', 0, 1, '2025-10-09 00:55:59', '2025-10-09 00:55:59'),
-(45, 39, 42, 'T2NA001', 0, 1, '2025-10-09 06:14:31', '2025-10-09 06:14:31'),
-(46, 40, 42, 'T2EW001', 0, 1, '2025-10-09 06:14:31', '2025-10-09 06:14:31'),
-(47, 41, 42, 'T2KW001', 0, 1, '2025-10-09 06:14:31', '2025-10-09 06:14:31'),
-(48, 42, 44, 'T2JO001', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(49, 42, 46, 'T2JO002', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(50, 42, 47, 'T2JO003', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(51, 43, 44, 'T2AG001', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(52, 43, 45, 'T2AG002', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(53, 43, 47, 'T2AG003', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(54, 44, 43, 'T2BI001', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(55, 44, 44, 'T2BI002', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(56, 44, 45, 'T2BI003', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(57, 45, 45, 'T2VI001', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(58, 45, 46, 'T2VI002', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(59, 45, 47, 'T2VI003', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(60, 46, 43, 'T2EM001', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(61, 46, 46, 'T2EM002', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(62, 46, 47, 'T2EM003', 0, 1, '2025-10-09 08:18:29', '2025-10-09 08:18:29'),
-(63, 47, 48, 'T2YA001', 0, 1, '2025-10-09 10:19:58', '2025-10-09 10:19:58'),
-(64, 48, 48, 'T2KW002', 0, 1, '2025-10-09 10:19:58', '2025-10-09 10:19:58'),
-(65, 49, 49, 'T2KU001', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(66, 49, 50, 'T2KU002', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(67, 50, 50, 'T2JO004', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(68, 50, 51, 'T2JO005', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(69, 51, 49, 'T2GE001', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(70, 51, 51, 'T2GE002', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(71, 52, 50, 'T2JA001', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(72, 52, 51, 'T2JA002', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(73, 53, 49, 'T2ER001', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(74, 53, 51, 'T2ER002', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(75, 54, 49, 'T2EK001', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(76, 54, 50, 'T2EK002', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(77, 55, 49, 'T2NO001', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10'),
-(78, 55, 51, 'T2NO002', 0, 1, '2025-10-09 12:34:10', '2025-10-09 12:34:10');
+(211, 202, 161, 'YL05', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(212, 202, 162, 'TP67', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(213, 202, 163, 'CL88', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(214, 202, 164, 'JN50', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(215, 202, 165, 'LR14', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(216, 203, 161, 'MM90', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(217, 203, 162, 'FL74', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(218, 203, 163, 'WF83', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(219, 203, 164, 'UC70', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(220, 203, 165, 'SB09', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(221, 204, 162, 'NA62', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(222, 204, 165, 'XF08', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(223, 205, 163, 'WK41', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(224, 206, 161, 'VE66', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(225, 206, 162, 'MH42', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(226, 206, 164, 'FF04', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(227, 207, 162, 'AM06', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(228, 208, 162, 'YH29', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(229, 208, 165, 'NR32', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(230, 209, 162, 'FP50', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(231, 209, 164, 'AY43', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(232, 209, 165, 'QK57', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
+(233, 210, 166, 'PX27', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(234, 211, 166, 'JX62', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(235, 212, 166, 'RS01', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(236, 213, 166, 'JZ56', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(237, 214, 166, 'RA54', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
+(238, 215, 166, 'HV69', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28');
 
 -- --------------------------------------------------------
 
@@ -396,11 +274,9 @@ CREATE TABLE `events` (
 --
 
 INSERT INTO `events` (`id`, `tenant_id`, `name`, `code`, `description`, `featured_image`, `start_date`, `end_date`, `vote_price`, `active`, `status`, `visibility`, `admin_status`, `admin_notes`, `created_by`, `suspended_reason`, `suspended_by`, `suspended_at`, `closed_at`, `archived_at`, `created_at`, `updated_at`, `results_visible`, `deactivated_at`, `deactivated_by`) VALUES
-(22, 3, 'Ghana Music Awards 25', 'GHANAMUSIC', 'GhaMA2025', '/uploads/events/events_68e7081f62707.jpg', '2025-10-09 00:55:00', '2025-10-30 00:54:00', 1.00, 1, 'active', 'public', 'pending', NULL, 5, NULL, NULL, NULL, NULL, NULL, '2025-10-09 00:55:59', '2025-10-09 09:23:23', 0, NULL, NULL),
-(23, 2, 'Breman Excellence Awardss', 'BREMANEXCE', 'nmbmnmmnbm,b n  bnm bn, n', '/uploads/events/events_68e752c725078.jpeg', '2025-10-09 06:09:00', '2025-10-26 06:09:00', 2.00, 1, 'active', 'public', 'pending', NULL, 4, NULL, NULL, NULL, NULL, NULL, '2025-10-09 06:14:31', '2025-10-09 10:17:22', 1, NULL, NULL),
-(24, 2, 'Teachers Awards', 'TEACHERSAW', 'Teachers Awards 2025', '/uploads/events/events_68e76fd571ae4.jpg', '2025-10-09 08:14:00', '2025-10-22 08:14:00', 0.80, 1, 'active', 'public', 'pending', NULL, 4, NULL, NULL, NULL, NULL, NULL, '2025-10-09 08:18:29', '2025-10-09 09:35:19', 0, NULL, NULL),
-(25, 2, 'Another Sample', 'ASE25', 'aNOTHER SAMPLE EVENT FOR TESTING', '/uploads/events/events_68e78c4e7dce1.jpeg', '2025-10-17 10:18:00', '2025-10-24 10:19:00', 1.00, 1, 'active', 'public', 'pending', NULL, 4, NULL, NULL, NULL, NULL, NULL, '2025-10-09 10:19:58', '2025-10-09 10:21:01', 1, NULL, NULL),
-(26, 2, 'NATIONAL HIGH SCHOOL ENTERTAINMENT AWARDS 2025', 'NHSEA25', 'NATIONAL HIGH SCHOOL AWARDS', '/uploads/events/events_68e7abc1e1fb9.jpeg', '2025-10-09 12:31:00', '2025-10-31 12:31:00', 1.00, 1, 'active', 'public', 'pending', NULL, 4, NULL, NULL, NULL, NULL, NULL, '2025-10-09 12:34:10', '2025-10-09 12:34:25', 1, NULL, NULL);
+(41, 22, 'Ghana Music Awards 25', 'GHANAMUSIC', '', 'public/uploads/events/events_68ecb14632ac9.jpeg', '2025-10-13 07:55:00', '2025-10-15 07:55:00', 1.00, 1, 'active', 'public', 'pending', NULL, 17, NULL, NULL, NULL, NULL, NULL, '2025-10-13 07:59:02', '2025-10-13 09:38:06', 0, NULL, NULL),
+(42, 22, 'Breman Excellence Awards', 'BREMANEXCE', '', 'public/uploads/events/events_68ecb487de9ae.jpg', '2025-10-13 08:12:00', '2025-10-16 08:12:00', 1.00, 1, 'draft', 'public', 'approved', NULL, 17, NULL, NULL, NULL, NULL, NULL, '2025-10-13 08:12:56', '2025-10-13 08:16:00', 1, NULL, NULL),
+(43, 22, 'MISS BREMAN ODWIRA', 'MISSBREMAN', '', 'public/uploads/events/events_68eccbdc82b13.jpeg', '2025-10-13 09:50:00', '2025-10-18 09:51:00', 1.00, 1, 'active', 'public', 'pending', NULL, 17, NULL, NULL, NULL, NULL, NULL, '2025-10-13 09:52:28', '2025-10-13 10:09:08', 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -446,11 +322,15 @@ CREATE TABLE `event_status_history` (
 
 CREATE TABLE `fee_rules` (
   `id` int(11) NOT NULL,
+  `name` varchar(100) DEFAULT NULL COMMENT 'Human-readable name for the fee rule',
+  `description` text DEFAULT NULL COMMENT 'Detailed description of when this rule applies',
   `tenant_id` int(11) DEFAULT NULL,
   `event_id` int(11) DEFAULT NULL,
   `rule_type` enum('percentage','fixed','blend') DEFAULT 'percentage',
   `percentage_rate` decimal(5,2) DEFAULT NULL,
   `fixed_amount` decimal(10,2) DEFAULT NULL,
+  `min_amount` decimal(10,2) DEFAULT NULL COMMENT 'Minimum fee amount (overrides calculated fee if lower)',
+  `max_amount` decimal(10,2) DEFAULT NULL COMMENT 'Maximum fee amount (caps calculated fee if higher)',
   `active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -460,10 +340,11 @@ CREATE TABLE `fee_rules` (
 -- Dumping data for table `fee_rules`
 --
 
-INSERT INTO `fee_rules` (`id`, `tenant_id`, `event_id`, `rule_type`, `percentage_rate`, `fixed_amount`, `active`, `created_at`, `updated_at`) VALUES
-(1, 1, NULL, 'percentage', 10.00, NULL, 1, '2025-10-03 11:36:30', '2025-10-03 11:36:30'),
-(2, 2, NULL, 'percentage', 15.00, NULL, 1, '2025-10-03 11:36:30', '2025-10-03 11:36:30'),
-(3, NULL, NULL, 'percentage', 12.00, NULL, 1, '2025-10-03 11:36:30', '2025-10-03 11:36:30');
+INSERT INTO `fee_rules` (`id`, `name`, `description`, `tenant_id`, `event_id`, `rule_type`, `percentage_rate`, `fixed_amount`, `min_amount`, `max_amount`, `active`, `created_at`, `updated_at`) VALUES
+(9, 'Global PERCENTAGE Rule - 35.00%', 'Global fee rule that applies to all tenants unless they have specific rules', NULL, NULL, 'percentage', 35.00, NULL, NULL, NULL, 1, '2025-10-10 21:26:43', '2025-10-10 22:36:57'),
+(10, 'Verified Plan A', 'Tenant-specific fee rule for tenant ID 22', NULL, NULL, 'percentage', 12.00, NULL, NULL, NULL, 1, '2025-10-10 22:16:01', '2025-10-12 15:08:30'),
+(11, 'Gold Plan', '', NULL, NULL, 'percentage', 5.00, NULL, NULL, NULL, 1, '2025-10-10 23:19:29', '2025-10-12 14:56:55'),
+(12, 'Diamond', '', NULL, NULL, 'percentage', 1.50, NULL, NULL, NULL, 1, '2025-10-12 15:00:48', '2025-10-12 15:00:48');
 
 -- --------------------------------------------------------
 
@@ -500,9 +381,7 @@ CREATE TABLE `leaderboard_cache` (
 --
 
 INSERT INTO `leaderboard_cache` (`id`, `event_id`, `contestant_id`, `category_id`, `total_votes`, `updated_at`) VALUES
-(52, 22, 37, 40, 1, '2025-10-09 12:06:08'),
-(53, 23, 40, 42, 25, '2025-10-09 12:09:44'),
-(54, 23, 41, 42, 5, '2025-10-09 12:11:26');
+(104, 41, 207, 162, 7, '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -528,9 +407,16 @@ CREATE TABLE `otp_requests` (
 CREATE TABLE `payouts` (
   `id` int(11) NOT NULL,
   `tenant_id` int(11) NOT NULL,
+  `initiated_by` int(11) DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL,
+  `approved_at` timestamp NULL DEFAULT NULL,
   `payout_id` varchar(50) DEFAULT NULL,
   `amount` decimal(10,2) NOT NULL,
+  `processing_fee` decimal(10,2) DEFAULT 0.00,
+  `net_amount` decimal(10,2) DEFAULT 0.00,
   `payout_method` enum('bank_transfer','mobile_money','paypal') DEFAULT 'bank_transfer',
+  `payout_type` enum('manual','automatic','instant') DEFAULT 'manual',
+  `payout_method_id` int(11) DEFAULT NULL,
   `recipient_details` text NOT NULL,
   `status` enum('queued','processing','success','failed','cancelled') DEFAULT 'queued',
   `provider_reference` varchar(100) DEFAULT NULL,
@@ -538,6 +424,126 @@ CREATE TABLE `payouts` (
   `processed_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payout_methods`
+--
+
+CREATE TABLE `payout_methods` (
+  `id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `method_type` enum('bank_transfer','mobile_money','paypal','stripe') NOT NULL,
+  `method_name` varchar(100) NOT NULL,
+  `account_details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`account_details`)),
+  `is_default` tinyint(1) DEFAULT 0,
+  `is_verified` tinyint(1) DEFAULT 0,
+  `verification_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`verification_data`)),
+  `active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payout_schedules`
+--
+
+CREATE TABLE `payout_schedules` (
+  `id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `frequency` enum('manual','daily','weekly','monthly') DEFAULT 'monthly',
+  `minimum_amount` decimal(10,2) DEFAULT 10.00,
+  `auto_payout_enabled` tinyint(1) DEFAULT 0,
+  `instant_payout_threshold` decimal(10,2) DEFAULT 1000.00,
+  `next_payout_date` date DEFAULT NULL,
+  `payout_day` int(2) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payout_schedules`
+--
+
+INSERT INTO `payout_schedules` (`id`, `tenant_id`, `frequency`, `minimum_amount`, `auto_payout_enabled`, `instant_payout_threshold`, `next_payout_date`, `payout_day`, `created_at`, `updated_at`) VALUES
+(4, 4, 'monthly', 10.00, 0, 1000.00, NULL, 1, '2025-10-10 13:13:17', '2025-10-10 13:13:17'),
+(5, 5, 'monthly', 10.00, 0, 1000.00, NULL, 1, '2025-10-10 13:13:17', '2025-10-10 13:13:17'),
+(6, 22, 'monthly', 10.00, 0, 1000.00, '2025-11-01', 1, '2025-10-12 15:10:08', '2025-10-12 15:10:08');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `plan_features`
+--
+
+CREATE TABLE `plan_features` (
+  `id` int(11) NOT NULL,
+  `plan_id` int(11) NOT NULL,
+  `feature_key` varchar(100) NOT NULL,
+  `feature_name` varchar(255) NOT NULL,
+  `feature_value` varchar(255) DEFAULT NULL,
+  `is_boolean` tinyint(1) DEFAULT 0 COMMENT '1 if feature is yes/no, 0 if has value',
+  `sort_order` int(3) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `plan_features`
+--
+
+INSERT INTO `plan_features` (`id`, `plan_id`, `feature_key`, `feature_name`, `feature_value`, `is_boolean`, `sort_order`) VALUES
+(1, 1, 'events', 'Events', '1', 0, 1),
+(2, 1, 'contestants', 'Contestants per Event', '10', 0, 2),
+(3, 1, 'votes', 'Votes per Event', '1,000', 0, 3),
+(4, 1, 'storage', 'Storage', '100 MB', 0, 4),
+(5, 1, 'custom_branding', 'Custom Branding', NULL, 1, 5),
+(6, 1, 'analytics', 'Analytics', 'Basic', 0, 6),
+(7, 1, 'support', 'Support', 'Community', 0, 7),
+(8, 2, 'events', 'Events', '5', 0, 1),
+(9, 2, 'contestants', 'Contestants per Event', '50', 0, 2),
+(10, 2, 'votes', 'Votes per Event', '10,000', 0, 3),
+(11, 2, 'storage', 'Storage', '1 GB', 0, 4),
+(12, 2, 'custom_branding', 'Custom Branding', '1', 1, 5),
+(13, 2, 'analytics', 'Analytics', 'Standard', 0, 6),
+(14, 2, 'support', 'Support', 'Email', 0, 7),
+(15, 2, 'api_access', 'API Access', NULL, 1, 8),
+(16, 3, 'events', 'Events', 'Unlimited', 0, 1),
+(17, 3, 'contestants', 'Contestants per Event', 'Unlimited', 0, 2),
+(18, 3, 'votes', 'Votes per Event', 'Unlimited', 0, 3),
+(19, 3, 'storage', 'Storage', '5 GB', 0, 4),
+(20, 3, 'custom_branding', 'Custom Branding', '1', 1, 5),
+(21, 3, 'analytics', 'Analytics', 'Advanced', 0, 6),
+(22, 3, 'support', 'Support', 'Priority', 0, 7),
+(23, 3, 'api_access', 'API Access', '1', 1, 8),
+(24, 3, 'webhooks', 'Webhooks', '1', 1, 9),
+(25, 4, 'events', 'Events', 'Unlimited', 0, 1),
+(26, 4, 'contestants', 'Contestants per Event', 'Unlimited', 0, 2),
+(27, 4, 'votes', 'Votes per Event', 'Unlimited', 0, 3),
+(28, 4, 'storage', 'Storage', '20 GB', 0, 4),
+(29, 4, 'custom_branding', 'Custom Branding', '1', 1, 5),
+(30, 4, 'analytics', 'Analytics', 'Premium', 0, 6),
+(31, 4, 'support', 'Support', 'Dedicated', 0, 7),
+(32, 4, 'api_access', 'API Access', '1', 1, 8),
+(33, 4, 'webhooks', 'Webhooks', '1', 1, 9),
+(34, 4, 'white_label', 'White Label', '1', 1, 10);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `platform_revenue`
+--
+
+CREATE TABLE `platform_revenue` (
+  `id` int(11) NOT NULL,
+  `transaction_id` int(11) DEFAULT NULL,
+  `revenue_type` enum('platform_fee','processing_fee','subscription_fee','other') DEFAULT 'platform_fee',
+  `amount` decimal(10,2) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -570,7 +576,39 @@ CREATE TABLE `revenue_shares` (
   `transaction_id` int(11) NOT NULL,
   `tenant_id` int(11) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
+  `revenue_type` enum('platform_fee','tenant_share','referrer_commission','processing_fee') DEFAULT 'platform_fee',
+  `percentage_applied` decimal(5,2) DEFAULT NULL,
+  `original_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `description` varchar(255) DEFAULT NULL,
   `fee_rule_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `revenue_shares`
+--
+
+INSERT INTO `revenue_shares` (`id`, `transaction_id`, `tenant_id`, `amount`, `revenue_type`, `percentage_applied`, `original_amount`, `description`, `fee_rule_id`, `created_at`) VALUES
+(47, 100, 22, 2.45, 'platform_fee', NULL, 0.00, NULL, 9, '2025-10-13 10:15:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `revenue_transactions`
+--
+
+CREATE TABLE `revenue_transactions` (
+  `id` int(11) NOT NULL,
+  `transaction_id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `event_id` int(11) NOT NULL,
+  `gross_amount` decimal(10,2) NOT NULL,
+  `platform_fee` decimal(10,2) NOT NULL,
+  `processing_fee` decimal(10,2) DEFAULT 0.00,
+  `referrer_commission` decimal(10,2) DEFAULT 0.00,
+  `net_tenant_amount` decimal(10,2) NOT NULL,
+  `fee_rule_snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fee_rule_snapshot`)),
+  `distribution_status` enum('pending','completed','failed') DEFAULT 'completed',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -594,6 +632,42 @@ CREATE TABLE `risk_blocks` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `subscription_plans`
+--
+
+CREATE TABLE `subscription_plans` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `slug` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `billing_cycle` enum('monthly','yearly','lifetime','free') DEFAULT 'monthly',
+  `max_events` int(11) DEFAULT NULL COMMENT 'NULL means unlimited',
+  `max_contestants_per_event` int(11) DEFAULT NULL COMMENT 'NULL means unlimited',
+  `max_votes_per_event` int(11) DEFAULT NULL COMMENT 'NULL means unlimited',
+  `features` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Additional features as JSON' CHECK (json_valid(`features`)),
+  `fee_rule_id` int(11) DEFAULT NULL COMMENT 'Default fee rule for this plan',
+  `is_popular` tinyint(1) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1,
+  `sort_order` int(3) DEFAULT 0,
+  `trial_days` int(3) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `subscription_plans`
+--
+
+INSERT INTO `subscription_plans` (`id`, `name`, `slug`, `description`, `price`, `billing_cycle`, `max_events`, `max_contestants_per_event`, `max_votes_per_event`, `features`, `fee_rule_id`, `is_popular`, `is_active`, `sort_order`, `trial_days`, `created_at`, `updated_at`) VALUES
+(5, 'Free', 'free', 'Totally FREE!', 0.00, 'lifetime', NULL, NULL, NULL, NULL, 9, 1, 1, 0, 0, '2025-10-10 22:11:57', '2025-10-12 14:54:06'),
+(6, 'Silver Plan', 'silver-plan', '', 1000.00, 'yearly', NULL, NULL, NULL, NULL, 10, 0, 1, 1, 0, '2025-10-12 14:55:38', '2025-10-13 05:48:41'),
+(7, 'Gold Plan', 'gold-plan', 'Gold Plan Package', 2000.00, 'yearly', NULL, NULL, NULL, NULL, 11, 1, 1, 0, 0, '2025-10-12 14:58:05', '2025-10-12 14:58:05'),
+(8, 'Diamond Plan', 'diamond-plan', 'Diamond Plan', 5000.00, 'lifetime', NULL, NULL, NULL, NULL, 12, 0, 1, 0, 0, '2025-10-12 14:59:12', '2025-10-12 15:01:08');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `tenants`
 --
 
@@ -605,6 +679,10 @@ CREATE TABLE `tenants` (
   `website` varchar(255) DEFAULT NULL,
   `address` text DEFAULT NULL,
   `plan` enum('free','basic','premium','enterprise') DEFAULT 'basic',
+  `current_plan_id` int(11) DEFAULT NULL,
+  `subscription_status` enum('active','trial','expired','cancelled','suspended') DEFAULT 'trial',
+  `subscription_expires_at` timestamp NULL DEFAULT NULL,
+  `trial_ends_at` timestamp NULL DEFAULT NULL,
   `active` tinyint(1) DEFAULT 1,
   `verified` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -615,12 +693,8 @@ CREATE TABLE `tenants` (
 -- Dumping data for table `tenants`
 --
 
-INSERT INTO `tenants` (`id`, `name`, `email`, `phone`, `website`, `address`, `plan`, `active`, `verified`, `created_at`, `updated_at`) VALUES
-(1, 'Organizer One', 'demo@votesaas.com', '+233241234567', NULL, NULL, 'basic', 1, 1, '2025-10-03 11:36:30', '2025-10-05 05:04:28'),
-(2, 'Organizer Two', 'test@votesaas.com', '+233501234567', NULL, NULL, 'basic', 1, 1, '2025-10-03 11:36:30', '2025-10-05 05:04:36'),
-(3, 'Everything Nice Family', 'ekowmeee@gmail.com', NULL, NULL, NULL, 'basic', 1, 0, '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(4, 'Test Owner', 'owner@test.com', NULL, NULL, NULL, 'basic', 1, 1, '2025-10-08 19:29:28', '2025-10-08 19:29:28'),
-(5, 'Test Platform_admin', 'admin@test.com', NULL, NULL, NULL, 'basic', 1, 1, '2025-10-08 19:29:28', '2025-10-08 19:29:28');
+INSERT INTO `tenants` (`id`, `name`, `email`, `phone`, `website`, `address`, `plan`, `current_plan_id`, `subscription_status`, `subscription_expires_at`, `trial_ends_at`, `active`, `verified`, `created_at`, `updated_at`) VALUES
+(22, 'Hope For All', 'ekowmee@gmail.com', NULL, NULL, NULL, 'free', 5, 'trial', NULL, NULL, 1, 1, '2025-10-10 20:31:58', '2025-10-12 14:54:07');
 
 -- --------------------------------------------------------
 
@@ -633,8 +707,12 @@ CREATE TABLE `tenant_balances` (
   `tenant_id` int(11) NOT NULL,
   `available` decimal(10,2) DEFAULT 0.00,
   `pending` decimal(10,2) DEFAULT 0.00,
+  `on_hold` decimal(10,2) DEFAULT 0.00,
   `total_earned` decimal(10,2) DEFAULT 0.00,
   `total_paid` decimal(10,2) DEFAULT 0.00,
+  `last_payout_at` timestamp NULL DEFAULT NULL,
+  `last_payout_amount` decimal(10,2) DEFAULT 0.00,
+  `payout_count` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -643,10 +721,33 @@ CREATE TABLE `tenant_balances` (
 -- Dumping data for table `tenant_balances`
 --
 
-INSERT INTO `tenant_balances` (`id`, `tenant_id`, `available`, `pending`, `total_earned`, `total_paid`, `created_at`, `updated_at`) VALUES
-(3, 1, 0.00, 0.00, 0.00, 0.00, '2025-10-05 08:16:59', '2025-10-05 06:16:59'),
-(4, 2, 0.00, 0.00, 0.00, 0.00, '2025-10-05 08:53:02', '2025-10-05 06:53:02'),
-(5, 3, 0.00, 0.00, 0.00, 0.00, '2025-10-08 19:43:51', '2025-10-08 19:43:51');
+INSERT INTO `tenant_balances` (`id`, `tenant_id`, `available`, `pending`, `on_hold`, `total_earned`, `total_paid`, `last_payout_at`, `last_payout_amount`, `payout_count`, `created_at`, `updated_at`) VALUES
+(32, 22, 4.55, 0.00, 0.00, 4.55, 0.00, NULL, 0.00, 0, '2025-10-13 07:53:42', '2025-10-13 10:15:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tenant_plan_history`
+--
+
+CREATE TABLE `tenant_plan_history` (
+  `id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `old_plan_id` int(11) DEFAULT NULL,
+  `new_plan_id` int(11) NOT NULL,
+  `changed_by` int(11) DEFAULT NULL COMMENT 'User ID who made the change',
+  `change_reason` varchar(255) DEFAULT NULL,
+  `effective_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tenant_plan_history`
+--
+
+INSERT INTO `tenant_plan_history` (`id`, `tenant_id`, `old_plan_id`, `new_plan_id`, `changed_by`, `change_reason`, `effective_date`, `created_at`) VALUES
+(4, 22, 5, 5, NULL, 'Automatic plan update', '2025-10-11 00:01:44', '2025-10-11 00:01:44'),
+(5, 22, 5, 5, NULL, 'Automatic plan update', '2025-10-12 14:54:07', '2025-10-12 14:54:07');
 
 -- --------------------------------------------------------
 
@@ -668,21 +769,46 @@ CREATE TABLE `tenant_settings` (
 --
 
 INSERT INTO `tenant_settings` (`id`, `tenant_id`, `setting_key`, `setting_value`, `created_at`, `updated_at`) VALUES
-(1, 1, 'otp_required', 'false', '2025-10-03 11:36:30', '2025-10-03 11:36:30'),
-(2, 1, 'leaderboard_lag_seconds', '30', '2025-10-03 11:36:30', '2025-10-03 11:36:30'),
-(3, 1, 'theme_json', '{\"primary_color\": \"#007bff\", \"secondary_color\": \"#6c757d\"}', '2025-10-03 11:36:30', '2025-10-03 11:36:30'),
-(4, 1, 'max_votes_per_msisdn', '100', '2025-10-03 11:36:30', '2025-10-03 11:36:30'),
-(5, 1, 'fraud_detection_enabled', 'true', '2025-10-03 11:36:30', '2025-10-03 11:36:30'),
-(6, 3, 'otp_required', 'false', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(7, 3, 'leaderboard_lag_seconds', '30', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(8, 3, 'theme_json', '{\"primary_color\":\"#007bff\",\"secondary_color\":\"#6c757d\",\"success_color\":\"#28a745\",\"danger_color\":\"#dc3545\"}', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(9, 3, 'max_votes_per_msisdn', '100', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(10, 3, 'fraud_detection_enabled', 'true', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(11, 3, 'webhook_enabled', 'false', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(12, 3, 'email_notifications_enabled', 'true', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(13, 3, 'sms_notifications_enabled', 'false', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(14, 3, 'auto_approve_events', 'false', '2025-10-08 19:16:34', '2025-10-08 19:16:34'),
-(15, 3, 'minimum_payout_amount', '10', '2025-10-08 19:16:34', '2025-10-08 19:16:34');
+(46, 22, 'otp_required', 'false', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(47, 22, 'leaderboard_lag_seconds', '30', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(48, 22, 'theme_json', '{\"primary_color\":\"#007bff\",\"secondary_color\":\"#6c757d\",\"success_color\":\"#28a745\",\"danger_color\":\"#dc3545\"}', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(49, 22, 'max_votes_per_msisdn', '10000', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(50, 22, 'fraud_detection_enabled', 'true', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(51, 22, 'webhook_enabled', 'false', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(52, 22, 'email_notifications_enabled', 'true', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(53, 22, 'sms_notifications_enabled', 'false', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(54, 22, 'auto_approve_events', 'false', '2025-10-10 20:31:58', '2025-10-10 20:31:58'),
+(55, 22, 'minimum_payout_amount', '10', '2025-10-10 20:31:58', '2025-10-10 20:31:58');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `tenant_subscriptions`
+--
+
+CREATE TABLE `tenant_subscriptions` (
+  `id` int(11) NOT NULL,
+  `tenant_id` int(11) NOT NULL,
+  `plan_id` int(11) NOT NULL,
+  `status` enum('active','expired','cancelled','suspended') DEFAULT 'active',
+  `started_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `cancelled_at` timestamp NULL DEFAULT NULL,
+  `auto_renew` tinyint(1) DEFAULT 1,
+  `payment_method` varchar(50) DEFAULT NULL,
+  `last_payment_at` timestamp NULL DEFAULT NULL,
+  `next_payment_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `tenant_subscriptions`
+--
+
+INSERT INTO `tenant_subscriptions` (`id`, `tenant_id`, `plan_id`, `status`, `started_at`, `expires_at`, `cancelled_at`, `auto_renew`, `payment_method`, `last_payment_at`, `next_payment_at`, `created_at`, `updated_at`) VALUES
+(14, 22, 1, 'cancelled', '2025-10-10 20:31:58', NULL, '2025-10-10 22:16:01', 1, NULL, NULL, NULL, '2025-10-10 20:31:58', '2025-10-10 22:16:01'),
+(15, 22, 5, 'active', '2025-10-10 22:16:01', '2025-11-10 22:16:01', NULL, 1, NULL, NULL, '2025-11-10 22:16:01', '2025-10-10 22:16:01', '2025-10-10 22:16:01');
 
 -- --------------------------------------------------------
 
@@ -714,9 +840,8 @@ CREATE TABLE `transactions` (
 --
 
 INSERT INTO `transactions` (`id`, `tenant_id`, `event_id`, `contestant_id`, `category_id`, `bundle_id`, `amount`, `msisdn`, `status`, `provider`, `provider_reference`, `coupon_code`, `referral_code`, `failure_reason`, `created_at`, `updated_at`) VALUES
-(37, 3, 22, 37, 40, 16, 1.00, '+233545644749', 'success', 'momo', 'MPAD069BE3', '', '', NULL, '2025-10-09 12:06:01', '2025-10-09 12:06:07'),
-(38, 2, 23, 40, 42, 11, 35.00, '233545644749', 'success', 'momo', 'MP97F2A883', '', '', NULL, '2025-10-09 12:09:37', '2025-10-09 12:09:44'),
-(39, 2, 23, 41, 42, 8, 10.00, '0545644749', 'success', 'momo', 'MP4CBE0D72', '', '', NULL, '2025-10-09 12:11:19', '2025-10-09 12:11:26');
+(99, 22, 41, 203, 163, 27, 7.00, '233545644749', '', 'momo', 'PAY_35A7F6DBE1', '', '', 'Payment request expired. Please initiate a new payment.', '2025-10-13 10:14:30', '2025-10-13 10:14:41'),
+(100, 22, 41, 207, 162, 27, 7.00, '233545644749', 'success', 'momo', 'MP550665FB', '', '', NULL, '2025-10-13 10:15:11', '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -741,13 +866,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `tenant_id`, `email`, `password_hash`, `role`, `active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 1, 'admin@demo.com', '$2y$10$IdVuCAw45Y7kkjsiqzBwIO99rvD6Fe0oSDQMAzL9DeJ7jzFUpEMFu', 'owner', 1, '2025-10-08 10:39:41', '2025-10-03 11:36:30', '2025-10-08 10:39:41'),
-(2, 1, 'manager@demo.com', '$2y$10$IdVuCAw45Y7kkjsiqzBwIO99rvD6Fe0oSDQMAzL9DeJ7jzFUpEMFu', 'manager', 1, '2025-10-08 19:24:48', '2025-10-03 11:36:30', '2025-10-08 19:24:48'),
-(3, NULL, 'ekowme@gmail.comm', '$2y$10$IdVuCAw45Y7kkjsiqzBwIO99rvD6Fe0oSDQMAzL9DeJ7jzFUpEMFu', 'platform_admin', 1, '2025-10-10 11:46:51', '2025-10-03 11:36:30', '2025-10-10 11:46:51'),
-(4, 2, 'ekowme@gmail.com', '$2y$10$IdVuCAw45Y7kkjsiqzBwIO99rvD6Fe0oSDQMAzL9DeJ7jzFUpEMFu', 'owner', 1, '2025-10-10 12:58:23', '2025-10-03 14:24:41', '2025-10-10 12:58:23'),
-(5, 3, 'ekowmeee@gmail.com', '$2y$10$rGl6GaNNGv.o6Bz18lBES.Wc5yiwUi79dDzE5EIZu34QUzZjE/inC', 'owner', 1, '2025-10-09 05:28:59', '2025-10-08 19:16:34', '2025-10-09 05:28:59'),
-(6, 4, 'owner@test.com', '$2y$10$xK5ypV6EIp7taPnz.Y4Hn.8wYCvlzQtt2xG19fcMH93.9c/Rc4HmG', 'owner', 1, NULL, '2025-10-08 19:29:28', '2025-10-08 19:29:28'),
-(7, 5, 'admin@test.com', '$2y$10$X5x1hRHNS9.fF8a3G89kleFxmt9eKjEF3Lnrzha6X4sE115290HnO', 'platform_admin', 1, NULL, '2025-10-08 19:29:28', '2025-10-08 19:29:28');
+(3, NULL, 'ekowme@gmail.com', '$2y$10$IdVuCAw45Y7kkjsiqzBwIO99rvD6Fe0oSDQMAzL9DeJ7jzFUpEMFu', 'platform_admin', 1, '2025-10-13 09:19:27', '2025-10-03 11:36:30', '2025-10-13 09:19:27'),
+(17, 22, 'ekowmee@gmail.com', '$2y$10$VVxsBptQb2P1E51R.kV6wuxE82yQnZgoMkaHiW0H.OGpCLLoXJlJa', 'owner', 1, '2025-10-12 10:33:47', '2025-10-10 20:31:58', '2025-10-12 10:33:47');
 
 -- --------------------------------------------------------
 
@@ -787,9 +907,7 @@ CREATE TABLE `votes` (
 --
 
 INSERT INTO `votes` (`id`, `transaction_id`, `tenant_id`, `event_id`, `contestant_id`, `category_id`, `quantity`, `created_at`) VALUES
-(28, 37, 3, 22, 37, 40, 1, '2025-10-09 12:06:08'),
-(29, 38, 2, 23, 40, 42, 25, '2025-10-09 12:09:44'),
-(30, 39, 2, 23, 41, 42, 5, '2025-10-09 12:11:26');
+(80, 100, 22, 41, 207, 162, 7, '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -813,20 +931,10 @@ CREATE TABLE `vote_bundles` (
 --
 
 INSERT INTO `vote_bundles` (`id`, `event_id`, `name`, `votes`, `price`, `active`, `created_at`, `updated_at`) VALUES
-(8, 23, 'Single Vote', 1, 2.00, 1, '2025-10-09 07:38:32', '2025-10-09 07:38:32'),
-(9, 23, 'Vote Pack (5)', 5, 9.00, 1, '2025-10-09 07:38:32', '2025-10-09 07:38:32'),
-(10, 23, 'Vote Pack (10)', 10, 16.00, 1, '2025-10-09 07:38:32', '2025-10-09 07:38:32'),
-(11, 23, 'Vote Pack (25)', 25, 35.00, 1, '2025-10-09 07:38:32', '2025-10-09 07:38:32'),
-(12, 24, 'Single Vote', 1, 0.80, 1, '2025-10-09 08:19:44', '2025-10-09 08:19:44'),
-(13, 24, 'Vote Pack (5)', 5, 3.60, 1, '2025-10-09 08:19:44', '2025-10-09 08:19:44'),
-(14, 24, 'Vote Pack (10)', 10, 6.40, 1, '2025-10-09 08:19:44', '2025-10-09 08:19:44'),
-(15, 24, 'Vote Pack (25)', 25, 14.00, 1, '2025-10-09 08:19:44', '2025-10-09 08:19:44'),
-(16, 22, 'Vote Package', 100, 90.00, 1, '2025-10-09 08:22:28', '2025-10-09 08:22:28'),
-(17, 24, 'For You Bundle', 100, 90.00, 1, '2025-10-09 09:20:40', '2025-10-09 09:20:40'),
-(18, 26, 'Single Vote', 1, 1.00, 1, '2025-10-09 12:40:20', '2025-10-09 12:40:20'),
-(19, 26, 'Vote Pack (5)', 5, 4.50, 1, '2025-10-09 12:40:20', '2025-10-09 12:40:20'),
-(20, 26, 'Vote Pack (10)', 10, 8.00, 1, '2025-10-09 12:40:20', '2025-10-09 12:40:20'),
-(21, 26, 'Vote Pack (25)', 25, 17.50, 1, '2025-10-09 12:40:20', '2025-10-09 12:40:20');
+(27, 41, 'Single Vote', 1, 1.00, 1, '2025-10-13 09:05:50', '2025-10-13 09:05:50'),
+(28, 41, 'Vote Pack (5)', 5, 4.50, 1, '2025-10-13 09:05:51', '2025-10-13 09:05:51'),
+(29, 41, 'Vote Pack (10)', 10, 8.00, 1, '2025-10-13 09:05:51', '2025-10-13 09:05:51'),
+(30, 41, 'Vote Pack (25)', 25, 17.50, 1, '2025-10-13 09:05:51', '2025-10-13 09:05:51');
 
 -- --------------------------------------------------------
 
@@ -852,9 +960,7 @@ CREATE TABLE `vote_ledger` (
 --
 
 INSERT INTO `vote_ledger` (`id`, `vote_id`, `transaction_id`, `tenant_id`, `event_id`, `contestant_id`, `category_id`, `quantity`, `hash`, `created_at`) VALUES
-(20, 28, 37, 3, 22, 37, NULL, 1, 'fde0f58059f910f2fa55ea4d058ad82ceb4508ee84797ebaf7ef3760270a8b6c', '2025-10-09 12:06:08'),
-(21, 29, 38, 2, 23, 40, NULL, 25, '4ae4c0a67921a24ea845dde1e2bb230e6da32ca36e064ad4dddb14672dabe3a5', '2025-10-09 12:09:44'),
-(22, 30, 39, 2, 23, 41, NULL, 5, 'f4568d33c6f9567aa88aa561a5d0709a387514541f9617f5ffdd65322ff70acb', '2025-10-09 12:11:26');
+(72, 80, 100, 22, 41, 207, NULL, 7, '8755ebcfed5a1e849e0ad4df3739b3ff4199c8d9b45860aa45eede9887617973', '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -875,9 +981,7 @@ CREATE TABLE `vote_receipts` (
 --
 
 INSERT INTO `vote_receipts` (`id`, `transaction_id`, `short_code`, `public_hash`, `created_at`) VALUES
-(20, 37, 'YBK8T409', 'f983b7a7bfea5713639ce70be94893f3ecc2ad9c832ce930aced64958030b53a', '2025-10-09 12:06:08'),
-(21, 38, 'B6I0RM9S', 'f49f35bfbcfd95b3967853a597ed342125eb020de1703e43aafe3e17652e7178', '2025-10-09 12:09:44'),
-(22, 39, 'VEYAKF8I', '51aa1b9e704f92095b5af10c926fcfa2752c71f94c413cb96ea9e1cd1d6f4bfc', '2025-10-09 12:11:26');
+(72, 100, 'TI70O6U5', '01e5e84423f32160cd8b5d518dafd61705d045c965c87f97928b1fea9600f6e0', '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -890,6 +994,9 @@ CREATE TABLE `webhook_endpoints` (
   `tenant_id` int(11) NOT NULL,
   `url` varchar(500) NOT NULL,
   `secret` varchar(255) DEFAULT NULL,
+  `event_types` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`event_types`)),
+  `retry_count` int(2) DEFAULT 3,
+  `timeout_seconds` int(3) DEFAULT 10,
   `active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -1020,7 +1127,41 @@ ALTER TABLE `payouts`
   ADD UNIQUE KEY `payout_id` (`payout_id`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_tenant_status` (`tenant_id`,`status`),
-  ADD KEY `idx_created_at` (`created_at`);
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `payout_method_id` (`payout_method_id`),
+  ADD KEY `initiated_by` (`initiated_by`),
+  ADD KEY `approved_by` (`approved_by`);
+
+--
+-- Indexes for table `payout_methods`
+--
+ALTER TABLE `payout_methods`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_tenant_default` (`tenant_id`,`is_default`);
+
+--
+-- Indexes for table `payout_schedules`
+--
+ALTER TABLE `payout_schedules`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_tenant_schedule` (`tenant_id`);
+
+--
+-- Indexes for table `plan_features`
+--
+ALTER TABLE `plan_features`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_plan_feature` (`plan_id`,`feature_key`),
+  ADD KEY `idx_plan_sort` (`plan_id`,`sort_order`);
+
+--
+-- Indexes for table `platform_revenue`
+--
+ALTER TABLE `platform_revenue`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `transaction_id` (`transaction_id`),
+  ADD KEY `idx_type_date` (`revenue_type`,`created_at`),
+  ADD KEY `idx_amount_date` (`amount`,`created_at`);
 
 --
 -- Indexes for table `rate_limits`
@@ -1039,6 +1180,16 @@ ALTER TABLE `revenue_shares`
   ADD KEY `fee_rule_id` (`fee_rule_id`);
 
 --
+-- Indexes for table `revenue_transactions`
+--
+ALTER TABLE `revenue_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `transaction_id` (`transaction_id`),
+  ADD KEY `idx_tenant_date` (`tenant_id`,`created_at`),
+  ADD KEY `idx_event_date` (`event_id`,`created_at`),
+  ADD KEY `idx_distribution_status` (`distribution_status`);
+
+--
 -- Indexes for table `risk_blocks`
 --
 ALTER TABLE `risk_blocks`
@@ -1047,13 +1198,24 @@ ALTER TABLE `risk_blocks`
   ADD KEY `idx_type_value_active` (`block_type`,`block_value`,`active`);
 
 --
+-- Indexes for table `subscription_plans`
+--
+ALTER TABLE `subscription_plans`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`),
+  ADD KEY `fee_rule_id` (`fee_rule_id`),
+  ADD KEY `idx_active_sort` (`is_active`,`sort_order`),
+  ADD KEY `idx_slug` (`slug`);
+
+--
 -- Indexes for table `tenants`
 --
 ALTER TABLE `tenants`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD KEY `idx_active` (`active`),
-  ADD KEY `idx_plan` (`plan`);
+  ADD KEY `idx_plan` (`plan`),
+  ADD KEY `current_plan_id` (`current_plan_id`);
 
 --
 -- Indexes for table `tenant_balances`
@@ -1063,11 +1225,30 @@ ALTER TABLE `tenant_balances`
   ADD UNIQUE KEY `tenant_id` (`tenant_id`);
 
 --
+-- Indexes for table `tenant_plan_history`
+--
+ALTER TABLE `tenant_plan_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `old_plan_id` (`old_plan_id`),
+  ADD KEY `new_plan_id` (`new_plan_id`),
+  ADD KEY `changed_by` (`changed_by`),
+  ADD KEY `idx_tenant_date` (`tenant_id`,`effective_date`);
+
+--
 -- Indexes for table `tenant_settings`
 --
 ALTER TABLE `tenant_settings`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_tenant_setting` (`tenant_id`,`setting_key`);
+
+--
+-- Indexes for table `tenant_subscriptions`
+--
+ALTER TABLE `tenant_subscriptions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `plan_id` (`plan_id`),
+  ADD KEY `idx_tenant_status` (`tenant_id`,`status`),
+  ADD KEY `idx_expires_at` (`expires_at`);
 
 --
 -- Indexes for table `transactions`
@@ -1158,31 +1339,31 @@ ALTER TABLE `webhook_events`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=267;
 
 --
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=167;
 
 --
 -- AUTO_INCREMENT for table `contestants`
 --
 ALTER TABLE `contestants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=216;
 
 --
 -- AUTO_INCREMENT for table `contestant_categories`
 --
 ALTER TABLE `contestant_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=79;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=239;
 
 --
 -- AUTO_INCREMENT for table `events`
 --
 ALTER TABLE `events`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `event_drafts`
@@ -1200,7 +1381,7 @@ ALTER TABLE `event_status_history`
 -- AUTO_INCREMENT for table `fee_rules`
 --
 ALTER TABLE `fee_rules`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `fraud_events`
@@ -1212,7 +1393,7 @@ ALTER TABLE `fraud_events`
 -- AUTO_INCREMENT for table `leaderboard_cache`
 --
 ALTER TABLE `leaderboard_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=55;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT for table `otp_requests`
@@ -1224,6 +1405,30 @@ ALTER TABLE `otp_requests`
 -- AUTO_INCREMENT for table `payouts`
 --
 ALTER TABLE `payouts`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+
+--
+-- AUTO_INCREMENT for table `payout_methods`
+--
+ALTER TABLE `payout_methods`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `payout_schedules`
+--
+ALTER TABLE `payout_schedules`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `plan_features`
+--
+ALTER TABLE `plan_features`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
+
+--
+-- AUTO_INCREMENT for table `platform_revenue`
+--
+ALTER TABLE `platform_revenue`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -1236,7 +1441,13 @@ ALTER TABLE `rate_limits`
 -- AUTO_INCREMENT for table `revenue_shares`
 --
 ALTER TABLE `revenue_shares`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+
+--
+-- AUTO_INCREMENT for table `revenue_transactions`
+--
+ALTER TABLE `revenue_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=151;
 
 --
 -- AUTO_INCREMENT for table `risk_blocks`
@@ -1245,34 +1456,52 @@ ALTER TABLE `risk_blocks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `subscription_plans`
+--
+ALTER TABLE `subscription_plans`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT for table `tenants`
 --
 ALTER TABLE `tenants`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `tenant_balances`
 --
 ALTER TABLE `tenant_balances`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+
+--
+-- AUTO_INCREMENT for table `tenant_plan_history`
+--
+ALTER TABLE `tenant_plan_history`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `tenant_settings`
 --
 ALTER TABLE `tenant_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+
+--
+-- AUTO_INCREMENT for table `tenant_subscriptions`
+--
+ALTER TABLE `tenant_subscriptions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `ussd_sessions`
@@ -1284,25 +1513,25 @@ ALTER TABLE `ussd_sessions`
 -- AUTO_INCREMENT for table `votes`
 --
 ALTER TABLE `votes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
 -- AUTO_INCREMENT for table `vote_bundles`
 --
 ALTER TABLE `vote_bundles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `vote_ledger`
 --
 ALTER TABLE `vote_ledger`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT for table `vote_receipts`
 --
 ALTER TABLE `vote_receipts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT for table `webhook_endpoints`
@@ -1384,7 +1613,34 @@ ALTER TABLE `leaderboard_cache`
 -- Constraints for table `payouts`
 --
 ALTER TABLE `payouts`
-  ADD CONSTRAINT `payouts_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `payouts_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `payouts_ibfk_2` FOREIGN KEY (`payout_method_id`) REFERENCES `payout_methods` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `payouts_ibfk_3` FOREIGN KEY (`initiated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `payouts_ibfk_4` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `payout_methods`
+--
+ALTER TABLE `payout_methods`
+  ADD CONSTRAINT `payout_methods_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `payout_schedules`
+--
+ALTER TABLE `payout_schedules`
+  ADD CONSTRAINT `payout_schedules_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `plan_features`
+--
+ALTER TABLE `plan_features`
+  ADD CONSTRAINT `plan_features_ibfk_1` FOREIGN KEY (`plan_id`) REFERENCES `subscription_plans` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `platform_revenue`
+--
+ALTER TABLE `platform_revenue`
+  ADD CONSTRAINT `platform_revenue_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `revenue_shares`
@@ -1395,10 +1651,30 @@ ALTER TABLE `revenue_shares`
   ADD CONSTRAINT `revenue_shares_ibfk_3` FOREIGN KEY (`fee_rule_id`) REFERENCES `fee_rules` (`id`) ON DELETE SET NULL;
 
 --
+-- Constraints for table `revenue_transactions`
+--
+ALTER TABLE `revenue_transactions`
+  ADD CONSTRAINT `revenue_transactions_ibfk_1` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `revenue_transactions_ibfk_2` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `revenue_transactions_ibfk_3` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `risk_blocks`
 --
 ALTER TABLE `risk_blocks`
   ADD CONSTRAINT `risk_blocks_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `subscription_plans`
+--
+ALTER TABLE `subscription_plans`
+  ADD CONSTRAINT `subscription_plans_ibfk_1` FOREIGN KEY (`fee_rule_id`) REFERENCES `fee_rules` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `tenants`
+--
+ALTER TABLE `tenants`
+  ADD CONSTRAINT `tenants_ibfk_1` FOREIGN KEY (`current_plan_id`) REFERENCES `subscription_plans` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `tenant_balances`
@@ -1407,10 +1683,26 @@ ALTER TABLE `tenant_balances`
   ADD CONSTRAINT `tenant_balances_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `tenant_plan_history`
+--
+ALTER TABLE `tenant_plan_history`
+  ADD CONSTRAINT `tenant_plan_history_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tenant_plan_history_ibfk_2` FOREIGN KEY (`old_plan_id`) REFERENCES `subscription_plans` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `tenant_plan_history_ibfk_3` FOREIGN KEY (`new_plan_id`) REFERENCES `subscription_plans` (`id`),
+  ADD CONSTRAINT `tenant_plan_history_ibfk_4` FOREIGN KEY (`changed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
 -- Constraints for table `tenant_settings`
 --
 ALTER TABLE `tenant_settings`
   ADD CONSTRAINT `tenant_settings_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `tenant_subscriptions`
+--
+ALTER TABLE `tenant_subscriptions`
+  ADD CONSTRAINT `tenant_subscriptions_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `tenant_subscriptions_ibfk_2` FOREIGN KEY (`plan_id`) REFERENCES `subscription_plans` (`id`);
 
 --
 -- Constraints for table `transactions`

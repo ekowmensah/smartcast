@@ -127,6 +127,7 @@ class Application
             $router->get('/payouts/settings', 'PayoutController@settings');
             $router->post('/payouts/settings', 'PayoutController@settings');
             $router->post('/payouts/{id}/cancel', 'PayoutController@cancelPayout');
+            $router->get('/payouts/{id}/receipt', 'PayoutController@downloadReceipt');
             
             // Payout API routes
             $router->get('/api/payouts/balance', 'PayoutController@apiGetBalance');
@@ -236,6 +237,26 @@ class Application
             $router->post('/financial/payouts/{id}/reject', 'SuperAdminController@rejectPayout');
             $router->post('/financial/payouts/batch-process', 'SuperAdminController@processBatchPayouts');
             $router->get('/financial/payouts/{id}/details', 'SuperAdminController@getPayoutDetails');
+            
+            // New Comprehensive Payout Management System
+            $router->get('/payouts', 'SuperAdmin\\PayoutController@index');
+            $router->get('/payouts/pending', 'SuperAdmin\\PayoutController@pending');
+            $router->get('/payouts/approve/{id}', 'SuperAdmin\\PayoutController@approve');
+            $router->get('/payouts/reject/{id}', 'SuperAdmin\\PayoutController@reject');
+            $router->post('/payouts/process-approval/{id}', 'SuperAdmin\\PayoutController@processApproval');
+            $router->post('/payouts/process-rejection/{id}', 'SuperAdmin\\PayoutController@processRejection');
+            $router->get('/payouts/reverse-processed/{id}', 'SuperAdmin\\PayoutController@reverseProcessed');
+            $router->post('/payouts/reverse-processed/{id}', 'SuperAdmin\\PayoutController@processReverseProcessed');
+            $router->get('/payouts/reverse-approved/{id}', 'SuperAdmin\\PayoutController@reverseApproved');
+            $router->post('/payouts/reverse-approved/{id}', 'SuperAdmin\\PayoutController@processReverseApproved');
+            $router->post('/payouts/recalculate-fees/{id}', 'SuperAdmin\\PayoutController@recalculateFees');
+            $router->get('/payouts/debug/{id}', 'SuperAdmin\\PayoutController@debugPayoutMethods');
+            $router->post('/payouts/bulk-approve', 'SuperAdmin\\PayoutController@bulkApprove');
+            $router->get('/payouts/process/{id}', 'SuperAdmin\\PayoutController@process');
+            $router->get('/payouts/details/{id}', 'SuperAdmin\\PayoutController@details');
+            $router->get('/payouts/{id}/receipt', 'SuperAdmin\\PayoutController@downloadReceipt');
+            $router->get('/payouts/history', 'SuperAdmin\\PayoutController@history');
+            $router->get('/api/payouts/stats', 'SuperAdmin\\PayoutController@apiStats');
             $router->get('/financial/fees', 'SuperAdminController@globalFeeRules');
             $router->post('/financial/fees/create', 'SuperAdminController@createFeeRule');
             $router->post('/financial/fees/update', 'SuperAdminController@updateFeeRule');

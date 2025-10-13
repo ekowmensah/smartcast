@@ -33,6 +33,7 @@ $content = ob_start();
                                 <th>Payout ID</th>
                                 <th>Date Requested</th>
                                 <th>Amount</th>
+                                <th>Expected Amount</th>
                                 <th>Method</th>
                                 <th>Status</th>
                                 <th>Processed Date</th>
@@ -55,16 +56,16 @@ $content = ob_start();
                                     <small class="text-muted"><?= date('g:i A', strtotime($payout['created_at'])) ?></small>
                                 </td>
                                 <td>
-                                    <div class="fw-bold">$<?= number_format($payout['amount'], 2) ?></div>
+                                    <div class="fw-bold">GH₵<?= number_format($payout['amount'], 2) ?></div>
                                     <?php if (($payout['processing_fee'] ?? 0) > 0): ?>
                                     <small class="text-muted">
-                                        Fee: $<?= number_format($payout['processing_fee'], 2) ?>
-                                    </small>
-                                    <br>
-                                    <small class="text-success">
-                                        Net: $<?= number_format($payout['net_amount'] ?? ($payout['amount'] - ($payout['processing_fee'] ?? 0)), 2) ?>
+                                        Fee: GH₵<?= number_format($payout['processing_fee'], 2) ?>
                                     </small>
                                     <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-success">GH₵<?= number_format($payout['net_amount'] ?? ($payout['amount'] - ($payout['processing_fee'] ?? 0)), 2) ?></div>
+                                    <small class="text-muted">You received</small>
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">

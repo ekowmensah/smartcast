@@ -29,7 +29,53 @@ class TenantBalance extends BaseModel
             return $this->getBalance($tenantId);
         }
         
-        return $balance[0];
+        $balanceData = $balance[0];
+        
+        // Get pending breakdown by payout status
+        $pendingBreakdown = $this->getPendingBreakdown($tenantId);
+        
+        // Merge the breakdown into balance data
+        return array_merge($balanceData, $pendingBreakdown);
+    }
+    
+    private function getPendingBreakdown($tenantId)
+    {
+        try {
+            $db = new \SmartCast\Core\Database();
+            
+            // Get pending amounts by status
+            $pendingApproval = $db->query("
+                SELECT COALESCE(SUM(amount), 0) as total 
+                FROM payouts 
+                WHERE tenant_id = " . intval($tenantId) . " AND status = 'pending'
+            ")->fetch()['total'] ?? 0;
+            
+            $approvedPending = $db->query("
+                SELECT COALESCE(SUM(amount), 0) as total 
+                FROM payouts 
+                WHERE tenant_id = " . intval($tenantId) . " AND status = 'approved'
+            ")->fetch()['total'] ?? 0;
+            
+            $processing = $db->query("
+                SELECT COALESCE(SUM(amount), 0) as total 
+                FROM payouts 
+                WHERE tenant_id = " . intval($tenantId) . " AND status = 'processing'
+            ")->fetch()['total'] ?? 0;
+            
+            return [
+                'pending_approval' => floatval($pendingApproval),
+                'approved_pending' => floatval($approvedPending),
+                'processing' => floatval($processing)
+            ];
+            
+        } catch (\Exception $e) {
+            error_log('Get pending breakdown error: ' . $e->getMessage());
+            return [
+                'pending_approval' => 0,
+                'approved_pending' => 0,
+                'processing' => 0
+            ];
+        }
     }
     
     public function updateBalance($tenantId, $totalEarned, $totalPaid = null)
@@ -102,7 +148,7 @@ class TenantBalance extends BaseModel
         ]);
     }
     
-    public function processPayout($tenantId, $amount)
+    public function reserveForPayout($tenantId, $amount)
     {
         $balance = $this->getBalance($tenantId);
         
@@ -112,7 +158,49 @@ class TenantBalance extends BaseModel
         
         return $this->update($balance['id'], [
             'available' => $balance['available'] - $amount,
+            'pending' => $balance['pending'] + $amount
+        ]);
+    }
+    
+    public function processPayout($tenantId, $amount)
+    {
+        $balance = $this->getBalance($tenantId);
+        
+        if ($balance['pending'] < $amount) {
+            throw new \Exception('Insufficient pending balance for payout processing');
+        }
+        
+        return $this->update($balance['id'], [
+            'pending' => $balance['pending'] - $amount,
             'total_paid' => $balance['total_paid'] + $amount
+        ]);
+    }
+    
+    public function rejectPayout($tenantId, $amount)
+    {
+        $balance = $this->getBalance($tenantId);
+        
+        if ($balance['pending'] < $amount) {
+            throw new \Exception('Insufficient pending balance for payout rejection');
+        }
+        
+        return $this->update($balance['id'], [
+            'pending' => $balance['pending'] - $amount,
+            'available' => $balance['available'] + $amount
+        ]);
+    }
+    
+    public function reverseProcessedPayout($tenantId, $amount)
+    {
+        $balance = $this->getBalance($tenantId);
+        
+        if ($balance['total_paid'] < $amount) {
+            throw new \Exception('Insufficient paid balance for payout reversal');
+        }
+        
+        return $this->update($balance['id'], [
+            'total_paid' => $balance['total_paid'] - $amount,
+            'pending' => $balance['pending'] + $amount
         ]);
     }
     

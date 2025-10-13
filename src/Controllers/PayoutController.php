@@ -113,7 +113,7 @@ class PayoutController extends BaseController
             
             if ($result['success']) {
                 $this->redirect(ORGANIZER_URL . '/payouts', 
-                    'Payout request submitted successfully and is pending approval. Amount: $' . number_format($result['amount'], 2), 
+                    'Payout request submitted successfully! Your request for $' . number_format($result['amount'], 2) . ' is now pending admin approval. You will be notified once it\'s reviewed.', 
                     'success');
             } else {
                 $this->redirect(ORGANIZER_URL . '/payouts/request', 
@@ -443,5 +443,54 @@ class PayoutController extends BaseController
         } catch (\Exception $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+    }
+    
+    /**
+     * Download payout receipt
+     */
+    public function downloadReceipt($payoutId)
+    {
+        try {
+            $tenantId = $this->session->getTenantId();
+            $payout = $this->payoutModel->getPayoutWithDetails($payoutId);
+            
+            // Verify payout belongs to current tenant and is paid
+            if (!$payout || $payout['tenant_id'] != $tenantId || $payout['status'] !== 'paid') {
+                $this->redirect(ORGANIZER_URL . '/payouts', 'Receipt not available', 'error');
+                return;
+            }
+            
+            // Generate and download receipt
+            $this->generatePayoutReceipt($payout);
+            
+        } catch (\Exception $e) {
+            error_log('Download receipt error: ' . $e->getMessage());
+            $this->redirect(ORGANIZER_URL . '/payouts', 'Error downloading receipt', 'error');
+        }
+    }
+    
+    /**
+     * Generate payout receipt
+     */
+    private function generatePayoutReceipt($payout)
+    {
+        // Set headers for text receipt download
+        header('Content-Type: text/plain');
+        header('Content-Disposition: attachment; filename="payout-receipt-' . $payout['payout_id'] . '.txt"');
+        
+        echo "SMARTCAST PAYOUT RECEIPT\n";
+        echo "========================\n\n";
+        echo "Payout ID: " . $payout['payout_id'] . "\n";
+        echo "Organization: " . $payout['tenant_name'] . "\n";
+        echo "Amount: $" . number_format($payout['amount'], 2) . "\n";
+        echo "Processing Fee: $" . number_format($payout['processing_fee'], 2) . "\n";
+        echo "Net Amount: $" . number_format($payout['net_amount'], 2) . "\n";
+        echo "Method: " . ucfirst(str_replace('_', ' ', $payout['payout_method'])) . "\n";
+        echo "Status: " . ucfirst($payout['status']) . "\n";
+        echo "Requested: " . date('F j, Y g:i A', strtotime($payout['requested_at'])) . "\n";
+        echo "Processed: " . date('F j, Y g:i A', strtotime($payout['processed_at'])) . "\n";
+        echo "\nThis receipt confirms the successful payout processing.\n";
+        echo "Generated on: " . date('F j, Y g:i A') . "\n";
+        echo "\nThank you for using SmartCast!\n";
     }
 }

@@ -12,9 +12,16 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
     color: #2d3748;
     line-height: 1.6;
+    min-height: 100vh;
+    animation: gradientShift 10s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); }
+    50% { background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%); }
 }
 
 /* Container & Layout */
@@ -53,14 +60,22 @@ body {
 
 /* Nominee Showcase */
 .nominee-showcase {
-    background: linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #4a5568 100%);
+    background: linear-gradient(135deg, rgba(26, 32, 44, 0.95) 0%, rgba(45, 55, 72, 0.95) 50%, rgba(74, 85, 104, 0.95) 100%);
     color: white;
     padding: 3rem;
-    border-radius: 1.5rem;
+    border-radius: 2rem;
     margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transform: translateY(0);
+    transition: transform 0.3s ease;
+}
+
+.nominee-showcase:hover {
+    transform: translateY(-5px);
 }
 
 .nominee-showcase::before {
@@ -81,13 +96,37 @@ body {
 
 /* Nominee Card */
 .nominee-card {
-    background: white;
-    border-radius: 1.5rem;
-    padding: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 2rem;
+    padding: 2.5rem;
     margin-bottom: 2rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(20px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(30px);
+    position: relative;
+    overflow: hidden;
+    animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.nominee-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #667eea, transparent);
+    animation: slideRight 2s ease-in-out infinite;
+}
+
+@keyframes slideRight {
+    0% { left: -100%; }
+    100% { left: 100%; }
 }
 
 .nominee-header {
@@ -98,25 +137,40 @@ body {
 }
 
 .nominee-avatar {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid #e2e8f0;
+    border: 4px solid rgba(255, 255, 255, 0.3);
     flex-shrink: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.nominee-avatar:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
 }
 
 .nominee-avatar-placeholder {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+    background: linear-gradient(135deg, rgba(226, 232, 240, 0.8), rgba(203, 213, 224, 0.8));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: #a0aec0;
     flex-shrink: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.nominee-avatar-placeholder:hover {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
 }
 
 .nominee-details h1 {
@@ -162,12 +216,33 @@ body {
 
 /* Voting Interface */
 .voting-interface {
-    background: white;
-    border-radius: 1.5rem;
-    padding: 2rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 2rem;
+    padding: 2.5rem;
     margin-bottom: 2rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(30px);
+    animation: slideInUp 0.8s ease-out 0.2s both;
+    position: relative;
+}
+
+.voting-interface::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+    border-radius: 2rem;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.voting-interface:hover::after {
+    opacity: 0.1;
 }
 
 .interface-header {
@@ -198,22 +273,29 @@ body {
 }
 
 .vote-method {
-    border: 2px solid #e2e8f0;
-    border-radius: 1rem;
+    border: 2px solid rgba(226, 232, 240, 0.5);
+    border-radius: 1.5rem;
     padding: 1.5rem;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    transform: scale(1);
 }
 
 .vote-method:hover {
     border-color: #667eea;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    box-shadow: 0 12px 30px rgba(102, 126, 234, 0.2);
+    transform: translateY(-3px) scale(1.02);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .vote-method.active {
     border-color: #667eea;
-    background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+    background: linear-gradient(135deg, rgba(240, 244, 255, 0.9), rgba(232, 240, 254, 0.9));
+    transform: scale(1.03);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.25);
 }
 
 .method-header {
@@ -315,24 +397,30 @@ body {
 }
 
 .package-option {
-    border: 2px solid #e2e8f0;
-    border-radius: 1rem;
+    border: 2px solid rgba(226, 232, 240, 0.5);
+    border-radius: 1.5rem;
     padding: 1.5rem;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    transform: scale(1);
 }
 
 .package-option:hover {
     border-color: #667eea;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.25);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .package-option.selected {
     border-color: #667eea;
-    background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+    background: linear-gradient(135deg, rgba(240, 244, 255, 0.9), rgba(232, 240, 254, 0.9));
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
 }
 
 .package-popular {
@@ -473,16 +561,33 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 1rem 3rem;
-    border-radius: 0.75rem;
+    padding: 1.25rem 3.5rem;
+    border-radius: 2rem;
     font-size: 1.125rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
-    min-width: 200px;
-    box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.4);
+    min-width: 250px;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.vote-submit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.vote-submit-btn:hover::before {
+    left: 100%;
 }
 
 .vote-submit-btn:hover:not(:disabled) {
@@ -560,7 +665,41 @@ body {
     margin-bottom: 0.25rem;
 }
 
-/* Responsive Design */
+/* Floating Particles Background */
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.particle:nth-child(1) { left: 20%; animation-delay: 0s; }
+.particle:nth-child(2) { left: 40%; animation-delay: 1s; }
+.particle:nth-child(3) { left: 60%; animation-delay: 2s; }
+.particle:nth-child(4) { left: 80%; animation-delay: 3s; }
+.particle:nth-child(5) { left: 10%; animation-delay: 4s; }
+.particle:nth-child(6) { left: 90%; animation-delay: 5s; }
+
+@keyframes float {
+    0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+}
+
+/* Enhanced Mobile Experience */
 @media (max-width: 768px) {
     .professional-vote-container {
         padding: 1rem;
@@ -577,8 +716,19 @@ body {
         gap: 1rem;
     }
     
+    .nominee-avatar, .nominee-avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        font-size: 3rem;
+    }
+    
     .packages-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .package-option {
+        padding: 1rem;
     }
     
     .vote-input-group {
@@ -586,12 +736,46 @@ body {
         align-items: stretch;
         gap: 1rem;
     }
+    
+    .vote-submit-btn {
+        width: 100%;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+    
+    .nominee-card, .voting-interface, .contact-section {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .packages-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .nominee-details h1 {
+        font-size: 1.5rem;
+    }
+    
+    .interface-title {
+        font-size: 1.25rem;
+    }
 }
 </style>
 
 
 
 
+
+<div class="particles">
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+</div>
 
 <div class="professional-vote-container">
     <!-- Back Navigation -->
