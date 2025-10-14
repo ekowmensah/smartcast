@@ -25,7 +25,7 @@
         <div class="card stats-card text-white bg-success">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($revenue['total_revenue'] ?? 0) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($revenue['total_revenue'] ?? 0) ?></div>
                     <div>Total Revenue</div>
                     <div class="small">All time</div>
                 </div>
@@ -40,7 +40,7 @@
         <div class="card stats-card text-white bg-primary">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($revenue['monthly_revenue'] ?? 0) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($revenue['monthly_revenue'] ?? 0) ?></div>
                     <div>This Month</div>
                     <div class="small">Current month</div>
                 </div>
@@ -55,7 +55,7 @@
         <div class="card stats-card text-white bg-info">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($revenue['avg_monthly'] ?? 0) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($revenue['avg_monthly'] ?? 0) ?></div>
                     <div>Avg Monthly</div>
                     <div class="small">Last 12 months</div>
                 </div>
@@ -142,8 +142,8 @@
                                         <div class="fw-semibold"><?= htmlspecialchars($tenant['name'] ?? 'Unknown') ?></div>
                                     </td>
                                     <td><span class="badge bg-info"><?= htmlspecialchars($tenant['plan'] ?? 'N/A') ?></span></td>
-                                    <td>$<?= number_format($tenant['monthly_revenue'] ?? 0) ?></td>
-                                    <td>$<?= number_format($tenant['total_revenue'] ?? 0) ?></td>
+                                    <td>GH₵<?= number_format($tenant['monthly_revenue'] ?? 0) ?></td>
+                                    <td>GH₵<?= number_format($tenant['total_revenue'] ?? 0) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -173,7 +173,7 @@
                             <small class="text-muted"><?= number_format($plan['subscriber_count'] ?? 0) ?> subscribers</small>
                         </div>
                         <div class="text-end">
-                            <div class="fw-bold">$<?= number_format($plan['revenue'] ?? 0) ?></div>
+                            <div class="fw-bold">GH₵<?= number_format($plan['revenue'] ?? 0) ?></div>
                             <small class="text-muted"><?= number_format($plan['percentage'] ?? 0, 1) ?>%</small>
                         </div>
                     </div>

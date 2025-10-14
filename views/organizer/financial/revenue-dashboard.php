@@ -23,7 +23,7 @@
         <div class="card stats-card text-white bg-success">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($balance['available'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($balance['available'] ?? 0, 2) ?></div>
                     <div>Available Balance</div>
                     <div class="small">Ready for payout</div>
                 </div>
@@ -38,7 +38,7 @@
         <div class="card stats-card text-white bg-primary">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
                     <div>Total Earned</div>
                     <div class="small">All time</div>
                 </div>
@@ -53,7 +53,7 @@
         <div class="card stats-card text-white bg-info">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($balance['total_paid'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($balance['total_paid'] ?? 0, 2) ?></div>
                     <div>Total Paid Out</div>
                     <div class="small">Lifetime payouts</div>
                 </div>
@@ -68,7 +68,7 @@
         <div class="card stats-card text-white bg-warning">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($todayEarnings ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($todayEarnings ?? 0, 2) ?></div>
                     <div>Today's Earnings</div>
                     <div class="small">Last 24 hours</div>
                 </div>
@@ -113,7 +113,7 @@
                             <small class="text-muted"><?= $event['transaction_count'] ?> transactions</small>
                         </div>
                         <div class="text-end">
-                            <div class="fw-bold text-success">$<?= number_format($event['total_revenue'], 2) ?></div>
+                            <div class="fw-bold text-success">GH₵<?= number_format($event['total_revenue'], 2) ?></div>
                         </div>
                     </div>
                     <?php endforeach; ?>
@@ -162,7 +162,7 @@
                                 <span class="badge bg-primary"><?= $transaction['vote_count'] ?> votes</span>
                             </td>
                             <td>
-                                <div class="fw-bold">$<?= number_format($transaction['amount'], 2) ?></div>
+                                <div class="fw-bold">GH₵<?= number_format($transaction['amount'], 2) ?></div>
                             </td>
                             <td>
                                 <?php 
@@ -174,14 +174,14 @@
                                     $feePercentage = ($platformFee / $transaction['amount']) * 100;
                                 }
                                 ?>
-                                <div class="text-danger">-$<?= number_format($platformFee, 2) ?></div>
+                                <div class="text-danger">-GH₵<?= number_format($platformFee, 2) ?></div>
                                 <small class="text-muted"><?= number_format($feePercentage, 1) ?>%</small>
                             </td>
                             <td>
                                 <?php 
                                 $netAmount = $transaction['calculated_net_amount'] ?? $transaction['net_amount'] ?? 0;
                                 ?>
-                                <div class="fw-bold text-success">+$<?= number_format($netAmount, 2) ?></div>
+                                <div class="fw-bold text-success">+GH₵<?= number_format($netAmount, 2) ?></div>
                             </td>
                         </tr>
                         <?php endforeach; ?>

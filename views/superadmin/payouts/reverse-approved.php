@@ -28,7 +28,7 @@ $content = ob_start();
                             </tr>
                             <tr>
                                 <td class="fw-bold">Amount:</td>
-                                <td class="h5 text-primary">$<?= number_format($payout['amount'], 2) ?></td>
+                                <td class="h5 text-primary">GH₵<?= number_format($payout['amount'], 2) ?></td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Organizer:</td>
@@ -44,11 +44,11 @@ $content = ob_start();
                         <table class="table table-borderless">
                             <tr>
                                 <td class="fw-bold">Processing Fee:</td>
-                                <td>$<?= number_format($payout['processing_fee'], 2) ?></td>
+                                <td>GH₵<?= number_format($payout['processing_fee'], 2) ?></td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Net Amount:</td>
-                                <td class="h6 text-success">$<?= number_format($payout['net_amount'], 2) ?></td>
+                                <td class="h6 text-success">GH₵<?= number_format($payout['net_amount'], 2) ?></td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Approved By:</td>
@@ -121,7 +121,7 @@ $content = ob_start();
                         </h6>
                         <ul class="mb-0">
                             <li>The payout status will be changed from "Approved" to "Pending"</li>
-                            <li>The funds ($<?= number_format($payout['amount'], 2) ?>) will remain in pending status</li>
+                            <li>The funds (GH₵<?= number_format($payout['amount'], 2) ?>) will remain in pending status</li>
                             <li>All approval details (date, approver, notes) will be cleared</li>
                             <li>The payout will require re-approval before processing</li>
                             <li>The organizer will see the payout as "pending approval" again</li>

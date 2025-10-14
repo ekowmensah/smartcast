@@ -55,7 +55,7 @@
                 </div>
                 <div class="col-md-3">
                     <small class="text-muted">Price:</small><br>
-                    <strong>$<?= number_format($currentSubscription['price'], 2) ?>/<?= $currentSubscription['billing_cycle'] ?></strong>
+                    <strong>GH₵<?= number_format($currentSubscription['price'], 2) ?>/<?= $currentSubscription['billing_cycle'] ?></strong>
                 </div>
             </div>
             <div class="mt-3">
@@ -201,18 +201,18 @@
                 <div class="row text-center">
                     <div class="col-4">
                         <div class="border-end">
-                            <div class="fs-5 fw-semibold text-success">$<?= number_format($balance['available'] ?? 0, 2) ?></div>
+                            <div class="fs-5 fw-semibold text-success">GH₵<?= number_format($balance['available'] ?? 0, 2) ?></div>
                             <div class="text-uppercase text-medium-emphasis small">Available</div>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="border-end">
-                            <div class="fs-5 fw-semibold text-info">$<?= number_format($balance['pending'] ?? 0, 2) ?></div>
+                            <div class="fs-5 fw-semibold text-info">GH₵<?= number_format($balance['pending'] ?? 0, 2) ?></div>
                             <div class="text-uppercase text-medium-emphasis small">Pending</div>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div class="fs-5 fw-semibold text-primary">$<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
+                        <div class="fs-5 fw-semibold text-primary">GH₵<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
                         <div class="text-uppercase text-medium-emphasis small">Total Earned</div>
                     </div>
                 </div>
@@ -228,7 +228,7 @@
                                 <div class="small text-medium-emphasis"><?= htmlspecialchars($vote['event_name']) ?></div>
                             </div>
                             <div class="text-end">
-                                <div class="fw-semibold text-success">+$<?= number_format($vote['amount'], 2) ?></div>
+                                <div class="fw-semibold text-success">+GH₵<?= number_format($vote['amount'], 2) ?></div>
                                 <div class="small text-medium-emphasis"><?= $vote['quantity'] ?> vote<?= $vote['quantity'] > 1 ? 's' : '' ?></div>
                             </div>
                         </div>

@@ -28,7 +28,7 @@ $content = ob_start();
                             </tr>
                             <tr>
                                 <td class="fw-bold">Amount:</td>
-                                <td class="h5 text-primary">$<?= number_format($payout['amount'], 2) ?></td>
+                                <td class="h5 text-primary">GH₵<?= number_format($payout['amount'], 2) ?></td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Organizer:</td>
@@ -44,11 +44,11 @@ $content = ob_start();
                         <table class="table table-borderless">
                             <tr>
                                 <td class="fw-bold">Processing Fee:</td>
-                                <td>$<?= number_format($payout['processing_fee'], 2) ?></td>
+                                <td>GH₵<?= number_format($payout['processing_fee'], 2) ?></td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Net Amount:</td>
-                                <td class="h6 text-success">$<?= number_format($payout['net_amount'], 2) ?></td>
+                                <td class="h6 text-success">GH₵<?= number_format($payout['net_amount'], 2) ?></td>
                             </tr>
                             <tr>
                                 <td class="fw-bold">Payout Method:</td>
@@ -123,7 +123,7 @@ $content = ob_start();
                         </h6>
                         <ul class="mb-0">
                             <li>The payout status will be changed from "Paid" to "Approved"</li>
-                            <li>The funds ($<?= number_format($payout['amount'], 2) ?>) will be moved from "Total Paid" back to "Pending"</li>
+                            <li>The funds (GH₵<?= number_format($payout['amount'], 2) ?>) will be moved from "Total Paid" back to "Pending"</li>
                             <li>The payout can then be re-processed or further modified</li>
                             <li>All processing details (date, reference) will be cleared</li>
                             <li>A complete audit trail will be maintained</li>

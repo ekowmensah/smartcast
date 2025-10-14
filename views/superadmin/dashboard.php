@@ -89,7 +89,7 @@
         <div class="card stats-card info text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($stats['total_revenue'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($stats['total_revenue'] ?? 0, 2) ?></div>
                     <div>Platform Revenue</div>
                     <div class="small">
                         <?= number_format($stats['successful_transactions'] ?? 0) ?> transactions
@@ -209,13 +209,13 @@
                     <div class="row text-center">
                         <div class="col-md-3">
                             <div class="platform-metric">
-                                <div class="fs-4 fw-semibold">$<?= number_format($revenueOverview['total_revenue'] ?? 0, 2) ?></div>
+                                <div class="fs-4 fw-semibold">GH₵<?= number_format($revenueOverview['total_revenue'] ?? 0, 2) ?></div>
                                 <div class="small">Total Revenue</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="platform-metric">
-                                <div class="fs-4 fw-semibold">$<?= number_format($revenueOverview['monthly_revenue'] ?? 0, 2) ?></div>
+                                <div class="fs-4 fw-semibold">GH₵<?= number_format($revenueOverview['monthly_revenue'] ?? 0, 2) ?></div>
                                 <div class="small">This Month</div>
                             </div>
                         </div>
