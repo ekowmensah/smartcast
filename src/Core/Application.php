@@ -282,8 +282,29 @@ class Application
             $router->get('/api/keys', 'SuperAdminController@apiKeys');
             $router->get('/api/webhooks', 'SuperAdminController@apiWebhooks');
             
+            // SMS Gateway Management
+            $router->get('/sms/gateways', 'SuperAdminController@smsGateways');
+            $router->post('/sms/gateways', 'SuperAdminController@createSmsGateway');
+            $router->get('/sms/gateways/{id}/edit', 'SuperAdminController@editSmsGateway');
+            $router->post('/sms/gateways/{id}/update', 'SuperAdminController@updateSmsGateway');
+            $router->post('/sms/gateways/{id}/toggle', 'SuperAdminController@toggleSmsGateway');
+            $router->delete('/sms/gateways/{id}', 'SuperAdminController@deleteSmsGateway');
+            $router->post('/sms/gateways/{id}/test', 'SuperAdminController@testSmsGateway');
+            $router->get('/sms/statistics', 'SuperAdminController@smsStatistics');
+            
+            // Bulk SMS routes
+            $router->get('/bulk-sms', 'BulkSmsController@index');
+            $router->get('/bulk-sms/compose', 'BulkSmsController@compose');
+            $router->post('/bulk-sms/preview-recipients', 'BulkSmsController@previewRecipients');
+            $router->post('/bulk-sms/send', 'BulkSmsController@send');
+            $router->get('/bulk-sms/template-preview', 'BulkSmsController@templatePreview');
+            $router->get('/bulk-sms/templates', 'BulkSmsController@templates');
+            $router->post('/bulk-sms/templates/save', 'BulkSmsController@saveTemplate');
+            
             // Reports
             $router->get('/reports', 'SuperAdminController@platformReports');
+            
+            $router->get('/alerts/critical', 'SuperAdminController@getCriticalAlerts');
         });
         
         // API routes
@@ -297,6 +318,9 @@ class Application
             $router->get('/vote/verify', 'Api\\VoteController@verifyReceipt');
             $router->get('/vote/bundles', 'Api\\VoteController@getBundles');
             $router->get('/vote/contestants', 'Api\\VoteController@getContestants');
+            
+            // SMS API routes
+            $router->post('/sms/vote-confirmation', 'SmsController@sendVoteConfirmation');
             
             // Shortcode API routes
             $router->get('/shortcode-test', 'Api\\ShortcodeController@test');

@@ -231,6 +231,40 @@
                 </ul>
             </li>
             
+            <!-- SMS Management -->
+            <li class="nav-group">
+                <a class="nav-link nav-group-toggle" href="#">
+                    <i class="nav-icon fas fa-mobile-alt"></i>
+                    SMS Management
+                </a>
+                <ul class="nav-group-items">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= SUPERADMIN_URL ?>/sms/gateways">
+                            <i class="nav-icon fas fa-server"></i>
+                            SMS Gateways
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= SUPERADMIN_URL ?>/bulk-sms">
+                            <i class="nav-icon fas fa-paper-plane"></i>
+                            Bulk SMS
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= SUPERADMIN_URL ?>/bulk-sms/templates">
+                            <i class="nav-icon fas fa-file-alt"></i>
+                            SMS Templates
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= SUPERADMIN_URL ?>/sms/statistics">
+                            <i class="nav-icon fas fa-chart-bar"></i>
+                            SMS Statistics
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
             <!-- API Management -->
             <li class="nav-group">
                 <a class="nav-link nav-group-toggle" href="#">

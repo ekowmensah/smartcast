@@ -54,6 +54,24 @@ class Vote extends BaseModel
         return $voteId;
     }
     
+    /**
+     * Get vote by transaction ID
+     */
+    public function getByTransactionId($transactionId)
+    {
+        $sql = "
+            SELECT v.*, c.name as contestant_name, cat.name as category_name, e.name as event_name
+            FROM votes v
+            LEFT JOIN contestants c ON v.contestant_id = c.id
+            LEFT JOIN categories cat ON v.category_id = cat.id
+            LEFT JOIN events e ON v.event_id = e.id
+            WHERE v.transaction_id = :transaction_id
+            LIMIT 1
+        ";
+        
+        return $this->db->selectOne($sql, ['transaction_id' => $transactionId]);
+    }
+    
     public function getVotesByEvent($eventId, $limit = null)
     {
         $sql = "

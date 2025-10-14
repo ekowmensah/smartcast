@@ -11,7 +11,10 @@ use SmartCast\Models\FraudEvent;
 use SmartCast\Models\RevenueShare;
 use SmartCast\Models\Payout;
 use SmartCast\Models\TenantBalance;
+use SmartCast\Models\SmsGateway;
+use SmartCast\Models\SmsLog;
 use SmartCast\Services\PayoutService;
+use SmartCast\Services\SmsService;
 
 /**
  * Super Admin Dashboard Controller
@@ -28,6 +31,9 @@ class SuperAdminController extends BaseController
     private $payoutModel;
     private $balanceModel;
     private $payoutService;
+    private $smsGateway;
+    private $smsLog;
+    private $smsService;
     
     public function __construct()
     {
@@ -45,6 +51,9 @@ class SuperAdminController extends BaseController
         $this->payoutModel = new Payout();
         $this->balanceModel = new TenantBalance();
         $this->payoutService = new PayoutService();
+        $this->smsGateway = new SmsGateway();
+        $this->smsLog = new SmsLog();
+        $this->smsService = new SmsService();
     }
     
     public function dashboard()
@@ -2502,5 +2511,348 @@ class SuperAdminController extends BaseController
         }
         
         return $trends;
+    }
+    
+    // ===== SMS GATEWAY MANAGEMENT =====
+
+    /**
+     * Show SMS gateways management page
+     */
+    public function smsGateways()
+    {
+        $gateways = $this->smsGateway->findAll();
+        $gatewayStats = [];
+        
+        // Get statistics for each gateway
+        foreach ($gateways as $gateway) {
+            $stats = $this->smsGateway->getGatewayStats($gateway['id']);
+            $gatewayStats[$gateway['id']] = $stats[0] ?? null;
+        }
+        
+        // Get overall SMS statistics
+        $smsStats = $this->smsLog->getStatistics();
+        
+        $content = $this->renderView('superadmin/sms/gateways', [
+            'gateways' => $gateways,
+            'gatewayStats' => $gatewayStats,
+            'totalSms' => $smsStats['total_sms'] ?? 0,
+            'successRate' => $smsStats['success_rate'] ?? 0,
+            'title' => 'SMS Gateways'
+        ]);
+        
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'SMS Gateways',
+            'breadcrumbs' => [
+                ['title' => 'SMS Management', 'url' => SUPERADMIN_URL . '/sms'],
+                ['title' => 'Gateways']
+            ]
+        ]);
+    }
+
+    /**
+     * Show edit SMS gateway form
+     */
+    public function editSmsGateway($gatewayId)
+    {
+        $gateway = $this->smsGateway->find($gatewayId);
+        if (!$gateway) {
+            $this->redirect(SUPERADMIN_URL . '/sms/gateways', 'Gateway not found', 'error');
+            return;
+        }
+
+        $content = $this->renderView('superadmin/sms/edit-gateway', [
+            'gateway' => $gateway,
+            'title' => 'Edit SMS Gateway'
+        ]);
+
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'Edit SMS Gateway',
+            'breadcrumbs' => [
+                ['title' => 'SMS Management', 'url' => SUPERADMIN_URL . '/sms'],
+                ['title' => 'Gateways', 'url' => SUPERADMIN_URL . '/sms/gateways'],
+                ['title' => 'Edit Gateway']
+            ]
+        ]);
+    }
+
+    /**
+     * Update SMS gateway
+     */
+    public function updateSmsGateway($gatewayId)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $gateway = $this->smsGateway->find($gatewayId);
+                if (!$gateway) {
+                    $this->json([
+                        'success' => false,
+                        'message' => 'Gateway not found'
+                    ], 404);
+                    return;
+                }
+
+                $data = [
+                    'name' => $_POST['name'] ?? '',
+                    'type' => $_POST['type'] ?? '',
+                    'api_key' => $_POST['api_key'] ?? '',
+                    'sender_id' => $_POST['sender_id'] ?? '',
+                    'client_id' => $_POST['client_id'] ?? null,
+                    'client_secret' => $_POST['client_secret'] ?? null,
+                    'test_phone' => $_POST['test_phone'] ?? null,
+                    'priority' => (int)($_POST['priority'] ?? 1),
+                    'is_active' => isset($_POST['is_active']) ? 1 : 0
+                ];
+
+                // Validate required fields
+                $required = ['name', 'type', 'api_key', 'sender_id'];
+                if ($data['type'] === 'hubtel') {
+                    $required[] = 'client_id';
+                    $required[] = 'client_secret';
+                }
+
+                foreach ($required as $field) {
+                    if (empty($data[$field])) {
+                        $this->json([
+                            'success' => false,
+                            'message' => "Field '{$field}' is required"
+                        ], 400);
+                        return;
+                    }
+                }
+
+                $this->smsGateway->update($gatewayId, $data);
+
+                $this->json([
+                    'success' => true,
+                    'message' => 'SMS gateway updated successfully'
+                ]);
+
+            } catch (\Exception $e) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Error updating gateway: ' . $e->getMessage()
+                ], 500);
+            }
+        }
+    }
+
+    /**
+     * Create new SMS gateway
+     */
+    public function createSmsGateway()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $data = [
+                    'name' => $_POST['name'] ?? '',
+                    'type' => $_POST['type'] ?? '',
+                    'api_key' => $_POST['api_key'] ?? '',
+                    'sender_id' => $_POST['sender_id'] ?? '',
+                    'client_id' => $_POST['client_id'] ?? null,
+                    'client_secret' => $_POST['client_secret'] ?? null,
+                    'test_phone' => $_POST['test_phone'] ?? null,
+                    'priority' => (int)($_POST['priority'] ?? 1),
+                    'is_active' => isset($_POST['is_active']) ? 1 : 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                
+                // Validate required fields
+                $required = ['name', 'type', 'api_key', 'sender_id'];
+                if ($data['type'] === 'hubtel') {
+                    $required[] = 'client_id';
+                    $required[] = 'client_secret';
+                }
+                
+                foreach ($required as $field) {
+                    if (empty($data[$field])) {
+                        $this->json([
+                            'success' => false,
+                            'message' => "Field '{$field}' is required"
+                        ], 400);
+                        return;
+                    }
+                }
+                
+                $gatewayId = $this->smsGateway->create($data);
+                
+                $this->json([
+                    'success' => true,
+                    'message' => 'SMS gateway created successfully',
+                    'gateway_id' => $gatewayId
+                ]);
+                
+            } catch (\Exception $e) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Error creating gateway: ' . $e->getMessage()
+                ], 500);
+            }
+        }
+    }
+
+    /**
+     * Toggle SMS gateway status
+     */
+    public function toggleSmsGateway($gatewayId)
+    {
+        try {
+            $result = $this->smsGateway->toggleStatus($gatewayId);
+            
+            if ($result) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Gateway status updated successfully'
+                ]);
+            } else {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Gateway not found'
+                ], 404);
+            }
+            
+        } catch (\Exception $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Error updating gateway: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete SMS gateway
+     */
+    public function deleteSmsGateway($gatewayId)
+    {
+        try {
+            $result = $this->smsGateway->delete($gatewayId);
+            
+            if ($result) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Gateway deleted successfully'
+                ]);
+            } else {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Gateway not found'
+                ], 404);
+            }
+            
+        } catch (\Exception $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Error deleting gateway: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Test SMS gateway
+     */
+    public function testSmsGateway($gatewayId)
+    {
+        try {
+            $testPhone = $_POST['test_phone'] ?? null;
+            $result = $this->smsService->testGateway($gatewayId, $testPhone);
+            
+            $this->json([
+                'success' => $result['success'],
+                'message' => $result['success'] ? 'Test SMS sent successfully' : 'Test failed',
+                'details' => $result
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Test failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get SMS statistics
+     */
+    public function smsStatistics()
+    {
+        try {
+            $dateFrom = $_GET['date_from'] ?? date('Y-m-d', strtotime('-30 days'));
+            $dateTo = $_GET['date_to'] ?? date('Y-m-d');
+            
+            $stats = $this->smsService->getStatistics($dateFrom, $dateTo);
+            $dailyStats = $this->smsLog->getDailyStats(30);
+            $gatewayComparison = $this->smsLog->getGatewayComparison($dateFrom, $dateTo);
+            
+            $this->json([
+                'success' => true,
+                'data' => [
+                    'overview' => $stats,
+                    'daily_stats' => $dailyStats,
+                    'gateway_comparison' => $gatewayComparison
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Error fetching statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get critical alerts for dashboard
+     */
+    public function getCriticalAlerts()
+    {
+        try {
+            // Mock critical alerts - replace with real implementation
+            $alerts = [];
+
+            // Check for system issues
+            $systemAlerts = [];
+            
+            // Check database connection
+            try {
+                $this->db->selectOne("SELECT 1");
+            } catch (\Exception $e) {
+                $systemAlerts[] = [
+                    'type' => 'error',
+                    'message' => 'Database connection issue',
+                    'time' => date('Y-m-d H:i:s')
+                ];
+            }
+
+            // Check for failed SMS in last hour (if SMS tables exist)
+            try {
+                if ($this->smsLog) {
+                    $failedSms = $this->smsLog->count([
+                        'status' => 'failed',
+                        'created_at' => ['>=', date('Y-m-d H:i:s', strtotime('-1 hour'))]
+                    ]);
+                    
+                    if ($failedSms > 10) {
+                        $systemAlerts[] = [
+                            'type' => 'warning',
+                            'message' => "High SMS failure rate: {$failedSms} failed in last hour",
+                            'time' => date('Y-m-d H:i:s')
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                // SMS tables might not exist yet or other error
+            }
+
+            $this->json([
+                'success' => true,
+                'alerts' => array_merge($alerts, $systemAlerts)
+            ]);
+
+        } catch (\Exception $e) {
+            $this->json([
+                'success' => false,
+                'message' => 'Error fetching alerts: ' . $e->getMessage(),
+                'alerts' => []
+            ], 500);
+        }
     }
 }

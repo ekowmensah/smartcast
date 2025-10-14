@@ -17,6 +17,7 @@ use SmartCast\Models\RevenueShare;
 use SmartCast\Models\TenantBalance;
 use SmartCast\Services\MoMoPaymentService;
 use SmartCast\Services\RevenueWebhookService;
+use SmartCast\Services\VoteCompletionService;
 
 /**
  * Vote Controller
@@ -36,6 +37,7 @@ class VoteController extends BaseController
     private $tenantBalanceModel;
     private $webhookService;
     private $paymentService;
+    private $voteCompletionService;
     
     public function __construct()
     {
@@ -53,6 +55,7 @@ class VoteController extends BaseController
         $this->tenantBalanceModel = new TenantBalance();
         $this->webhookService = new RevenueWebhookService();
         $this->paymentService = new MoMoPaymentService();
+        $this->voteCompletionService = new VoteCompletionService();
     }
     
     public function showVoting($eventSlug)
@@ -423,10 +426,14 @@ class VoteController extends BaseController
             if (empty($transaction['provider_reference'])) {
                 // If no provider reference, the payment initiation likely failed
                 // Update transaction status and return failed status
-                $this->transactionModel->update($transactionId, [
-                    'status' => 'failed',
-                    'failure_reason' => 'Payment initiation failed - no provider reference'
-                ]);
+                try {
+                    $this->transactionModel->update($transactionId, [
+                        'status' => 'failed',
+                        'failure_reason' => 'Payment initiation failed - no provider reference'
+                    ]);
+                } catch (\Exception $updateError) {
+                    error_log("Failed to update transaction status: " . $updateError->getMessage());
+                }
                 
                 return $this->json([
                     'success' => true, 
@@ -468,6 +475,17 @@ class VoteController extends BaseController
                 } catch (\Exception $e) {
                     error_log("Vote processing error: " . $e->getMessage());
                     error_log("Vote processing stack trace: " . $e->getTraceAsString());
+                    
+                    // Try to update transaction status to success even if vote processing fails
+                    try {
+                        $this->transactionModel->update($transactionId, [
+                            'status' => 'success',
+                            'provider_reference' => $paymentStatus['receipt_number'] ?? $transaction['provider_reference']
+                        ]);
+                    } catch (\Exception $updateError) {
+                        error_log("Failed to update transaction status: " . $updateError->getMessage());
+                    }
+                    
                     // Return success for payment but note processing issue
                     return $this->json([
                         'success' => true,
@@ -481,10 +499,14 @@ class VoteController extends BaseController
                 }
             } elseif (in_array($paymentStatus['status'], ['failed', 'expired'])) {
                 // Payment failed - update transaction status
-                $this->transactionModel->update($transactionId, [
-                    'status' => $paymentStatus['status'],
-                    'failure_reason' => $paymentStatus['message'] ?? 'Payment failed'
-                ]);
+                try {
+                    $this->transactionModel->update($transactionId, [
+                        'status' => $paymentStatus['status'],
+                        'failure_reason' => $paymentStatus['message'] ?? 'Payment failed'
+                    ]);
+                } catch (\Exception $updateError) {
+                    error_log("Failed to update transaction status: " . $updateError->getMessage());
+                }
             }
             
             return $this->json([
@@ -564,6 +586,19 @@ class VoteController extends BaseController
             error_log("Processing revenue distribution for transaction: " . $transaction['id']);
             $this->processRevenueDistribution($transaction);
             
+            // ✅ SEND SMS NOTIFICATION - NEW!
+            error_log("Sending SMS notification for transaction: " . $transaction['id']);
+            try {
+                $smsResult = $this->voteCompletionService->processVoteCompletion($transaction['id'], [
+                    'phone' => $this->extractPhoneFromTransaction($transaction, $paymentStatus)
+                ]);
+                error_log("SMS notification result: " . json_encode($smsResult));
+            } catch (\Exception $e) {
+                error_log("SMS notification failed: " . $e->getMessage());
+                error_log("SMS notification stack trace: " . $e->getTraceAsString());
+                // Don't throw - SMS failure shouldn't break the vote process
+            }
+            
             // Log the vote
             $this->auditModel->logVoteCast(
                 $transaction['id'], 
@@ -582,6 +617,62 @@ class VoteController extends BaseController
         }
     }
     
+    /**
+     * Extract phone number from transaction or payment status
+     */
+    private function extractPhoneFromTransaction($transaction, $paymentStatus = [])
+    {
+        // Try to get phone from various sources
+        $phone = null;
+        
+        // From payment status (webhook payload)
+        if (!empty($paymentStatus['phone'])) {
+            $phone = $paymentStatus['phone'];
+        }
+        
+        // From transaction msisdn field (primary source for votes)
+        if (!$phone && !empty($transaction['msisdn'])) {
+            $phone = $transaction['msisdn'];
+        }
+        
+        // From transaction metadata
+        if (!$phone && !empty($transaction['metadata'])) {
+            $metadata = is_string($transaction['metadata']) ? 
+                json_decode($transaction['metadata'], true) : 
+                $transaction['metadata'];
+                
+            if (isset($metadata['phone'])) {
+                $phone = $metadata['phone'];
+            }
+        }
+        
+        // From transaction phone field (if exists)
+        if (!$phone && !empty($transaction['phone'])) {
+            $phone = $transaction['phone'];
+        }
+        
+        // From payment gateway response
+        if (!$phone && !empty($transaction['gateway_response'])) {
+            $response = is_string($transaction['gateway_response']) ? 
+                json_decode($transaction['gateway_response'], true) : 
+                $transaction['gateway_response'];
+                
+            if (isset($response['phone']) || isset($response['mobile'])) {
+                $phone = $response['phone'] ?? $response['mobile'];
+            }
+        }
+        
+        // Default fallback - you might want to get this from user session or form data
+        if (!$phone) {
+            error_log("Warning: Phone number not found in transaction data for SMS notification");
+            error_log("Transaction data: " . json_encode($transaction));
+            // You could return a default test number or throw an exception
+            return null;
+        }
+        
+        return $phone;
+    }
+
     private function getVoteCountFromTransaction($transaction)
     {
         error_log("Getting vote count for transaction: " . print_r($transaction, true));

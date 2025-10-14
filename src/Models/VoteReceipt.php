@@ -150,6 +150,14 @@ class VoteReceipt extends BaseModel
     }
     
     /**
+     * Alias for getReceiptByTransaction for consistency with other models
+     */
+    public function getByTransactionId($transactionId)
+    {
+        return $this->getReceiptByTransaction($transactionId);
+    }
+    
+    /**
      * Find receipt by short code
      */
     public function findByShortCode($shortCode)

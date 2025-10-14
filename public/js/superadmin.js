@@ -10,9 +10,42 @@ document.addEventListener('DOMContentLoaded', function() {
             new coreui.Sidebar(sidebar);
         }
 
-        // Initialize all CoreUI components
-        coreui.Tooltip.getOrCreateInstance('[data-coreui-toggle="tooltip"]');
-        coreui.Dropdown.getOrCreateInstance('[data-coreui-toggle="dropdown"]');
+        // Initialize all CoreUI components safely
+        const tooltipElements = document.querySelectorAll('[data-coreui-toggle="tooltip"]');
+        if (tooltipElements.length > 0) {
+            tooltipElements.forEach(element => {
+                try {
+                    coreui.Tooltip.getOrCreateInstance(element);
+                } catch (e) {
+                    console.warn('Could not initialize CoreUI tooltip:', e);
+                }
+            });
+        }
+        
+        const dropdownElements = document.querySelectorAll('[data-coreui-toggle="dropdown"]');
+        if (dropdownElements.length > 0) {
+            dropdownElements.forEach(element => {
+                try {
+                    coreui.Dropdown.getOrCreateInstance(element);
+                } catch (e) {
+                    console.warn('Could not initialize CoreUI dropdown:', e);
+                }
+            });
+        }
+    }
+
+    // Initialize Bootstrap tooltips if Bootstrap is available
+    if (typeof bootstrap !== 'undefined') {
+        const bsTooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        if (bsTooltipElements.length > 0) {
+            bsTooltipElements.forEach(element => {
+                try {
+                    new bootstrap.Tooltip(element);
+                } catch (e) {
+                    console.warn('Could not initialize Bootstrap tooltip:', e);
+                }
+            });
+        }
     }
 
     // Auto-refresh for super admin dashboard
