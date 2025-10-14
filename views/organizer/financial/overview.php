@@ -25,7 +25,7 @@
         <div class="card stats-card text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($balance['available'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($balance['available'] ?? 0, 2) ?></div>
                     <div>Available Balance</div>
                     <div class="small">Ready for payout</div>
                 </div>
@@ -40,7 +40,7 @@
         <div class="card stats-card success text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
                     <div>Total Earned</div>
                     <div class="small">All time earnings</div>
                 </div>
@@ -55,7 +55,7 @@
         <div class="card stats-card warning text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($balance['pending'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($balance['pending'] ?? 0, 2) ?></div>
                     <div>Pending</div>
                     <div class="small">Processing...</div>
                 </div>
@@ -70,7 +70,7 @@
         <div class="card stats-card info text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($balance['total_paid'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($balance['total_paid'] ?? 0, 2) ?></div>
                     <div>Total Paid Out</div>
                     <div class="small">Lifetime payouts</div>
                 </div>
@@ -137,7 +137,7 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="small">This Week</span>
-                        <span class="small fw-semibold">$<?= number_format($revenueStats['this_week'] ?? 0, 2) ?></span>
+                        <span class="small fw-semibold">GH₵<?= number_format($revenueStats['this_week'] ?? 0, 2) ?></span>
                     </div>
                     <div class="progress" style="height: 6px;">
                         <div class="progress-bar bg-primary" style="width: 75%"></div>
@@ -147,7 +147,7 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <span class="small">Last Week</span>
-                        <span class="small fw-semibold">$<?= number_format($revenueStats['last_week'] ?? 0, 2) ?></span>
+                        <span class="small fw-semibold">GH₵<?= number_format($revenueStats['last_week'] ?? 0, 2) ?></span>
                     </div>
                     <div class="progress" style="height: 6px;">
                         <div class="progress-bar bg-info" style="width: 60%"></div>
@@ -195,7 +195,7 @@
                                         <td><?= htmlspecialchars($transaction['event_name'] ?? 'N/A') ?></td>
                                         <td><?= htmlspecialchars($transaction['contestant_name'] ?? 'N/A') ?></td>
                                         <td><?= number_format($transaction['quantity'] ?? 0) ?></td>
-                                        <td>$<?= number_format($transaction['amount'] ?? 0, 2) ?></td>
+                                        <td>GH₵<?= number_format($transaction['amount'] ?? 0, 2) ?></td>
                                         <td>
                                             <span class="badge bg-<?= $transaction['status'] === 'success' ? 'success' : ($transaction['status'] === 'pending' ? 'warning' : 'danger') ?>">
                                                 <?= ucfirst($transaction['status'] ?? 'unknown') ?>
@@ -232,17 +232,17 @@
             <div class="modal-body">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    Available balance: <strong>$<?= number_format($balance['available'] ?? 0, 2) ?></strong>
+                    Available balance: <strong>GH₵<?= number_format($balance['available'] ?? 0, 2) ?></strong>
                 </div>
                 
                 <form id="payoutForm">
                     <div class="mb-3">
                         <label class="form-label">Payout Amount *</label>
                         <div class="input-group">
-                            <span class="input-group-text">$</span>
+                            <span class="input-group-text">GH₵</span>
                             <input type="number" class="form-control" name="amount" step="0.01" max="<?= $balance['available'] ?? 0 ?>" required>
                         </div>
-                        <div class="form-text">Minimum payout: $10.00</div>
+                        <div class="form-text">Minimum payout: GH₵10.00</div>
                     </div>
                     
                     <div class="mb-3">

@@ -220,7 +220,7 @@ $content = ob_start();
 <!-- Balance Overview -->
 <div class="balance-grid">
     <div class="glass-card balance-card">
-        <div class="balance-amount">$<?= number_format($balance['available'] ?? 0, 2) ?></div>
+        <div class="balance-amount">GH₵<?= number_format($balance['available'] ?? 0, 2) ?></div>
         <div class="balance-label">Available Balance</div>
         <div class="status-indicator bg-success text-white">
             <i class="fas fa-check-circle"></i>
@@ -229,7 +229,7 @@ $content = ob_start();
     </div>
     
     <div class="glass-card balance-card">
-        <div class="balance-amount">$<?= number_format(($balance['pending_approval'] ?? 0) + ($balance['approved_pending'] ?? 0) + ($balance['processing'] ?? 0), 2) ?></div>
+        <div class="balance-amount">GH₵<?= number_format(($balance['pending_approval'] ?? 0) + ($balance['approved_pending'] ?? 0) + ($balance['processing'] ?? 0), 2) ?></div>
         <div class="balance-label">Total Pending</div>
         <?php if (isset($balance['pending_approval']) && $balance['pending_approval'] > 0): ?>
             <div class="status-indicator bg-warning text-dark">
@@ -251,7 +251,7 @@ $content = ob_start();
     </div>
     
     <div class="glass-card balance-card">
-        <div class="balance-amount">$<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
+        <div class="balance-amount">GH₵<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
         <div class="balance-label">Total Earned</div>
         <div class="status-indicator bg-info text-white">
             <i class="fas fa-chart-line"></i>
