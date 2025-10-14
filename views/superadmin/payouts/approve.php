@@ -9,7 +9,7 @@ $content = ob_start();
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i class="fas fa-file-invoice-dollar me-2"></i>
+                    <i class="fas fa-file-invoice me-2"></i>
                     Payout Request Details
                 </h5>
             </div>

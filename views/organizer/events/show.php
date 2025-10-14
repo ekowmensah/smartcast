@@ -14,8 +14,8 @@
                 <?= date('M j', strtotime($event['start_date'])) ?> - <?= date('M j, Y', strtotime($event['end_date'])) ?>
             </span>
             <span class="text-muted">
-                <i class="fas fa-dollar-sign me-1"></i>
-                $<?= number_format($eventStats['vote_price'], 2) ?> per vote
+                <i class="fas fa-money-bill me-1"></i>
+                GH₵<?= number_format($eventStats['vote_price'], 2) ?> per vote
             </span>
         </div>
     </div>
@@ -202,7 +202,7 @@
                 
                 <div class="row text-center mb-3">
                     <div class="col-6">
-                        <div class="fs-4 fw-semibold text-info">$1,228</div>
+                        <div class="fs-4 fw-semibold text-info">GH₵1,228</div>
                         <div class="small text-muted">Revenue</div>
                     </div>
                     <div class="col-6">
@@ -345,11 +345,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">$<?= number_format($eventStats['total_revenue'] ?? 0, 0) ?></h4>
+                        <h4 class="mb-0">GH₵<?= number_format($eventStats['total_revenue'] ?? 0, 0) ?></h4>
                         <p class="mb-0">Revenue</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                        <i class="fas fa-money-bill fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>

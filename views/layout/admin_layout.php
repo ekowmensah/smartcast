@@ -148,7 +148,7 @@
             <!-- Financial -->
             <li class="nav-group">
                 <a class="nav-link nav-group-toggle" href="#">
-                    <i class="nav-icon fas fa-dollar-sign"></i>
+                    <i class="nav-icon fas fa-money-bill"></i>
                     Financial
                 </a>
                 <ul class="nav-group-items">

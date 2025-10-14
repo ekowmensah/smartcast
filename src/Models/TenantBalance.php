@@ -270,6 +270,6 @@ class TenantBalance extends BaseModel
     public function getMinimumPayoutAmount($tenantId)
     {
         // This could be configurable per tenant or globally
-        return 10.00; // Minimum $10 payout
+        return 10.00; // Minimum GH₵10 payout
     }
 }

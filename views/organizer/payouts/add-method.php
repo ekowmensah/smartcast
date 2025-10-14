@@ -24,7 +24,7 @@ $content = ob_start();
                                     <i class="fas fa-university fa-2x mb-2"></i>
                                     <div class="fw-bold">Bank Transfer</div>
                                     <small class="text-muted">1-3 business days</small>
-                                    <small class="text-muted">1.0% + $0.50</small>
+                                    <small class="text-muted">1.0% + GH₵0.50</small>
                                 </label>
                             </div>
                             <div class="col-md-3 mb-3">
@@ -33,7 +33,7 @@ $content = ob_start();
                                     <i class="fas fa-mobile-alt fa-2x mb-2"></i>
                                     <div class="fw-bold">Mobile Money</div>
                                     <small class="text-muted">Instant to 24 hours</small>
-                                    <small class="text-muted">1.5% + $0.25</small>
+                                    <small class="text-muted">1.5% + GH₵0.25</small>
                                 </label>
                             </div>
                             <div class="col-md-3 mb-3">
@@ -42,7 +42,7 @@ $content = ob_start();
                                     <i class="fab fa-paypal fa-2x mb-2"></i>
                                     <div class="fw-bold">PayPal</div>
                                     <small class="text-muted">Instant to 1 day</small>
-                                    <small class="text-muted">2.9% + $0.30</small>
+                                    <small class="text-muted">2.9% + GH₵0.30</small>
                                 </label>
                             </div>
                             <div class="col-md-3 mb-3">
@@ -51,7 +51,7 @@ $content = ob_start();
                                     <i class="fab fa-stripe fa-2x mb-2"></i>
                                     <div class="fw-bold">Stripe</div>
                                     <small class="text-muted">2-7 business days</small>
-                                    <small class="text-muted">2.9% + $0.30</small>
+                                    <small class="text-muted">2.9% + GH₵0.30</small>
                                 </label>
                             </div>
                         </div>

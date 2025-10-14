@@ -78,20 +78,18 @@
         <div class="card stats-card text-white bg-warning">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">
-                        $<?php 
+                    <div class="fs-4 fw-semibold">GH₵<?php 
                         $totalRevenue = 0;
                         foreach ($plans ?? [] as $plan) {
                             $totalRevenue += ($plan['price'] ?? 0) * (($plan['usage_stats']['active_subscriptions'] ?? 0));
                         }
                         echo number_format($totalRevenue);
-                        ?>
-                    </div>
+                        ?></div>
                     <div>Monthly Revenue</div>
                     <div class="small">From subscriptions</div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
             </div>
         </div>
     </div>
@@ -120,8 +118,7 @@
                             <div class="h5 text-success mb-0">Free</div>
                         <?php else: ?>
                             <div class="h5 text-primary mb-0">
-                                $<?= number_format($plan['price'], 2) ?>
-                                <small class="text-muted">/<?= $plan['billing_cycle'] ?></small>
+                                <div class="h5 text-primary mb-0">GH₵<?= number_format($plan['price'], 2) ?><small class="text-muted">/<?= $plan['billing_cycle'] ?></small></div>
                             </div>
                         <?php endif; ?>
                         <p class="text-muted small mb-2"><?= htmlspecialchars($plan['description'] ?? '') ?></p>
@@ -272,8 +269,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Price *</label>
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" name="price" step="0.01" min="0" required>
+                                    <div class="input-group"><span class="input-group-text">GH₵</span><input type="number" class="form-control" name="price" step="0.01" min="0" required></div>
                                 </div>
                             </div>
                         </div>
@@ -299,9 +295,9 @@
                                     <?php foreach ($feeRules as $rule): ?>
                                     <option value="<?= $rule['id'] ?>">
                                         <?php if ($rule['rule_type'] === 'percentage'): ?>
-                                            <?= $rule['percentage_rate'] ?>% Fee
+                                            <?= $rule['percentage_rate'] ?>%
                                         <?php elseif ($rule['rule_type'] === 'fixed'): ?>
-                                            $<?= number_format($rule['fixed_amount'], 2) ?> Fee
+                                            GH₵<?= number_format($rule['fixed_amount'], 2) ?>
                                         <?php endif; ?>
                                         <?php if ($rule['tenant_id']): ?>
                                             (Tenant Specific)
@@ -466,8 +462,7 @@ function showEditPlanModal(plan) {
                                     <div class="mb-3">
                                         <label class="form-label">Price *</label>
                                         <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" name="price" step="0.01" min="0" value="${plan.price}" required>
+                                            <div class="input-group"><span class="input-group-text">GH₵</span><input type="number" class="form-control" name="price" step="0.01" min="0" value="${plan.price}" required></div>
                                         </div>
                                     </div>
                                 </div>
@@ -665,7 +660,7 @@ function populateFeeRulesDropdown(selectedFeeRuleId) {
         if (rule.rule_type === 'percentage') {
             feeText = rule.percentage_rate + '% Fee';
         } else if (rule.rule_type === 'fixed') {
-            feeText = '$' + parseFloat(rule.fixed_amount).toFixed(2) + ' Fee';
+            feeText = 'GH₵' + parseFloat(rule.fixed_amount).toFixed(2) + ' Fee';
         }
         
         option.textContent = feeText + (rule.tenant_id ? ' (Tenant Specific)' : ' (Global)');

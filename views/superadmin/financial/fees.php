@@ -23,7 +23,7 @@
         <div class="card stats-card text-white bg-warning">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($fees['total_collected'] ?? 0) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($fees['total_collected'] ?? 0) ?></div>
                     <div>Total Fees Collected</div>
                     <div class="small">All time</div>
                 </div>
@@ -38,7 +38,7 @@
         <div class="card stats-card text-white bg-primary">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($fees['monthly_fees'] ?? 0) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($fees['monthly_fees'] ?? 0) ?></div>
                     <div>This Month</div>
                     <div class="small">Fee revenue</div>
                 </div>
@@ -126,7 +126,7 @@
                                 <div class="fw-bold"><?= $rule['rate_display'] ?></div>
                                 <small class="text-muted">
                                     Used <?= $rule['usage_count'] ?> times<br>
-                                    Collected: $<?= number_format($rule['total_collected'], 2) ?>
+                                    Collected: GH₵<?= number_format($rule['total_collected'], 2) ?>
                                 </small>
                             </td>
                             <td>
@@ -154,7 +154,7 @@
                                 <span class="badge bg-success">Active</span>
                                 <br><small class="text-muted">Since <?= date('M Y', strtotime($rule['created_at'])) ?></small>
                                 <?php if ($rule['usage_count'] > 0): ?>
-                                    <br><small class="text-success">Avg: $<?= number_format($rule['avg_fee_amount'], 2) ?></small>
+                                    <br><small class="text-success">Avg: GH₵<?= number_format($rule['avg_fee_amount'], 2) ?></small>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -238,13 +238,13 @@
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="minAmount" class="form-label">Min Amount ($)</label>
+                                <label for="minAmount" class="form-label">Min Amount (GH₵)</label>
                                 <input type="number" class="form-control" id="minAmount" name="min_amount" step="0.01">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="maxAmount" class="form-label">Max Amount ($)</label>
+                                <label for="maxAmount" class="form-label">Max Amount (GH₵)</label>
                                 <input type="number" class="form-control" id="maxAmount" name="max_amount" step="0.01">
                             </div>
                         </div>
@@ -265,7 +265,7 @@
                         <select class="form-select" id="planSelection" name="plan_ids[]" multiple>
                             <?php if (isset($plans) && is_array($plans)): ?>
                                 <?php foreach ($plans as $plan): ?>
-                                    <option value="<?= $plan['id'] ?>"><?= htmlspecialchars($plan['name']) ?> - $<?= number_format($plan['price'], 2) ?>/<?= $plan['billing_cycle'] ?></option>
+                                    <option value="<?= $plan['id'] ?>"><?= htmlspecialchars($plan['name']) ?> - GH₵<?= number_format($plan['price'], 2) ?>/<?= $plan['billing_cycle'] ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>
@@ -441,7 +441,7 @@ function editFeeRule(ruleId) {
                         unitElement.textContent = '%';
                     } else if (rule.rule_type === 'fixed') {
                         rateElement.value = rule.fixed_amount || '';
-                        unitElement.textContent = '$';
+                        unitElement.textContent = 'GH₵';
                     }
                 } else {
                     console.warn('Rate or unit element not found');
@@ -615,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (ruleType) {
         ruleType.addEventListener('change', function() {
-            rateUnit.textContent = this.value === 'percentage' ? '%' : '$';
+            rateUnit.textContent = this.value === 'percentage' ? '%' : 'GH₵';
         });
     }
     

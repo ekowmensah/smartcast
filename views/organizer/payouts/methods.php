@@ -154,10 +154,10 @@ $content = ob_start();
                                         <i class="fas fa-info-circle me-1"></i>
                                         <?php
                                         $processingInfo = [
-                                            'bank_transfer' => 'Processing: 1-3 business days | Fee: 1.0% + $0.50',
-                                            'mobile_money' => 'Processing: Instant to 24 hours | Fee: 1.5% + $0.25',
-                                            'paypal' => 'Processing: Instant to 1 business day | Fee: 2.9% + $0.30',
-                                            'stripe' => 'Processing: 2-7 business days | Fee: 2.9% + $0.30'
+                                            'bank_transfer' => 'Processing: 1-3 business days | Fee: 1.0% + GH₵0.50',
+                                            'mobile_money' => 'Processing: Instant to 24 hours | Fee: 1.5% + GH₵0.25',
+                                            'paypal' => 'Processing: Instant to 1 business day | Fee: 2.9% + GH₵0.30',
+                                            'stripe' => 'Processing: 2-7 business days | Fee: 2.9% + GH₵0.30'
                                         ];
                                         echo $processingInfo[$method['method_type']] ?? 'Processing info not available';
                                         ?>
@@ -191,7 +191,7 @@ $content = ob_start();
             <div class="card-body">
                 <i class="fas fa-university fa-2x text-primary mb-2"></i>
                 <h6>Bank Transfer</h6>
-                <small class="text-muted">1-3 business days<br>1.0% + $0.50</small>
+                <small class="text-muted">1-3 business days<br>1.0% + GH₵0.50</small>
             </div>
         </div>
     </div>
@@ -200,7 +200,7 @@ $content = ob_start();
             <div class="card-body">
                 <i class="fas fa-mobile-alt fa-2x text-success mb-2"></i>
                 <h6>Mobile Money</h6>
-                <small class="text-muted">Instant to 24 hours<br>1.5% + $0.25</small>
+                <small class="text-muted">Instant to 24 hours<br>1.5% + GH₵0.25</small>
             </div>
         </div>
     </div>
@@ -209,7 +209,7 @@ $content = ob_start();
             <div class="card-body">
                 <i class="fab fa-paypal fa-2x text-info mb-2"></i>
                 <h6>PayPal</h6>
-                <small class="text-muted">Instant to 1 day<br>2.9% + $0.30</small>
+                <small class="text-muted">Instant to 1 day<br>2.9% + GH₵0.30</small>
             </div>
         </div>
     </div>
@@ -218,7 +218,7 @@ $content = ob_start();
             <div class="card-body">
                 <i class="fab fa-stripe fa-2x text-warning mb-2"></i>
                 <h6>Stripe</h6>
-                <small class="text-muted">2-7 business days<br>2.9% + $0.30</small>
+                <small class="text-muted">2-7 business days<br>2.9% + GH₵0.30</small>
             </div>
         </div>
     </div>

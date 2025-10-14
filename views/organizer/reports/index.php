@@ -103,14 +103,14 @@
         <div class="card stats-card warning text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($reportData['financial_summary']['total_revenue'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($reportData['financial_summary']['total_revenue'] ?? 0, 2) ?></div>
                     <div>Total Revenue</div>
                     <div class="small">
                         <?= number_format($reportData['financial_summary']['total_transactions'] ?? 0) ?> transactions
                     </div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>
@@ -120,7 +120,7 @@
         <div class="card stats-card info text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($reportData['financial_summary']['avg_transaction'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($reportData['financial_summary']['avg_transaction'] ?? 0, 2) ?></div>
                     <div>Avg Transaction</div>
                     <div class="small">
                         Per vote value
@@ -192,8 +192,8 @@
                                     <div class="small text-muted">+12% vs avg</div>
                                 </td>
                                 <td>
-                                    <div class="fw-semibold">$1,228.00</div>
-                                    <div class="small text-muted">$0.50 per vote</div>
+                                    <div class="fw-semibold">GH₵1,228.00</div>
+                                    <div class="small text-muted">GH₵0.50 per vote</div>
                                 </td>
                                 <td>
                                     <div class="progress" style="height: 4px;">
@@ -218,8 +218,8 @@
                                     <div class="small text-muted">-5% vs avg</div>
                                 </td>
                                 <td>
-                                    <div class="fw-semibold">$946.00</div>
-                                    <div class="small text-muted">$0.50 per vote</div>
+                                    <div class="fw-semibold">GH₵946.00</div>
+                                    <div class="small text-muted">GH₵0.50 per vote</div>
                                 </td>
                                 <td>
                                     <div class="progress" style="height: 4px;">

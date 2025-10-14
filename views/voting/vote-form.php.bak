@@ -918,7 +918,7 @@ function updateVoteSummary() {
             </div>
             <div class="summary-item">
                 <span class="summary-label">Total Amount:</span>
-                <span class="summary-value">$${total.toFixed(2)}</span>
+                <span class="summary-value">GH₵${total.toFixed(2)}</span>
             </div>
         `;
         summaryDiv.style.display = 'block';

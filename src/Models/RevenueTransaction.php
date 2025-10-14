@@ -43,7 +43,7 @@ class RevenueTransaction extends BaseModel
         $defaultRules = [
             'platform_fee_percentage' => 5.0, // 5%
             'processing_fee_percentage' => 2.9, // 2.9%
-            'processing_fee_fixed' => 0.30, // $0.30
+            'processing_fee_fixed' => 0.30, // GH₵0.30
             'referrer_commission_percentage' => 0.0 // 0% (if no referrer)
         ];
         

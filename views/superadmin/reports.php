@@ -35,7 +35,7 @@
     <div class="col-lg-3 col-md-6 mb-3">
         <div class="card h-100">
             <div class="card-body text-center">
-                <i class="fas fa-dollar-sign fa-3x text-success mb-3"></i>
+                <i class="fas fa-money-bill fa-3x text-success mb-3"></i>
                 <h5>Financial Report</h5>
                 <p class="text-muted small">Revenue, transactions, and financial performance analysis</p>
                 <button class="btn btn-outline-success" onclick="generateReport('financial')">

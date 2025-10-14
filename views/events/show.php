@@ -20,7 +20,7 @@
                                 <?= ucfirst($event['status']) ?>
                             </span>
                             <small class="text-muted">
-                                <i class="fas fa-code me-1"></i>
+                                <i class="fas fa-money-bill me-1"></i>
                                 <?= htmlspecialchars($event['code']) ?>
                             </small>
                         </div>
@@ -302,7 +302,7 @@
                             <div class="flex-grow-1">
                                 <div class="fw-bold"><?= htmlspecialchars($leader['name']) ?></div>
                                 <small class="text-muted">
-                                    <?= number_format($leader['total_votes']) ?> votes
+                                    GH₵<?= number_format($eventStats['vote_price'], 2) ?> per votes
                                 </small>
                             </div>
                             

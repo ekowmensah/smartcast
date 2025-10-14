@@ -184,13 +184,13 @@
                                         <?php endif; ?>
                                     </div>
                                     <small class="text-success">
-                                        <i class="fas fa-dollar-sign me-1"></i>
-                                        Total: $<?= number_format($tenant['total_revenue'] ?? 0, 2) ?>
+                                        <i class="fas fa-money-bill me-1"></i>
+                                        Total: GH₵<?= number_format($tenant['total_revenue'] ?? 0, 2) ?>
                                         <?php if (($tenant['monthly_revenue'] ?? 0) > 0): ?>
-                                            | Month: $<?= number_format($tenant['monthly_revenue'], 2) ?>
+                                            | Month: GH₵<?= number_format($tenant['monthly_revenue'], 2) ?>
                                         <?php endif; ?>
                                         <?php if (isset($tenant['available']) && $tenant['available'] > 0): ?>
-                                            | Balance: $<?= number_format($tenant['available'], 2) ?>
+                                            | Balance: GH₵<?= number_format($tenant['available'], 2) ?>
                                         <?php endif; ?>
                                     </small>
                                 </div>

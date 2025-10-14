@@ -108,7 +108,7 @@ class HomeController extends BaseController
                 'total_contestants' => '5K+',
                 'total_contestants_raw' => 5000,
                 'active_events' => 5,
-                'total_revenue' => '$25K+',
+                'total_revenue' => 'GH₵25K+',
                 'total_revenue_raw' => 25000,
                 'avg_votes_per_event' => '50',
                 'uptime' => '99.9%',

@@ -163,7 +163,7 @@ $content = ob_start();
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="require_confirmation" checked>
                                 <label class="form-check-label" for="require_confirmation">
-                                    Require email confirmation for large payouts (>$500)
+                                    Require email confirmation for large payouts (>GH₵500)
                                 </label>
                             </div>
                         </div>
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (frequency !== 'manual' && autoEnabled && minAmount < 1) {
             e.preventDefault();
-            alert('Minimum payout amount must be at least $1.00 for automatic payouts.');
+            alert('Minimum payout amount must be at least GH₵1.00 for automatic payouts.');
             return;
         }
         

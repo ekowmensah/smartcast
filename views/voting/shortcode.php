@@ -358,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             Vote Now
                         </button>
                         <p class="text-muted small mt-2">
-                            Vote Price: <strong>$${nominee.vote_price}</strong>
+                            Vote Price: <strong>GH₵${nominee.vote_price}</strong>
                         </p>
                     </div>
                 </div>

@@ -195,7 +195,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <i class="fas fa-dollar-sign me-2"></i>Financial Overview
+                <i class="fas fa-money-bill me-2"></i>Financial Overview
             </div>
             <div class="card-body">
                 <div class="row text-center">

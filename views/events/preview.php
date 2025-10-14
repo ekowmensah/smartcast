@@ -99,8 +99,8 @@
                 
                 <!-- Vote Price -->
                 <div class="alert alert-info">
-                    <i class="fas fa-dollar-sign me-2"></i>
-                    <strong>Vote Price:</strong> $<?= number_format($event['vote_price'], 2) ?> per vote
+                    <i class="fas fa-money-bill me-2"></i>
+                    <strong>Vote Price:</strong> GH₵<?= number_format($event['vote_price'], 2) ?> per vote
                 </div>
             </div>
         </div>

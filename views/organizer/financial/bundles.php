@@ -50,12 +50,12 @@
         <div class="card stats-card warning text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($bundleStats['total_revenue'], 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($bundleStats['total_revenue'], 2) ?></div>
                     <div>Bundle Revenue</div>
                     <div class="small">From all bundles</div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>
@@ -121,8 +121,8 @@
                 </div>
                 <div class="card-body text-center">
                     <div class="bundle-price mb-3">
-                        <div class="fs-1 fw-bold">$<?= number_format($bundle['price'], 2) ?></div>
-                        <div class="text-muted">$<?= number_format($pricePerVote, 2) ?> per vote</div>
+                        <div class="fs-1 fw-bold">GH₵<?= number_format($bundle['price'], 2) ?></div>
+                        <div class="text-muted">GH₵<?= number_format($pricePerVote, 2) ?> per vote</div>
                     </div>
                     
                     <div class="bundle-features mb-4">
@@ -137,7 +137,7 @@
                                 <div class="small text-muted">Sold</div>
                             </div>
                             <div class="col-6">
-                                <div class="fw-semibold">$0.00</div>
+                                <div class="fw-semibold">GH₵0.00</div>
                                 <div class="small text-muted">Revenue</div>
                             </div>
                         </div>
@@ -206,7 +206,7 @@
                     <div class="mb-3">
                         <label class="form-label">Price *</label>
                         <div class="input-group">
-                            <span class="input-group-text">$</span>
+                            <span class="input-group-text">GH₵</span>
                             <input type="number" class="form-control" name="price" step="0.01" min="0.01" required>
                         </div>
                         <div class="form-text">Total price for the entire bundle</div>

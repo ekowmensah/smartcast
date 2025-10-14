@@ -78,7 +78,7 @@ foreach ($eventData as $data) {
     <div class="col-md-3">
         <div class="card bg-warning text-white">
             <div class="card-body text-center">
-                <div class="fs-4 fw-semibold">$<?= number_format($totalRevenue, 2) ?></div>
+                <div class="fs-4 fw-semibold">GH₵<?= number_format($totalRevenue, 2) ?></div>
                 <div>Revenue</div>
             </div>
         </div>
@@ -108,7 +108,7 @@ foreach ($eventData as $data) {
                                 <small class="text-muted">
                                     <?= $event['contestant_count'] ?> contestants • 
                                     <?= number_format($event['total_votes']) ?> votes • 
-                                    $<?= number_format($event['revenue'], 2) ?>
+                                    GH₵<?= number_format($event['revenue'], 2) ?>
                                 </small>
                             </div>
                         </div>
@@ -164,7 +164,7 @@ foreach ($eventData as $data) {
                                                                             <h6 class="mb-0"><?= htmlspecialchars($contestant['name']) ?></h6>
                                                                             <div class="text-end">
                                                                                 <span class="badge bg-primary me-1"><?= number_format($contestant['total_votes']) ?> votes</span>
-                                                                                <span class="badge bg-success">$<?= number_format($contestant['revenue'], 2) ?></span>
+                                                                                <span class="badge bg-success">GH₵<?= number_format($contestant['revenue'], 2) ?></span>
                                                                             </div>
                                                                         </div>
                                                                         

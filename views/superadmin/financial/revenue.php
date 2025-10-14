@@ -30,7 +30,7 @@
                     <div class="small">All time</div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>

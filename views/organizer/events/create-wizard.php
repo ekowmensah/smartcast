@@ -441,7 +441,7 @@
                                                         <small class="text-muted">Days Duration</small>
                                                     </div>
                                                     <div class="col-md-3 text-center">
-                                                        <div class="h4 mb-0" id="preview-estimated-revenue">$0</div>
+                                                        <div class="h4 mb-0" id="preview-estimated-revenue">GH₵0</div>
                                                         <small class="text-muted">Est. Revenue (100 votes)</small>
                                                     </div>
                                                 </div>

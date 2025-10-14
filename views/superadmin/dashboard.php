@@ -96,7 +96,7 @@
                     </div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>
@@ -275,7 +275,7 @@
                     </div>
                     <div class="col-md-2 col-sm-4 mb-3">
                         <a href="<?= SUPERADMIN_URL ?>/financial/overview" class="btn btn-outline-secondary w-100">
-                            <i class="fas fa-dollar-sign me-2"></i>Financials
+                            <i class="fas fa-money-bill me-2"></i>Financials
                         </a>
                     </div>
                     <div class="col-md-2 col-sm-4 mb-3">

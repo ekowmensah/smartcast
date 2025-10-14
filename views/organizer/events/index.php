@@ -67,7 +67,7 @@
                             <div class="fs-4 fw-semibold">
                                 <?php 
                                 $totalRevenue = array_sum(array_column($events ?? [], 'revenue'));
-                                echo '$' . number_format($totalRevenue, 0);
+                                echo 'GH₵' . number_format($totalRevenue, 0);
                                 ?>
                             </div>
                             <div>Total Revenue</div>
@@ -77,7 +77,7 @@
                             <small class="text-white-50">From all events</small>
                         </div>
                         <div class="dropdown">
-                            <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                            <i class="fas fa-money-bill fa-2x opacity-75"></i>
                         </div>
                     </div>
                 </div>

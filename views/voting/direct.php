@@ -60,8 +60,8 @@
                                     </p>
                                 <?php endif; ?>
                                 <p class="mb-0">
-                                    <i class="fas fa-dollar-sign text-success me-2"></i>
-                                    <strong>Vote Price:</strong> $<?= number_format($event['vote_price'], 2) ?> per vote
+                                    <i class="fas fa-money-bill text-success me-2"></i>
+                                    <strong>Vote Price:</strong> GH₵<?= number_format($event['vote_price'], 2) ?> per vote
                                 </p>
                             </div>
 
@@ -152,7 +152,7 @@
                                 <div class="payment-summary bg-light p-3 rounded">
                                     <div class="summary-row d-flex justify-content-between mb-2">
                                         <span>Vote Price:</span>
-                                        <span>$<?= number_format($event['vote_price'], 2) ?></span>
+                                        <span>GH₵<?= number_format($event['vote_price'], 2) ?></span>
                                     </div>
                                     <div class="summary-row d-flex justify-content-between mb-2">
                                         <span>Quantity:</span>
@@ -160,12 +160,12 @@
                                     </div>
                                     <div class="summary-row d-flex justify-content-between mb-2" id="discountRow" style="display: none;">
                                         <span class="text-success">Bundle Discount:</span>
-                                        <span class="text-success" id="summaryDiscount">-$0.00</span>
+                                                        <span class="text-success" id="summaryDiscount">-GH₵0.00</span>
                                     </div>
                                     <hr>
                                     <div class="summary-total d-flex justify-content-between">
                                         <strong>Total Amount:</strong>
-                                        <strong class="text-primary" id="summaryTotal">$<?= number_format($event['vote_price'], 2) ?></strong>
+                                        <strong class="text-primary" id="summaryTotal">GH₵<?= number_format($event['vote_price'], 2) ?></strong>
                                     </div>
                                 </div>
 
@@ -360,14 +360,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateSummary(quantity, total, isBundle) {
         summaryQuantity.textContent = quantity;
-        summaryTotal.textContent = '$' + total.toFixed(2);
+        summaryTotal.textContent = 'GH₵' + total.toFixed(2);
         
         if (isBundle) {
             const regularPrice = quantity * votePrice;
             const discount = regularPrice - total;
             
             if (discount > 0) {
-                summaryDiscount.textContent = '-$' + discount.toFixed(2);
+                summaryDiscount.textContent = '-GH₵' + discount.toFixed(2);
                 discountRow.style.display = 'flex';
             } else {
                 discountRow.style.display = 'none';

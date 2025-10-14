@@ -259,7 +259,8 @@
                                     <div class="mb-3">
                                         <label for="defaultCurrency" class="form-label">Default Currency</label>
                                         <select class="form-select" id="defaultCurrency" name="default_currency">
-                                            <option value="USD" <?= ($settings['default_currency'] ?? '') === 'USD' ? 'selected' : '' ?>>USD - US Dollar</option>
+                                            <option value="GHS" <?= ($settings['default_currency'] ?? '') === 'GHS' ? 'selected' : '' ?>>GHS - Ghana Cedi</option>
+                                            <option value="USD" <?= ($settings['default_currency'] ?? '') === 'USD' ? 'selected' : '' ?>>USD - US Dollar (Legacy)</option>
                                             <option value="EUR" <?= ($settings['default_currency'] ?? '') === 'EUR' ? 'selected' : '' ?>>EUR - Euro</option>
                                             <option value="GBP" <?= ($settings['default_currency'] ?? '') === 'GBP' ? 'selected' : '' ?>>GBP - British Pound</option>
                                         </select>

@@ -151,7 +151,7 @@ function selectBundle(bundleId, votes, price) {
     }
     
     if (priceDisplay) {
-        priceDisplay.textContent = `$${price}`;
+        priceDisplay.textContent = `GH₵${price}`;
     }
 }
 
@@ -322,7 +322,7 @@ function formatNumber(num) {
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD'
+        currency: 'GHS'
     }).format(amount);
 }
 

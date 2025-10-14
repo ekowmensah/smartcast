@@ -872,7 +872,7 @@ body {
                                 <button type="button" class="counter-btn" onclick="changeVoteCount(1)">+</button>
                             </div>
                             <div class="vote-total">
-                                Total: $<span id="custom-total"><?= number_format($vote_price, 2) ?></span>
+                                Total: GH₵<span id="custom-total"><?= number_format($vote_price, 2) ?></span>
                             </div>
                         </div>
                     </div>
@@ -912,8 +912,8 @@ body {
                         <div style="color: #718096; margin-bottom: 1rem;">
                             Vote<?= $bundle['votes'] > 1 ? 's' : '' ?>
                         </div>
-                        <div class="package-price">$<?= number_format($bundle['price'], 2) ?></div>
-                        <div class="package-unit">$<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per vote</div>
+                        <div class="package-price">GH₵<?= number_format($bundle['price'], 2) ?></div>
+                        <div class="package-unit">GH₵<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per vote</div>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -1102,7 +1102,7 @@ function updateVoteSummary() {
             </div>
             <div class="summary-item">
                 <span class="summary-label">Total Amount:</span>
-                <span class="summary-value">$${total.toFixed(2)}</span>
+                <span class="summary-value">GH₵${total.toFixed(2)}</span>
             </div>
         `;
         summaryDiv.style.display = 'block';

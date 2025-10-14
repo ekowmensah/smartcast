@@ -50,12 +50,12 @@
         <div class="card stats-card warning text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$2,340</div>
+                    <div class="fs-4 fw-semibold">GH₵2,340</div>
                     <div>Discount Given</div>
-                    <div class="small">Average: $2.76</div>
+                    <div class="small">Average: GH₵2.76</div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>
@@ -117,7 +117,7 @@
                         <td><span class="badge bg-primary">Percentage</span></td>
                         <td>
                             <div class="fw-semibold">20%</div>
-                            <div class="small text-muted">Max $10</div>
+                            <div class="small text-muted">Max GH₵10</div>
                         </td>
                         <td>
                             <div class="fw-semibold">234 / 500</div>
@@ -151,7 +151,7 @@
                         </td>
                         <td><span class="badge bg-success">Fixed Amount</span></td>
                         <td>
-                            <div class="fw-semibold">$5.00</div>
+                            <div class="fw-semibold">GH₵5.00</div>
                             <div class="small text-muted">Per transaction</div>
                         </td>
                         <td>

@@ -41,8 +41,8 @@ $content = ob_start();
     <div class="col-md-3">
         <div class="card bg-info text-white">
             <div class="card-body text-center">
-                <i class="fas fa-dollar-sign fa-2x mb-2"></i>
-                <h3 class="mb-1">$<?= number_format($vote_stats['total_revenue'], 2) ?></h3>
+                <i class="fas fa-money-bill fa-2x mb-2"></i>
+                <h3 class="mb-1">GH₵<?= number_format($vote_stats['total_revenue'], 2) ?></h3>
                 <small>Revenue Generated</small>
             </div>
         </div>

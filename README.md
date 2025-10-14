@@ -155,10 +155,10 @@ smartcast/
 ### Vote Bundles
 
 Vote bundles are automatically created with default pricing:
-- 1 Vote - $1.00
-- 5 Votes - $4.50
-- 10 Votes - $8.00
-- 25 Votes - $18.00
+- 1 Vote - GH₵1.00
+- 5 Votes - GH₵4.50
+- 10 Votes - GH₵8.00
+- 25 Votes - GH₵18.00
 
 You can customize these in the event management interface.
 

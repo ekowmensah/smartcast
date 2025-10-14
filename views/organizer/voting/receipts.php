@@ -382,11 +382,11 @@ function viewReceipt(receiptId) {
                 </tr>
                 <tr>
                     <td>Price per Vote:</td>
-                    <td>$0.50</td>
+                    <td>GH₵0.50</td>
                 </tr>
                 <tr class="table-light">
                     <td><strong>Total Amount:</strong></td>
-                    <td><strong>$2.50</strong></td>
+                    <td><strong>GH₵2.50</strong></td>
                 </tr>
             </table>
         </div>

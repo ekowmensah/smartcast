@@ -197,7 +197,7 @@
                         <div class="small text-muted">Total Votes</div>
                     </div>
                     <div class="col-6">
-                        <div class="fs-5 fw-semibold text-warning">$1,228</div>
+                        <div class="fs-5 fw-semibold text-warning">GH₵1,228</div>
                         <div class="small text-muted">Revenue</div>
                     </div>
                 </div>

@@ -216,7 +216,7 @@ try {
     echo "Tenant ID: $tenantId\n";
     echo "User ID: $userId\n";
     echo "Login: test" . date('His') . "@organizer.com / password123\n";
-    echo "Available Balance: $125.50\n";
+    echo "Available Balance: GH₵125.50\n";
     echo "Total Payouts: 3 (Success: 1, Processing: 1, Failed: 1)\n";
     echo "\nYou can now:\n";
     echo "1. Login with test@organizer.com / password123\n";

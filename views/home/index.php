@@ -187,7 +187,7 @@ include __DIR__ . '/../layout/public_header.php';
                                 <div class="flex-grow-1">
                                     <div class="small text-muted mb-1">Total Revenue</div>
                                     <div class="h6 mb-0 text-success fw-bold">
-                                        <?= $stats['total_revenue'] ?? '$12.5K+' ?>
+                                        <?= $stats['total_revenue'] ?? 'GH₵12.5K+' ?>
                                     </div>
                                 </div>
                                 <div class="ms-3">

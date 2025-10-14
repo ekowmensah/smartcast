@@ -55,12 +55,12 @@
         <div class="card stats-card warning text-white">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($referralStats['earned_rewards'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GH₵<?= number_format($referralStats['earned_rewards'] ?? 0, 2) ?></div>
                     <div>Earned Rewards</div>
-                    <div class="small">$5.00 per referral</div>
+                    <div class="small">GH₵5.00 per referral</div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>
@@ -92,7 +92,7 @@
             <div class="card-body">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    Share this link to earn $5.00 for each successful referral who creates an event!
+                    Share this link to earn GH₵5.00 for each successful referral who creates an event!
                 </div>
                 
                 <div class="input-group mb-3">
@@ -148,7 +148,7 @@
                             <div class="fw-semibold">Sign-up Bonus</div>
                             <div class="small text-muted">New user registers</div>
                         </div>
-                        <div class="fw-semibold text-success">$2.00</div>
+                        <div class="fw-semibold text-success">GH₵2.00</div>
                     </div>
                 </div>
                 
@@ -158,7 +158,7 @@
                             <div class="fw-semibold">First Event</div>
                             <div class="small text-muted">Creates their first event</div>
                         </div>
-                        <div class="fw-semibold text-success">$5.00</div>
+                        <div class="fw-semibold text-success">GH₵5.00</div>
                     </div>
                 </div>
                 
@@ -168,7 +168,7 @@
                             <div class="fw-semibold">Premium Upgrade</div>
                             <div class="small text-muted">Upgrades to premium plan</div>
                         </div>
-                        <div class="fw-semibold text-success">$10.00</div>
+                        <div class="fw-semibold text-success">GH₵10.00</div>
                     </div>
                 </div>
                 
@@ -176,7 +176,7 @@
                 
                 <div class="text-center">
                     <div class="fw-semibold text-primary">Available Balance</div>
-                    <div class="fs-4 fw-bold text-success">$445.00</div>
+                    <div class="fs-4 fw-bold text-success">GH₵445.00</div>
                     <button class="btn btn-sm btn-outline-primary mt-2" onclick="requestPayout()">
                         Request Payout
                     </button>
@@ -235,8 +235,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-semibold text-success">$7.00</div>
-                                    <div class="small text-muted">$2 + $5</div>
+                                    <div class="fw-semibold text-success">GH₵7.00</div>
+                                    <div class="small text-muted">GH₵2 + GH₵5</div>
                                 </td>
                                 <td>
                                     <span class="badge bg-primary">Facebook</span>
@@ -260,7 +260,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-semibold text-warning">$2.00</div>
+                                    <div class="fw-semibold text-warning">GH₵2.00</div>
                                     <div class="small text-muted">Partial</div>
                                 </td>
                                 <td>
@@ -285,8 +285,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-semibold text-success">$17.00</div>
-                                    <div class="small text-muted">$2 + $5 + $10</div>
+                                    <div class="fw-semibold text-success">GH₵17.00</div>
+                                    <div class="small text-muted">GH₵2 + GH₵5 + GH₵10</div>
                                 </td>
                                 <td>
                                     <span class="badge bg-success">WhatsApp</span>
@@ -310,7 +310,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="fw-semibold text-secondary">$0.00</div>
+                                    <div class="fw-semibold text-secondary">GH₵0.00</div>
                                     <div class="small text-muted">Expired</div>
                                 </td>
                                 <td>
@@ -454,7 +454,7 @@ function shareReferral() {
 }
 
 function requestPayout() {
-    if (confirm('Request payout of $445.00 to your account?')) {
+    if (confirm('Request payout of GH₵445.00 to your account?')) {
         console.log('Requesting referral payout...');
         alert('Payout request submitted successfully!');
     }

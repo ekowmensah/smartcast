@@ -248,15 +248,15 @@ function viewPayoutDetails(payoutId) {
                         </tr>
                         <tr>
                             <td><strong>Amount:</strong></td>
-                            <td>$500.00</td>
+                            <td>GH₵500.00</td>
                         </tr>
                         <tr>
                             <td><strong>Processing Fee:</strong></td>
-                            <td>$5.50</td>
+                            <td>GH₵5.50</td>
                         </tr>
                         <tr>
                             <td><strong>Net Amount:</strong></td>
-                            <td><strong>$494.50</strong></td>
+                            <td><strong>GH₵494.50</strong></td>
                         </tr>
                     </table>
                 </div>

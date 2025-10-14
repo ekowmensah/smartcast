@@ -88,19 +88,19 @@ $content = ob_start();
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="text-center">
-                                        <div class="h5 mb-1" id="requestedAmount">$0.00</div>
+                                        <div class="h5 mb-1" id="requestedAmount">GH₵0.00</div>
                                         <div class="text-muted small">Requested Amount</div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="text-center">
-                                        <div class="h5 mb-1 text-warning" id="processingFee">$0.00</div>
+                                        <div class="h5 mb-1 text-warning" id="processingFee">GH₵0.00</div>
                                         <div class="text-muted small">Processing Fee</div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="text-center">
-                                        <div class="h5 mb-1 text-success" id="netAmount">$0.00</div>
+                                        <div class="h5 mb-1 text-success" id="netAmount">GH₵0.00</div>
                                         <div class="text-muted small">You'll Receive</div>
                                     </div>
                                 </div>
@@ -117,15 +117,15 @@ $content = ob_start();
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" 
                                     data-amount="<?= min(50, $balance['available']) ?>">
-                                $50
+                                GH₵50
                             </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" 
                                     data-amount="<?= min(100, $balance['available']) ?>">
-                                $100
+                                GH₵100
                             </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" 
                                     data-amount="<?= min(250, $balance['available']) ?>">
-                                $250
+                                GH₵250
                             </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm quick-amount" 
                                     data-amount="<?= $balance['available'] ?>">
@@ -181,10 +181,10 @@ $content = ob_start();
                 
                 <h6>Processing Fees</h6>
                 <ul>
-                    <li><strong>Bank Transfer:</strong> 1.0% + $0.50</li>
-                    <li><strong>Mobile Money:</strong> 1.5% + $0.25</li>
-                    <li><strong>PayPal:</strong> 2.9% + $0.30</li>
-                    <li><strong>Stripe:</strong> 2.9% + $0.30</li>
+                    <li><strong>Bank Transfer:</strong> 1.0% + GH₵0.50</li>
+                    <li><strong>Mobile Money:</strong> 1.5% + GH₵0.25</li>
+                    <li><strong>PayPal:</strong> 2.9% + GH₵0.30</li>
+                    <li><strong>Stripe:</strong> 2.9% + GH₵0.30</li>
                 </ul>
                 
                 <h6>Important Notes</h6>

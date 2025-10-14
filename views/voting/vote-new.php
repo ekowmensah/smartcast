@@ -161,8 +161,8 @@
                                         <span class="votes-label">Vote<?= $bundle['votes'] > 1 ? 's' : '' ?></span>
                                     </div>
                                     <div class="package-price">
-                                        <span class="price-main">$<?= number_format($bundle['price'], 2) ?></span>
-                                        <span class="price-per">$<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per vote</span>
+                                        <span class="price-main">GH₵<?= number_format($bundle['price'], 2) ?></span>
+                                        <span class="price-per">GH₵<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per vote</span>
                                     </div>
                                 </div>
                                 <div class="package-footer">

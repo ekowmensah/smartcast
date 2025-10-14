@@ -407,8 +407,8 @@ body {
                     <div class="vote-count"><?= $bundle['votes'] ?></div>
                     <div style="margin-bottom: 10px; color: #666;">Vote<?= $bundle['votes'] > 1 ? 's' : '' ?></div>
                     
-                    <div class="package-price">$<?= number_format($bundle['price'], 2) ?></div>
-                    <div class="price-per-vote">$<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per vote</div>
+                    <div class="package-price">GH₵<?= number_format($bundle['price'], 2) ?></div>
+                    <div class="price-per-vote">GH₵<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per vote</div>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -511,7 +511,7 @@ function updateVoteSummary() {
                 <strong>Package:</strong> ${selectedBundle.votes} vote${selectedBundle.votes > 1 ? 's' : ''}
             </div>
             <div style="margin-bottom: 10px;">
-                <strong>Total:</strong> <span style="font-size: 1.2rem; color: #667eea; font-weight: 600;">$${selectedBundle.price.toFixed(2)}</span>
+                <strong>Total:</strong> <span style="font-size: 1.2rem; color: #667eea; font-weight: 600;">GH₵${selectedBundle.price.toFixed(2)}</span>
             </div>
         `;
         summaryDiv.style.display = 'block';

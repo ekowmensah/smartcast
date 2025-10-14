@@ -636,6 +636,7 @@ class OrganizerController extends BaseController
     {
         $tenantId = $this->session->getTenantId();
         $eventId = $_GET['event'] ?? null;
+        $categoryId = $_GET['category'] ?? null;
         
         // Get all events for dropdown
         $events = $this->eventModel->getEventsByTenant($tenantId);
@@ -643,9 +644,19 @@ class OrganizerController extends BaseController
             return $event['status'] === 'active';
         });
         
+        // Get categories for the selected event
+        $categories = [];
+        if ($eventId) {
+            $categories = $this->getCategoriesByEvent($eventId);
+        }
+        
         // If no event specified, use the first active event
         if (!$eventId && !empty($activeEvents)) {
             $eventId = reset($activeEvents)['id'];
+            // Reload categories for the selected event
+            if ($eventId) {
+                $categories = $this->getCategoriesByEvent($eventId);
+            }
         }
         
         $selectedEvent = null;
@@ -654,14 +665,16 @@ class OrganizerController extends BaseController
             if (!$selectedEvent || $selectedEvent['tenant_id'] != $tenantId) {
                 $selectedEvent = null;
                 $eventId = null;
+                $categoryId = null;
+                $categories = [];
             }
         }
         
         // Get event-specific data
-        $liveStats = $this->getLiveVotingStats($tenantId, $eventId);
-        $topContestants = $this->getTopContestants($tenantId, 15, $eventId);
-        $recentVotes = $this->getRecentVotes($tenantId, $eventId, 10);
-        $votingTrends = $this->getVotingTrends($tenantId, $eventId, 24); // Last 24 hours
+        $liveStats = $this->getLiveVotingStats($tenantId, $eventId, $categoryId);
+        $topContestants = $this->getTopContestants($tenantId, 15, $eventId, $categoryId);
+        $recentVotes = $this->getRecentVotes($tenantId, $eventId, $categoryId, 10);
+        $votingTrends = $this->getVotingTrends($tenantId, $eventId, $categoryId, 24); // Last 24 hours
         
         // Handle AJAX requests
         if (isset($_GET['ajax'])) {
@@ -678,8 +691,10 @@ class OrganizerController extends BaseController
         
         $content = $this->renderView('organizer/voting/live', [
             'events' => $activeEvents,
+            'categories' => $categories,
             'selectedEvent' => $selectedEvent,
             'selectedEventId' => $eventId,
+            'selectedCategoryId' => $categoryId,
             'liveStats' => $liveStats,
             'topContestants' => $topContestants,
             'recentVotes' => $recentVotes,
@@ -737,6 +752,7 @@ class OrganizerController extends BaseController
             AND t.status = 'success'
             AND t.created_at BETWEEN :start_date AND :end_date
         ";
+        
         $result = $this->eventModel->getDatabase()->selectOne($sql, [
             'tenant_id' => $tenantId,
             'start_date' => $startOfMonth,
@@ -747,12 +763,39 @@ class OrganizerController extends BaseController
         return $stats;
     }
     
-    private function getRecentVotes($tenantId, $eventId = null, $limit = 10)
+    private function getCategoriesByEvent($eventId)
+    {
+        try {
+            $sql = "
+                SELECT 
+                    cat.id,
+                    cat.name,
+                    cat.description,
+                    COUNT(DISTINCT cc.contestant_id) as contestant_count
+                FROM categories cat
+                LEFT JOIN contestant_categories cc ON cat.id = cc.category_id
+                LEFT JOIN contestants c ON cc.contestant_id = c.id AND c.active = 1
+                WHERE cat.event_id = :event_id
+                GROUP BY cat.id, cat.name, cat.description
+                ORDER BY cat.name ASC
+            ";
+            
+            return $this->eventModel->getDatabase()->select($sql, ['event_id' => $eventId]);
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+    
+    private function getRecentVotes($tenantId, $eventId = null, $categoryId = null, $limit = 10)
     {
         $eventFilter = $eventId ? "AND e.id = :event_id" : "";
+        $categoryFilter = $categoryId ? "AND v.category_id = :category_id" : "";
         $params = ['tenant_id' => $tenantId, 'limit' => $limit];
         if ($eventId) {
             $params['event_id'] = $eventId;
+        }
+        if ($categoryId) {
+            $params['category_id'] = $categoryId;
         }
         
         $sql = "
@@ -769,6 +812,7 @@ class OrganizerController extends BaseController
             WHERE e.tenant_id = :tenant_id
             AND e.status = 'active'
             $eventFilter
+            $categoryFilter
             ORDER BY v.created_at DESC
             LIMIT :limit
         ";
@@ -858,10 +902,10 @@ class OrganizerController extends BaseController
             SELECT 
                 e.id,
                 e.name,
-                COUNT(DISTINCT rt.id) as transaction_count,
-                COALESCE(SUM(rt.net_tenant_amount), 0) as total_revenue
+                COUNT(DISTINCT t.id) as transaction_count,
+                COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as total_revenue
             FROM events e
-            LEFT JOIN revenue_transactions rt ON e.id = rt.event_id AND rt.distribution_status = 'completed'
+            LEFT JOIN transactions t ON e.id = t.event_id
             WHERE e.tenant_id = :tenant_id
             GROUP BY e.id, e.name
             HAVING total_revenue > 0
@@ -925,11 +969,11 @@ class OrganizerController extends BaseController
             $labels[] = date('M j', strtotime($date));
             
             $sql = "
-                SELECT COALESCE(SUM(rt.net_tenant_amount), 0) as daily_revenue
-                FROM revenue_transactions rt
-                WHERE rt.tenant_id = :tenant_id
-                AND rt.distribution_status = 'completed'
-                AND DATE(rt.created_at) = :date
+                SELECT COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as daily_revenue
+                FROM transactions t
+                INNER JOIN events e ON t.event_id = e.id
+                WHERE e.tenant_id = :tenant_id
+                AND DATE(t.created_at) = :date
             ";
             
             $result = $this->balanceModel->getDatabase()->selectOne($sql, [
@@ -948,13 +992,41 @@ class OrganizerController extends BaseController
     
     private function getPayoutMethod($tenantId)
     {
-        // This would normally come from a payout_methods table
-        // For now, return a placeholder
-        return [
-            'type' => 'bank_transfer',
-            'name' => 'Bank Transfer',
-            'account' => '****1234'
-        ];
+        // Get actual payout method from database
+        try {
+            $sql = "
+                SELECT 
+                    pm.id,
+                    pm.type,
+                    pm.provider_name as name,
+                    pm.account_number as account,
+                    pm.account_name,
+                    pm.is_active,
+                    pm.created_at
+                FROM payout_methods pm
+                WHERE pm.tenant_id = :tenant_id
+                AND pm.is_active = 1
+                ORDER BY pm.created_at DESC
+                LIMIT 1
+            ";
+            
+            $result = $this->eventModel->getDatabase()->selectOne($sql, ['tenant_id' => $tenantId]);
+            
+            if ($result) {
+                return [
+                    'type' => $result['type'],
+                    'name' => $result['name'],
+                    'account' => $result['account'],
+                    'account_name' => $result['account_name'] ?? null
+                ];
+            }
+        } catch (\Exception $e) {
+            // Log error but don't break the page
+            error_log("Error fetching payout method: " . $e->getMessage());
+        }
+        
+        // Return null if no payout method configured
+        return null;
     }
     
     // Additional methods for missing routes
@@ -2398,11 +2470,85 @@ class OrganizerController extends BaseController
     {
         $tenantId = $this->session->getTenantId();
         
-        // Get transactions with related data
-        $transactions = $this->transactionModel->getSuccessfulTransactions(null, $tenantId);
+        // Get transactions with related data (events, contestants, bundles, actual votes)
+        $sql = "
+            SELECT 
+                t.*,
+                e.name as event_name,
+                e.code as event_code,
+                c.name as contestant_name,
+                c.contestant_code,
+                vb.name as bundle_name,
+                vb.votes as bundle_vote_count,
+                vb.price as bundle_price,
+                cat.name as category_name,
+                COALESCE(v.quantity, vb.votes, 1) as actual_votes
+            FROM transactions t
+            LEFT JOIN events e ON t.event_id = e.id
+            LEFT JOIN contestants c ON t.contestant_id = c.id
+            LEFT JOIN vote_bundles vb ON t.bundle_id = vb.id
+            LEFT JOIN categories cat ON t.category_id = cat.id
+            LEFT JOIN votes v ON t.id = v.transaction_id
+            WHERE t.tenant_id = :tenant_id
+            ORDER BY t.created_at DESC
+            LIMIT 100
+        ";
+        
+        $transactions = $this->db->select($sql, ['tenant_id' => $tenantId]);
+        
+        // Calculate statistics from the transactions
+        $stats = [
+            'total_transactions' => count($transactions),
+            'successful_transactions' => 0,
+            'failed_transactions' => 0,
+            'pending_transactions' => 0,
+            'total_volume' => 0,
+            'successful_volume' => 0,
+            'total_votes' => 0
+        ];
+        
+        foreach ($transactions as $transaction) {
+            $amount = floatval($transaction['amount'] ?? 0);
+            $votes = intval($transaction['actual_votes'] ?? $transaction['bundle_vote_count'] ?? 0);
+            $status = strtolower($transaction['status'] ?? '');
+            
+            // Always count in total volume for display purposes
+            $stats['total_volume'] += $amount;
+            
+            switch ($status) {
+                case 'success':
+                case 'completed':
+                    $stats['successful_transactions']++;
+                    $stats['successful_volume'] += $amount;
+                    $stats['total_votes'] += $votes; // Only count votes from successful transactions
+                    break;
+                case 'failed':
+                case 'error':
+                    $stats['failed_transactions']++;
+                    break;
+                case 'pending':
+                case 'processing':
+                    $stats['pending_transactions']++;
+                    break;
+            }
+        }
+        
+        // Get events for filter dropdown
+        $events = $this->eventModel->getEventsByTenant($tenantId);
+        
+        // Pagination info
+        $pagination = [
+            'current_page' => 1,
+            'total_pages' => 1,
+            'per_page' => 100,
+            'total_records' => count($transactions)
+        ];
         
         $content = $this->renderView('organizer/financial/transactions', [
             'transactions' => $transactions,
+            'stats' => $stats,
+            'events' => $events,
+            'pagination' => $pagination,
             'title' => 'Transactions'
         ]);
         
@@ -2839,13 +2985,17 @@ class OrganizerController extends BaseController
         return $this->eventModel->getDatabase()->selectOne($sql, ['tenant_id' => $tenantId]);
     }
     
-    private function getLiveVotingStats($tenantId, $eventId = null)
+    private function getLiveVotingStats($tenantId, $eventId = null, $categoryId = null)
     {
         try {
             $eventFilter = $eventId ? "AND e.id = :event_id" : "";
+            $categoryFilter = $categoryId ? "AND v.category_id = :category_id" : "";
             $params = ['tenant_id' => $tenantId];
             if ($eventId) {
                 $params['event_id'] = $eventId;
+            }
+            if ($categoryId) {
+                $params['category_id'] = $categoryId;
             }
             
             // Get total votes and revenue (showing tenant earnings, not gross revenue)
@@ -2879,6 +3029,7 @@ class OrganizerController extends BaseController
                 WHERE e.tenant_id = :tenant_id
                 AND e.status = 'active'
                 $eventFilter
+                $categoryFilter
             ";
             
             $totalStats = $this->eventModel->getDatabase()->selectOne($totalSql, $params);
@@ -2893,6 +3044,7 @@ class OrganizerController extends BaseController
                 AND e.status = 'active'
                 AND v.created_at >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
                 $eventFilter
+                $categoryFilter
             ";
             
             $hourStats = $this->eventModel->getDatabase()->selectOne($hourSql, $params);
@@ -2907,6 +3059,7 @@ class OrganizerController extends BaseController
                 AND e.status = 'active'
                 AND v.created_at >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)
                 $eventFilter
+                $categoryFilter
             ";
             
             $minuteStats = $this->eventModel->getDatabase()->selectOne($minuteSql, $params);
@@ -2977,50 +3130,93 @@ class OrganizerController extends BaseController
         }
     }
     
-    private function getTopContestants($tenantId, $limit = 10, $eventId = null)
+    private function getTopContestants($tenantId, $limit = 10, $eventId = null, $categoryId = null)
     {
         $eventFilter = $eventId ? "AND e.id = :event_id" : "";
         $params = ['tenant_id' => $tenantId, 'limit' => $limit];
         if ($eventId) {
             $params['event_id'] = $eventId;
         }
-        
-        $sql = "
-            SELECT 
-                c.id,
-                c.name,
-                c.contestant_code,
-                c.image_url,
-                e.name as event_name,
-                e.id as event_id,
-                GROUP_CONCAT(cat.name SEPARATOR ', ') as category_name,
-                COUNT(DISTINCT v.id) as vote_count,
-                COALESCE(SUM(v.quantity), 0) as total_votes,
-                SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END) as revenue
-            FROM contestants c
-            INNER JOIN events e ON c.event_id = e.id
-            LEFT JOIN contestant_categories cc ON c.id = cc.contestant_id
-            LEFT JOIN categories cat ON cc.category_id = cat.id
-            LEFT JOIN votes v ON c.id = v.contestant_id
-            LEFT JOIN transactions t ON v.transaction_id = t.id
-            WHERE e.tenant_id = :tenant_id
-            AND c.active = 1
-            $eventFilter
-            GROUP BY c.id, c.name, c.contestant_code, c.image_url, e.name, e.id
-            ORDER BY total_votes DESC, c.name ASC
-            LIMIT :limit
-        ";
-        
+
+        if ($categoryId) {
+            // When category is selected, only show contestants in that category with their category-specific votes
+            $params['category_id'] = $categoryId;
+            $sql = "
+                SELECT
+                    c.id,
+                    c.name,
+                    c.contestant_code,
+                    c.image_url,
+                    e.name as event_name,
+                    e.id as event_id,
+                    cat.name as category_name,
+                    COUNT(DISTINCT v.id) as vote_count,
+                    COALESCE(SUM(v.quantity), 0) as total_votes,
+                    SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END) as revenue
+                FROM contestants c
+                INNER JOIN events e ON c.event_id = e.id
+                INNER JOIN contestant_categories cc ON c.id = cc.contestant_id
+                INNER JOIN categories cat ON cc.category_id = cat.id AND cat.id = :category_id
+                LEFT JOIN votes v ON c.id = v.contestant_id AND v.category_id = cat.id
+                LEFT JOIN transactions t ON v.transaction_id = t.id AND t.status = 'success'
+                WHERE e.tenant_id = :tenant_id
+                AND c.active = 1
+                $eventFilter
+                GROUP BY c.id, c.name, c.contestant_code, c.image_url, e.name, e.id, cat.name
+                ORDER BY total_votes DESC, c.name ASC
+                LIMIT :limit
+            ";
+        } else {
+            // When no category selected, show all contestants with their total votes across all categories
+            $sql = "
+                SELECT
+                    c.id,
+                    c.name,
+                    c.contestant_code,
+                    c.image_url,
+                    e.name as event_name,
+                    e.id as event_id,
+                    GROUP_CONCAT(DISTINCT cat.name SEPARATOR ', ') as category_name,
+                    vote_data.vote_count,
+                    vote_data.total_votes,
+                    vote_data.revenue
+                FROM contestants c
+                INNER JOIN events e ON c.event_id = e.id
+                LEFT JOIN contestant_categories cc ON c.id = cc.contestant_id
+                LEFT JOIN categories cat ON cc.category_id = cat.id
+                LEFT JOIN (
+                    SELECT 
+                        v.contestant_id,
+                        COUNT(v.id) as vote_count,
+                        COALESCE(SUM(v.quantity), 0) as total_votes,
+                        SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END) as revenue
+                    FROM votes v
+                    LEFT JOIN transactions t ON v.transaction_id = t.id
+                    GROUP BY v.contestant_id
+                ) vote_data ON c.id = vote_data.contestant_id
+                WHERE e.tenant_id = :tenant_id
+                AND c.active = 1
+                $eventFilter
+                GROUP BY c.id, c.name, c.contestant_code, c.image_url, e.name, e.id, vote_data.vote_count, vote_data.total_votes, vote_data.revenue
+                ORDER BY vote_data.total_votes DESC, c.name ASC
+                LIMIT :limit
+            ";
+        }
+
         return $this->eventModel->getDatabase()->select($sql, $params);
     }
     
-    private function getVotingTrends($tenantId, $eventId = null, $hours = 24)
+    private function getVotingTrends($tenantId, $eventId = null, $categoryId = null, $hours = 24)
     {
         try {
             $eventFilter = $eventId ? "AND e.id = :event_id" : "";
+            $categoryFilter = $categoryId ? "AND v.category_id = :category_id" : "";
             $params = ['tenant_id' => $tenantId];
             if ($eventId) {
                 $params['event_id'] = $eventId;
+            }
+            if ($categoryId) {
+                $params['category_id'] = $categoryId;
             }
             
             $sql = "
@@ -3035,6 +3231,7 @@ class OrganizerController extends BaseController
                 WHERE e.tenant_id = :tenant_id
                 AND v.created_at >= DATE_SUB(NOW(), INTERVAL $hours HOUR)
                 $eventFilter
+                $categoryFilter
                 GROUP BY HOUR(v.created_at), c.id, c.name
                 ORDER BY vote_hour ASC, hourly_votes DESC
             ";

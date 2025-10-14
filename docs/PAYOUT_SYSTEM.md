@@ -63,10 +63,10 @@ $payoutService->processTransactionRevenue(
 ### Fee Structure
 - **Platform Fee**: 5% (configurable)
 - **Processing Fees**:
-  - Bank Transfer: 1.0% + $0.50
-  - Mobile Money: 1.5% + $0.25
-  - PayPal: 2.9% + $0.30
-  - Stripe: 2.9% + $0.30
+  - Bank Transfer: 1.0% + GH₵0.50
+  - Mobile Money: 1.5% + GH₵0.25
+  - PayPal: 2.9% + GH₵0.30
+  - Stripe: 2.9% + GH₵0.30
 
 ### Real-Time Updates
 - Tenant balances updated immediately

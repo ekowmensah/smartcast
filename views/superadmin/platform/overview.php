@@ -67,10 +67,10 @@
                 <div>
                     <div class="fs-4 fw-semibold"><?= number_format($overview['monthly_revenue'] ?? 0) ?></div>
                     <div>Monthly Revenue</div>
-                    <div class="small">USD</div>
+                    <div class="small">GHS</div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>
@@ -212,7 +212,7 @@
                                     $iconClass = match($activity['type'] ?? 'default') {
                                         'tenant_created' => 'fas fa-building text-success',
                                         'user_registered' => 'fas fa-user-plus text-primary',
-                                        'payment_received' => 'fas fa-dollar-sign text-warning',
+                                        'payment_received' => 'fas fa-money-bill text-warning',
                                         'security_alert' => 'fas fa-exclamation-triangle text-danger',
                                         default => 'fas fa-info-circle text-info'
                                     };

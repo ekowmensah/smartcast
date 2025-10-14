@@ -113,7 +113,7 @@
                     <div class="small">GHS <?= $votingStats['total_votes'] > 0 ? number_format(($votingStats['total_revenue'] ?? 0) / $votingStats['total_votes'], 2) : 0 ?> per vote</div>
                 </div>
                 <div class="dropdown">
-                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    <i class="fas fa-money-bill fa-2x opacity-75"></i>
                 </div>
             </div>
         </div>

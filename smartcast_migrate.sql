@@ -195,7 +195,7 @@ CREATE TABLE `events` (
   `featured_image` varchar(500) DEFAULT NULL,
   `start_date` datetime DEFAULT NULL,
   `end_date` datetime DEFAULT NULL,
-  `vote_price` decimal(10,2) DEFAULT 0.50 COMMENT 'Price per vote in USD',
+  `vote_price` decimal(10,2) DEFAULT 0.50 COMMENT 'Price per vote in GHS',
   `active` tinyint(1) DEFAULT 1,
   `status` enum('draft','active','suspended','closed','archived') DEFAULT 'draft',
   `visibility` enum('private','public','unlisted') DEFAULT 'private',
