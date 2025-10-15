@@ -492,8 +492,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (paymentData.transaction_id) {
                         window.location.href = '<?= APP_URL ?>/payment/receipt/' + paymentData.transaction_id;
                     } else {
-                        // Fallback to payment status page
-                        window.location.href = '<?= APP_URL ?>/payment/status/' + (paymentData.transaction_id || 'unknown');
+                        // If no transaction ID, stay on voting page with success message
+                        console.log('No transaction ID available for receipt page');
+                        // Could also redirect to event page or show a different success page
+                        // For now, just stay on the current page with the success message
                     }
                 }, 3000); // Wait 3 seconds to show success message first
             } else {

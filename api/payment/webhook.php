@@ -25,14 +25,35 @@ try {
                 header('Content-Type: text/html; charset=utf-8');
                 
                 // Get transaction ID from payment reference for receipt page
+                // The receipt page expects a voting transaction ID (from transactions table)
                 $transactionId = null;
                 try {
                     $db = \SmartCast\Core\Database::getInstance();
-                    $transaction = $db->selectOne(
-                        "SELECT id FROM payment_transactions WHERE gateway_reference = :ref OR reference = :ref2",
-                        ['ref' => $reference, 'ref2' => $reference]
+                    
+                    // First try the transactions table (voting transactions) - this is what receipt page expects
+                    $votingTransaction = $db->selectOne(
+                        "SELECT id FROM transactions WHERE provider_reference = :ref",
+                        ['ref' => $reference]
                     );
-                    $transactionId = $transaction['id'] ?? null;
+                    
+                    if ($votingTransaction) {
+                        $transactionId = $votingTransaction['id'];
+                        error_log("Found voting transaction ID: {$transactionId} for reference: {$reference}");
+                    } else {
+                        // Fallback: try payment_transactions table
+                        $paymentTransaction = $db->selectOne(
+                            "SELECT id FROM payment_transactions WHERE gateway_reference = :ref OR reference = :ref2",
+                            ['ref' => $reference, 'ref2' => $reference]
+                        );
+                        if ($paymentTransaction) {
+                            $transactionId = $paymentTransaction['id'];
+                            error_log("Found payment transaction ID: {$transactionId} for reference: {$reference}");
+                        }
+                    }
+                    
+                    if (!$transactionId) {
+                        error_log("No transaction found for reference: {$reference}");
+                    }
                 } catch (\Exception $e) {
                     error_log("Could not get transaction ID: " . $e->getMessage());
                 }
