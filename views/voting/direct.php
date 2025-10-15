@@ -386,9 +386,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Prevent duplicate submissions
+    let isSubmitting = false;
+    
     // Form validation and AJAX submission
     document.getElementById('voteForm').addEventListener('submit', function(e) {
         e.preventDefault(); // Always prevent default form submission
+        
+        // Prevent duplicate submissions
+        if (isSubmitting) {
+            showAlert('Please wait, your vote is being processed...', 'info');
+            return false;
+        }
         
         const voterName = document.getElementById('voter_name').value.trim();
         const voterPhone = document.getElementById('voter_phone').value.trim();
@@ -410,6 +419,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function submitVoteForm() {
         const form = document.getElementById('voteForm');
         const submitBtn = document.querySelector('.vote-submit-btn');
+        
+        // Set submitting flag
+        isSubmitting = true;
         
         // Show loading state
         submitBtn.disabled = true;
@@ -467,7 +479,8 @@ document.addEventListener('DOMContentLoaded', function() {
             `, 'error');
         })
         .finally(() => {
-            // Reset loading state
+            // Reset loading state and submission flag
+            isSubmitting = false;
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-credit-card me-2"></i>Proceed to Payment';
         });
@@ -642,6 +655,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
         `, 'error');
+    }
+    
+    function showPaymentStatus(data) {
+        // For direct voting, redirect to payment status page
+        if (data.transaction_id) {
+            window.location.href = '<?= APP_URL ?>/payment/status/' + data.transaction_id;
+        } else {
+            // Fallback: show status message
+            showAlert(`
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-clock me-3 fs-4 text-info"></i>
+                    <div>
+                        <h5 class="mb-1">Payment Processing</h5>
+                        <p class="mb-2">${data.message || 'Your payment is being processed.'}</p>
+                        <p class="mb-0">Please wait while we verify your payment...</p>
+                    </div>
+                </div>
+            `, 'info');
+        }
     }
 });
 </script>
