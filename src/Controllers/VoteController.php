@@ -1596,37 +1596,6 @@ class VoteController extends BaseController
                 $totalAmount = $voteQuantity * $event['vote_price'];
             }
 
-            // Check for existing pending transactions to prevent duplicates
-            $existingTransaction = $this->transactionModel->getDatabase()->selectOne(
-                "SELECT id FROM transactions 
-                 WHERE tenant_id = :tenant_id 
-                 AND event_id = :event_id 
-                 AND contestant_id = :contestant_id 
-                 AND msisdn = :msisdn 
-                 AND status = 'pending' 
-                 AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-                 ORDER BY created_at DESC LIMIT 1",
-                [
-                    'tenant_id' => $event['tenant_id'],
-                    'event_id' => $eventId,
-                    'contestant_id' => $contestantId,
-                    'msisdn' => $voterPhone
-                ]
-            );
-            
-            if ($existingTransaction) {
-                // Return existing transaction instead of creating duplicate
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'payment_initiated' => true,
-                    'transaction_id' => $existingTransaction['id'],
-                    'message' => 'Payment already initiated. Please complete the existing payment.',
-                    'status_check_url' => APP_URL . "/api/payment/status/{$existingTransaction['id']}"
-                ]);
-                return;
-            }
-
             // Start database transaction (matching normal voting)
             $this->transactionModel->getDatabase()->getConnection()->beginTransaction();
 
