@@ -78,11 +78,19 @@
                                 <li><hr class="dropdown-divider"></li>
                                 
                                 <?php 
-                                $dashboardUrl = match($_SESSION['user_role'] ?? '') {
-                                    'platform_admin' => SUPERADMIN_URL,
-                                    'owner', 'manager' => ORGANIZER_URL,
-                                    default => ADMIN_URL
-                                };
+                                $userRole = $_SESSION['user_role'] ?? '';
+                                switch($userRole) {
+                                    case 'platform_admin':
+                                        $dashboardUrl = SUPERADMIN_URL;
+                                        break;
+                                    case 'owner':
+                                    case 'manager':
+                                        $dashboardUrl = ORGANIZER_URL;
+                                        break;
+                                    default:
+                                        $dashboardUrl = ADMIN_URL;
+                                        break;
+                                }
                                 ?>
                                 
                                 <li>
