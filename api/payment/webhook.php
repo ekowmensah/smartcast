@@ -24,11 +24,25 @@ try {
                 // Set HTML content type for popup
                 header('Content-Type: text/html; charset=utf-8');
                 
+                // Get transaction ID from payment reference for receipt page
+                $transactionId = null;
+                try {
+                    $db = \SmartCast\Core\Database::getInstance();
+                    $transaction = $db->selectOne(
+                        "SELECT id FROM payment_transactions WHERE gateway_reference = :ref OR reference = :ref2",
+                        ['ref' => $reference, 'ref2' => $reference]
+                    );
+                    $transactionId = $transaction['id'] ?? null;
+                } catch (\Exception $e) {
+                    error_log("Could not get transaction ID: " . $e->getMessage());
+                }
+                
                 // Generate popup close script
                 $data = [
                     'success' => $verificationResult['success'],
                     'status' => $verificationResult['success'] ? 'success' : 'failed',
                     'message' => $verificationResult['success'] ? 'Payment completed successfully!' : 'Payment verification failed',
+                    'transaction_id' => $transactionId,
                     'receipt_number' => $verificationResult['receipt_number'] ?? null,
                     'amount' => $verificationResult['amount'] ?? null,
                     'votes_cast' => $verificationResult['votes_cast'] ?? null

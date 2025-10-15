@@ -1413,6 +1413,16 @@ window.addEventListener('message', function(event) {
         // Show payment result on the page
         if (paymentData.success) {
             showPaymentSuccess(paymentData);
+            
+            // Redirect to receipt page after successful payment (like the old simulation)
+            setTimeout(() => {
+                if (paymentData.transaction_id) {
+                    window.location.href = '<?= APP_URL ?>/payment/receipt/' + paymentData.transaction_id;
+                } else {
+                    // Fallback to payment status page
+                    window.location.href = '<?= APP_URL ?>/payment/status/' + (paymentData.transaction_id || 'unknown');
+                }
+            }, 3000); // Wait 3 seconds to show success message first
         } else {
             showPaymentFailed(paymentData);
         }
