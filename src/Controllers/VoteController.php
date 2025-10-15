@@ -1598,7 +1598,7 @@ class VoteController extends BaseController
 
             // Check for existing pending transactions to prevent duplicates
             $existingTransaction = $this->transactionModel->getDatabase()->selectOne(
-                "SELECT id FROM payment_transactions 
+                "SELECT id FROM transactions 
                  WHERE tenant_id = :tenant_id 
                  AND event_id = :event_id 
                  AND contestant_id = :contestant_id 
