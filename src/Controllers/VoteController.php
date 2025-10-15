@@ -1110,16 +1110,30 @@ class VoteController extends BaseController
                 return;
             }
             
-            // Get or create receipt details
-            $receipt = $this->receiptModel->getReceiptByTransaction($transactionId);
+            // Get or create receipt details using VoteReceipt model
+            $voteReceiptModel = new \SmartCast\Models\VoteReceipt();
+            $receipt = $voteReceiptModel->getReceiptByTransaction($transactionId);
             
             if (!$receipt) {
-                // Create a receipt on-the-fly if it doesn't exist
-                $receipt = [
-                    'short_code' => $transaction['provider_reference'] ?? 'TXN_' . $transactionId,
-                    'created_at' => $transaction['created_at'],
-                    'transaction_id' => $transactionId
-                ];
+                // Generate receipt if it doesn't exist (for older transactions)
+                try {
+                    $receiptData = $voteReceiptModel->generateReceipt($transactionId);
+                    $receipt = [
+                        'short_code' => $receiptData['short_code'],
+                        'created_at' => $transaction['created_at'],
+                        'transaction_id' => $transactionId,
+                        'public_hash' => $receiptData['public_hash']
+                    ];
+                    error_log("Generated receipt for existing transaction {$transactionId}: " . $receiptData['short_code']);
+                } catch (\Exception $e) {
+                    error_log("Failed to generate receipt for transaction {$transactionId}: " . $e->getMessage());
+                    // Fallback to basic receipt data
+                    $receipt = [
+                        'short_code' => $transaction['provider_reference'] ?? 'TXN_' . $transactionId,
+                        'created_at' => $transaction['created_at'],
+                        'transaction_id' => $transactionId
+                    ];
+                }
             }
             
             // Get additional transaction details

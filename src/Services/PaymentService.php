@@ -279,11 +279,23 @@ class PaymentService
                 $metadata['votes'] ?? 1
             );
             
+            // Generate receipt for the voting transaction
+            $receipt = null;
+            try {
+                $receiptModel = new \SmartCast\Models\VoteReceipt();
+                $receipt = $receiptModel->generateReceipt($transactionId);
+                error_log("Receipt generated for transaction {$transactionId}: " . $receipt['short_code']);
+            } catch (\Exception $e) {
+                error_log("Receipt generation failed for transaction {$transactionId}: " . $e->getMessage());
+                // Don't fail the entire process if receipt generation fails
+            }
+            
             return [
                 'success' => true,
                 'transaction_id' => $transactionId,
                 'vote_id' => $voteId,
-                'votes_cast' => $metadata['votes'] ?? 1
+                'votes_cast' => $metadata['votes'] ?? 1,
+                'receipt' => $receipt
             ];
             
         } catch (\Exception $e) {
