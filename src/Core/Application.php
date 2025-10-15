@@ -67,6 +67,7 @@ class Application
         $this->router->get('/api/payment/status/{transactionId}', 'VoteController@checkPaymentStatus'); // Check payment status
         $this->router->get('/api/payment/test/{transactionId}', 'VoteController@testPaymentStatus'); // Test payment processing
         $this->router->post('/api/payment/callback/{transactionId}', 'VoteController@handlePaymentCallback'); // Handle payment callbacks
+        $this->router->get('/api/payment/callback/{transactionId}', 'VoteController@handlePaymentCallback'); // Handle GET payment callbacks from Paystack
         $this->router->get('/api/payment/simulate/{transactionId}', 'VoteController@simulatePaymentCallback'); // Simulate payment callback for testing
         $this->router->get('/api/payment/receipt/{transactionId}', 'VoteController@getPaymentReceipt'); // Get payment receipt
         $this->router->get('/payment/receipt/{transactionId}', 'VoteController@showPaymentReceipt'); // Show payment receipt page

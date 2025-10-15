@@ -887,8 +887,46 @@ class VoteController extends BaseController
                 return $this->json(['success' => false, 'message' => 'Transaction not found'], 404);
             }
             
-            // Get callback data
-            $callbackData = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+            // Get callback data - handle both POST (webhook) and GET (redirect) callbacks
+            $callbackData = [];
+            
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                // Webhook callback
+                $callbackData = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+            } else {
+                // GET redirect callback from Paystack
+                $callbackData = $_GET;
+                
+                // For GET callbacks, we need to verify the payment with Paystack
+                if (isset($_GET['trxref']) || isset($_GET['reference'])) {
+                    $reference = $_GET['reference'] ?? $_GET['trxref'];
+                    error_log("GET callback received with reference: " . $reference);
+                    
+                    // Verify payment with Paystack API
+                    try {
+                        $paymentService = new \SmartCast\Services\PaymentService();
+                        $verificationResult = $paymentService->verifyPaymentAndProcessVote($reference);
+                        
+                        if ($verificationResult['success']) {
+                            // Redirect to success page
+                            $this->redirect(APP_URL . "/payment/status/{$transactionId}?status=success", 
+                                'Payment completed successfully!', 'success');
+                            return;
+                        } else {
+                            // Redirect to failure page
+                            $this->redirect(APP_URL . "/payment/status/{$transactionId}?status=failed", 
+                                'Payment verification failed', 'error');
+                            return;
+                        }
+                    } catch (\Exception $e) {
+                        error_log("Payment verification error: " . $e->getMessage());
+                        $this->redirect(APP_URL . "/payment/status/{$transactionId}?status=error", 
+                            'Payment verification error', 'error');
+                        return;
+                    }
+                }
+            }
+            
             error_log("Callback data received: " . json_encode($callbackData));
             
             // Verify callback (in production, verify signature)
