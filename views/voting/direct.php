@@ -486,18 +486,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show payment result on the page
             if (paymentData.success) {
                 showPaymentSuccess(paymentData);
-                
-                // Redirect to receipt page after successful payment (like the old simulation)
-                setTimeout(() => {
-                    if (paymentData.transaction_id) {
-                        window.location.href = '<?= APP_URL ?>/payment/receipt/' + paymentData.transaction_id;
-                    } else {
-                        // If no transaction ID, stay on voting page with success message
-                        console.log('No transaction ID available for receipt page');
-                        // Could also redirect to event page or show a different success page
-                        // For now, just stay on the current page with the success message
-                    }
-                }, 3000); // Wait 3 seconds to show success message first
             } else {
                 showPaymentFailed(paymentData);
             }
