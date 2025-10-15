@@ -12,6 +12,45 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     $provider = $_GET['provider'] ?? 'paystack';
     
+    if ($method === 'GET') {
+        // Handle GET redirect from Paystack (callback)
+        if (isset($_GET['trxref']) || isset($_GET['reference'])) {
+            $reference = $_GET['reference'] ?? $_GET['trxref'];
+            
+            // Verify payment and process vote
+            try {
+                $paymentService = new PaymentService();
+                $verificationResult = $paymentService->verifyPaymentAndProcessVote($reference);
+                
+                // Generate popup close script
+                $data = [
+                    'success' => $verificationResult['success'],
+                    'status' => $verificationResult['success'] ? 'success' : 'failed',
+                    'message' => $verificationResult['success'] ? 'Payment completed successfully!' : 'Payment verification failed',
+                    'receipt_number' => $verificationResult['receipt_number'] ?? null,
+                    'amount' => $verificationResult['amount'] ?? null,
+                    'votes_cast' => $verificationResult['votes_cast'] ?? null
+                ];
+                
+                echo generatePopupCloseScript($data);
+                exit;
+                
+            } catch (\Exception $e) {
+                error_log("Payment verification error: " . $e->getMessage());
+                echo generatePopupCloseScript([
+                    'success' => false,
+                    'status' => 'error',
+                    'message' => 'Payment verification error: ' . $e->getMessage()
+                ]);
+                exit;
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing payment reference']);
+            exit;
+        }
+    }
+    
     if ($method !== 'POST') {
         http_response_code(405);
         echo json_encode(['error' => 'Method not allowed']);
@@ -66,4 +105,40 @@ try {
         'message' => 'Internal server error',
         'error_code' => 'INTERNAL_ERROR'
     ]);
+}
+
+/**
+ * Generate script to close popup and communicate with parent window
+ */
+function generatePopupCloseScript($data)
+{
+    $jsonData = json_encode($data);
+    return "
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Payment Complete</title>
+    </head>
+    <body>
+        <div style='text-align: center; padding: 20px; font-family: Arial, sans-serif;'>
+            <h3>" . ($data['success'] ? '✅ Payment Successful!' : '❌ Payment Failed') . "</h3>
+            <p>" . htmlspecialchars($data['message']) . "</p>
+            <p><small>This window will close automatically...</small></p>
+        </div>
+        <script>
+            // Send result to parent window
+            if (window.opener && !window.opener.closed) {
+                window.opener.postMessage({
+                    type: 'PAYMENT_COMPLETE',
+                    data: {$jsonData}
+                }, '*');
+            }
+            
+            // Close popup after a short delay
+            setTimeout(function() {
+                window.close();
+            }, 2000);
+        </script>
+    </body>
+    </html>";
 }
