@@ -1,0 +1,478 @@
+<?php
+
+namespace SmartCast\Services;
+
+use SmartCast\Core\Database;
+use SmartCast\Services\Gateways\PaystackGateway;
+use SmartCast\Models\Transaction;
+
+/**
+ * Payment Service
+ * Manages payment processing through various gateways
+ */
+class PaymentService
+{
+    private $db;
+    private $gateways = [];
+    
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
+        $this->loadGateways();
+    }
+    
+    /**
+     * Initialize a mobile money payment
+     * 
+     * @param array $paymentData Payment information
+     * @return array Payment result
+     */
+    public function initializeMobileMoneyPayment($paymentData)
+    {
+        try {
+            // Validate required fields
+            $required = ['amount', 'phone', 'description', 'metadata'];
+            foreach ($required as $field) {
+                if (empty($paymentData[$field])) {
+                    throw new \Exception("Missing required field: {$field}");
+                }
+            }
+            
+            // Get active mobile money gateway (Paystack)
+            $gateway = $this->getActiveGateway('mobile_money');
+            if (!$gateway) {
+                throw new \Exception('No active mobile money gateway available');
+            }
+            
+            // Generate unique reference
+            $reference = $this->generatePaymentReference();
+            
+            // Create payment transaction record
+            $paymentTransactionId = $this->createPaymentTransaction([
+                'reference' => $reference,
+                'gateway_id' => $gateway['id'],
+                'amount' => $paymentData['amount'],
+                'currency' => $paymentData['currency'] ?? 'GHS',
+                'payment_method' => 'mobile_money',
+                'phone_number' => $paymentData['phone'],
+                'email' => $paymentData['email'] ?? null,
+                'customer_name' => $paymentData['customer_name'] ?? null,
+                'description' => $paymentData['description'],
+                'metadata' => json_encode($paymentData['metadata']),
+                'tenant_id' => $paymentData['tenant_id'] ?? null,
+                'related_type' => $paymentData['related_type'] ?? 'vote',
+                'related_id' => $paymentData['related_id'] ?? null
+            ]);
+            
+            // Initialize payment with gateway
+            $gatewayService = $this->getGatewayService($gateway);
+            $gatewayData = [
+                'amount' => $paymentData['amount'],
+                'phone' => $paymentData['phone'],
+                'reference' => $reference,
+                'currency' => $paymentData['currency'] ?? 'GHS',
+                'email' => $paymentData['email'],
+                'callback_url' => $paymentData['callback_url'] ?? null,
+                'metadata' => $paymentData['metadata']
+            ];
+            
+            $result = $gatewayService->initializeMobileMoneyPayment($gatewayData);
+            
+            if ($result['success']) {
+                // Update payment transaction with gateway response
+                $this->updatePaymentTransaction($paymentTransactionId, [
+                    'gateway_reference' => $result['gateway_reference'],
+                    'gateway_response' => json_encode($result)
+                ]);
+                
+                return [
+                    'success' => true,
+                    'payment_transaction_id' => $paymentTransactionId,
+                    'reference' => $reference,
+                    'gateway_reference' => $result['gateway_reference'],
+                    'payment_url' => $result['payment_url'],
+                    'access_code' => $result['access_code'] ?? null,
+                    'provider' => $result['provider'] ?? null,
+                    'charge_status' => $result['charge_status'] ?? 'pending',
+                    'requires_otp' => $result['requires_otp'] ?? false,
+                    'message' => $result['message']
+                ];
+            } else {
+                // Update payment transaction as failed
+                $this->updatePaymentTransaction($paymentTransactionId, [
+                    'status' => 'failed',
+                    'gateway_response' => json_encode($result)
+                ]);
+                
+                return [
+                    'success' => false,
+                    'message' => $result['message'],
+                    'error_code' => $result['error_code'] ?? 'PAYMENT_FAILED'
+                ];
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Payment initialization error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 'INITIALIZATION_ERROR'
+            ];
+        }
+    }
+    
+    /**
+     * Verify a payment and process vote if successful
+     * 
+     * @param string $reference Payment reference
+     * @return array Verification result
+     */
+    public function verifyPaymentAndProcessVote($reference)
+    {
+        try {
+            // Get payment transaction
+            $paymentTransaction = $this->getPaymentTransactionByReference($reference);
+            if (!$paymentTransaction) {
+                throw new \Exception('Payment transaction not found');
+            }
+            
+            // Get gateway and verify payment
+            $gateway = $this->getGatewayById($paymentTransaction['gateway_id']);
+            $gatewayService = $this->getGatewayService($gateway);
+            
+            $verificationResult = $gatewayService->verifyPayment($paymentTransaction['gateway_reference']);
+            
+            if ($verificationResult['success']) {
+                $status = $verificationResult['status'];
+                
+                // Update payment transaction
+                $this->updatePaymentTransaction($paymentTransaction['id'], [
+                    'status' => $status,
+                    'gateway_response' => json_encode($verificationResult),
+                    'webhook_verified' => 1
+                ]);
+                
+                if ($status === 'success') {
+                    // Process the vote
+                    $voteResult = $this->processVoteFromPayment($paymentTransaction);
+                    
+                    return [
+                        'success' => true,
+                        'status' => 'success',
+                        'message' => 'Payment verified and vote processed successfully',
+                        'payment_verified' => true,
+                        'vote_processed' => $voteResult['success'] ?? false,
+                        'vote_details' => $voteResult
+                    ];
+                } else {
+                    return [
+                        'success' => true,
+                        'status' => $status,
+                        'message' => 'Payment verification completed',
+                        'payment_verified' => true,
+                        'vote_processed' => false
+                    ];
+                }
+            } else {
+                return [
+                    'success' => false,
+                    'message' => $verificationResult['message'],
+                    'error_code' => $verificationResult['error_code']
+                ];
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Payment verification error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 'VERIFICATION_ERROR'
+            ];
+        }
+    }
+    
+    /**
+     * Process webhook from payment gateway
+     * 
+     * @param string $provider Gateway provider
+     * @param array $payload Webhook payload
+     * @param string $signature Webhook signature
+     * @return array Processing result
+     */
+    public function processWebhook($provider, $payload, $signature = null)
+    {
+        try {
+            // Log webhook
+            $this->logWebhook($provider, $payload, $signature);
+            
+            // Get gateway by provider
+            $gateway = $this->getGatewayByProvider($provider);
+            if (!$gateway) {
+                throw new \Exception("No gateway found for provider: {$provider}");
+            }
+            
+            // Process webhook
+            $gatewayService = $this->getGatewayService($gateway);
+            $result = $gatewayService->processWebhook($payload, $signature);
+            
+            // If payment was confirmed, process the vote
+            if ($result['success'] && $result['action'] === 'payment_confirmed') {
+                $reference = $result['reference'];
+                $paymentTransaction = $this->getPaymentTransactionByGatewayReference($reference);
+                
+                if ($paymentTransaction) {
+                    $voteResult = $this->processVoteFromPayment($paymentTransaction);
+                    $result['vote_processed'] = $voteResult['success'] ?? false;
+                    $result['vote_details'] = $voteResult;
+                }
+            }
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            error_log("Webhook processing error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 'WEBHOOK_ERROR'
+            ];
+        }
+    }
+    
+    /**
+     * Process vote from successful payment
+     */
+    private function processVoteFromPayment($paymentTransaction)
+    {
+        try {
+            $metadata = json_decode($paymentTransaction['metadata'], true);
+            
+            if (!$metadata || !isset($metadata['transaction_id'])) {
+                throw new \Exception('Invalid payment metadata for vote processing');
+            }
+            
+            // Create voting transaction record
+            $transactionModel = new Transaction();
+            $transactionData = [
+                'tenant_id' => $paymentTransaction['tenant_id'],
+                'event_id' => $metadata['event_id'],
+                'contestant_id' => $metadata['contestant_id'],
+                'category_id' => $metadata['category_id'] ?? null,
+                'bundle_id' => $metadata['bundle_id'] ?? null,
+                'amount' => $paymentTransaction['amount'],
+                'msisdn' => $paymentTransaction['phone_number'],
+                'status' => 'success',
+                'provider' => 'paystack',
+                'provider_reference' => $paymentTransaction['gateway_reference']
+            ];
+            
+            $transactionId = $transactionModel->createTransaction($transactionData);
+            
+            // Cast the votes
+            $voteModel = new \SmartCast\Models\Vote();
+            $voteId = $voteModel->castVote(
+                $transactionId,
+                $transactionData['tenant_id'],
+                $transactionData['event_id'],
+                $transactionData['contestant_id'],
+                $transactionData['category_id'],
+                $metadata['votes'] ?? 1
+            );
+            
+            return [
+                'success' => true,
+                'transaction_id' => $transactionId,
+                'vote_id' => $voteId,
+                'votes_cast' => $metadata['votes'] ?? 1
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("Vote processing error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 'VOTE_PROCESSING_ERROR'
+            ];
+        }
+    }
+    
+    /**
+     * Load available payment gateways
+     */
+    private function loadGateways()
+    {
+        $sql = "SELECT * FROM payment_gateways WHERE is_active = 1 ORDER BY priority ASC";
+        $this->gateways = $this->db->select($sql);
+    }
+    
+    /**
+     * Get active gateway for payment method
+     */
+    private function getActiveGateway($paymentMethod)
+    {
+        foreach ($this->gateways as $gateway) {
+            $supportedMethods = json_decode($gateway['supported_methods'], true);
+            if (in_array($paymentMethod, $supportedMethods)) {
+                return $gateway;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Get gateway by ID
+     */
+    private function getGatewayById($gatewayId)
+    {
+        $sql = "SELECT * FROM payment_gateways WHERE id = :id";
+        return $this->db->selectOne($sql, ['id' => $gatewayId]);
+    }
+    
+    /**
+     * Get gateway by provider
+     */
+    private function getGatewayByProvider($provider)
+    {
+        $sql = "SELECT * FROM payment_gateways WHERE provider = :provider AND is_active = 1";
+        return $this->db->selectOne($sql, ['provider' => $provider]);
+    }
+    
+    /**
+     * Get gateway service instance
+     */
+    private function getGatewayService($gateway)
+    {
+        $config = json_decode($gateway['config'], true);
+        
+        switch ($gateway['provider']) {
+            case 'paystack':
+                return new PaystackGateway($config);
+            default:
+                throw new \Exception("Unsupported gateway provider: {$gateway['provider']}");
+        }
+    }
+    
+    /**
+     * Create payment transaction record
+     */
+    private function createPaymentTransaction($data)
+    {
+        $sql = "INSERT INTO payment_transactions (
+            reference, gateway_id, amount, currency, payment_method, 
+            phone_number, email, customer_name, description, metadata, 
+            tenant_id, related_type, related_id, created_at
+        ) VALUES (
+            :reference, :gateway_id, :amount, :currency, :payment_method,
+            :phone_number, :email, :customer_name, :description, :metadata,
+            :tenant_id, :related_type, :related_id, NOW()
+        )";
+        
+        $this->db->query($sql, $data);
+        return $this->db->lastInsertId();
+    }
+    
+    /**
+     * Update payment transaction
+     */
+    private function updatePaymentTransaction($id, $data)
+    {
+        $setParts = [];
+        $params = ['id' => $id];
+        
+        foreach ($data as $key => $value) {
+            $setParts[] = "{$key} = :{$key}";
+            $params[$key] = $value;
+        }
+        
+        $sql = "UPDATE payment_transactions SET " . implode(', ', $setParts) . ", updated_at = NOW() WHERE id = :id";
+        return $this->db->query($sql, $params);
+    }
+    
+    /**
+     * Get payment transaction by reference
+     */
+    private function getPaymentTransactionByReference($reference)
+    {
+        $sql = "SELECT * FROM payment_transactions WHERE reference = :reference";
+        return $this->db->selectOne($sql, ['reference' => $reference]);
+    }
+    
+    /**
+     * Get payment transaction by gateway reference
+     */
+    private function getPaymentTransactionByGatewayReference($gatewayReference)
+    {
+        $sql = "SELECT * FROM payment_transactions WHERE gateway_reference = :gateway_reference";
+        return $this->db->selectOne($sql, ['gateway_reference' => $gatewayReference]);
+    }
+    
+    /**
+     * Log webhook for debugging
+     */
+    private function logWebhook($provider, $payload, $signature)
+    {
+        $sql = "INSERT INTO payment_webhook_logs (
+            gateway_provider, payload, signature, ip_address, created_at
+        ) VALUES (
+            :provider, :payload, :signature, :ip_address, NOW()
+        )";
+        
+        $this->db->query($sql, [
+            'provider' => $provider,
+            'payload' => json_encode($payload),
+            'signature' => $signature,
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+        ]);
+    }
+    
+    /**
+     * Generate unique payment reference
+     */
+    private function generatePaymentReference()
+    {
+        return strtolower(substr(uniqid() . bin2hex(random_bytes(4)), 0, 10));
+    }
+    
+    /**
+     * Format phone number
+     */
+    public function formatPhoneNumber($phone)
+    {
+        // Remove all non-numeric characters
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Handle Ghana phone numbers
+        if (strlen($phone) === 10 && substr($phone, 0, 1) === '0') {
+            // Convert 0XXXXXXXXX to 233XXXXXXXXX
+            $phone = '233' . substr($phone, 1);
+        } elseif (strlen($phone) === 9) {
+            // Convert XXXXXXXXX to 233XXXXXXXXX
+            $phone = '233' . $phone;
+        }
+        
+        return $phone;
+    }
+    
+    /**
+     * Detect mobile money provider
+     */
+    public function detectMobileMoneyProvider($phone)
+    {
+        $phone = $this->formatPhoneNumber($phone);
+        $prefix = substr($phone, -9, 3);
+        
+        $providers = [
+            'mtn' => ['024', '025', '053', '054', '055', '059'],
+            'vod' => ['020', '050'],
+            'tgo' => ['026', '027', '056', '057']
+        ];
+        
+        foreach ($providers as $code => $prefixes) {
+            if (in_array($prefix, $prefixes)) {
+                return $code;
+            }
+        }
+        
+        return 'mtn'; // Default
+    }
+}

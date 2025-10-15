@@ -383,6 +383,8 @@ class VoteController extends BaseController
                 'payment_initiated' => true,
                 'transaction_id' => $transactionId,
                 'payment_reference' => $paymentResult['payment_reference'],
+                'payment_url' => $paymentResult['payment_url'] ?? null,
+                'provider' => $paymentResult['provider'] ?? null,
                 'message' => $paymentResult['message'],
                 'status_check_url' => APP_URL . "/api/payment/status/{$transactionId}",
                 'expires_at' => $paymentResult['expires_at']
@@ -1566,17 +1568,29 @@ class VoteController extends BaseController
                     throw new \Exception('Failed to create transaction');
                 }
 
-                // Initiate payment
+                // Initiate payment using MoMoPaymentService for popup support
                 $paymentData = [
                     'amount' => $totalAmount,
                     'phone' => $voterPhone,
-                    'reference' => 'VOTE_' . $transactionId,
-                    'description' => "Vote for {$contestant['name']} in {$event['name']}"
+                    'description' => "Vote for {$contestant['name']} in {$event['name']}",
+                    'currency' => 'GHS',
+                    'email' => $voterEmail,
+                    'customer_name' => $voterName,
+                    'metadata' => [
+                        'event_id' => $eventId,
+                        'contestant_id' => $contestantId,
+                        'category_id' => $categoryId,
+                        'votes' => $voteQuantity,
+                        'bundle_id' => $finalBundleId,
+                        'transaction_id' => $transactionId
+                    ],
+                    'tenant_id' => $event['tenant_id']
                 ];
 
                 error_log('Initiating payment with data: ' . json_encode($paymentData));
 
-                $paymentResponse = $this->paymentService->initiatePayment($paymentData);
+                $momoService = new \SmartCast\Services\MoMoPaymentService();
+                $paymentResponse = $momoService->initiatePayment($paymentData);
                 error_log('Payment response: ' . json_encode($paymentResponse));
 
                 if (!$paymentResponse['success']) {
@@ -1599,44 +1613,47 @@ class VoteController extends BaseController
                 // Commit the transaction
                 $this->transactionModel->getDatabase()->getConnection()->commit();
 
-                // For testing purposes, automatically simulate successful payment
-                // In production, this would be handled by actual payment callbacks
-                try {
-                    error_log("Auto-simulating payment success for shortcode voting transaction: " . $transactionId);
-                    
-                    // Simulate successful payment status
-                    $paymentStatus = [
-                        'status' => 'success',
-                        'receipt_number' => 'SC_' . time() . '_' . $transactionId,
-                        'amount' => $totalAmount,
-                        'timestamp' => date('Y-m-d H:i:s')
-                    ];
-                    
-                    // Process the successful payment
-                    $this->processSuccessfulPayment($this->transactionModel->find($transactionId), $paymentStatus);
-                    
-                    error_log("Auto-simulation completed successfully for transaction: " . $transactionId);
-                } catch (\Exception $e) {
-                    error_log("Auto-simulation failed for transaction {$transactionId}: " . $e->getMessage());
-                    // Don't fail the entire process if simulation fails
-                }
-
-                // Redirect to payment status page
-                $this->redirect(APP_URL . "/payment/status/{$transactionId}", 
-                    'Payment completed successfully', 'success');
+                // Return JSON response for AJAX handling
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'payment_initiated' => true,
+                    'transaction_id' => $transactionId,
+                    'payment_reference' => $paymentResponse['payment_reference'] ?? null,
+                    'payment_url' => $paymentResponse['payment_url'] ?? null,
+                    'provider' => $paymentResponse['provider'] ?? null,
+                    'message' => $paymentResponse['message'] ?? 'Payment initiated successfully',
+                    'status_check_url' => APP_URL . "/api/payment/status/{$transactionId}"
+                ]);
+                return;
 
             } catch (\Exception $e) {
                 // Rollback the transaction
                 $this->transactionModel->getDatabase()->getConnection()->rollback();
                 
                 error_log('Payment processing error: ' . $e->getMessage());
-                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
-                    'Payment processing failed: ' . $e->getMessage(), 'error');
+                
+                // Return JSON error for AJAX requests
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Payment processing failed: ' . $e->getMessage(),
+                    'error_code' => 'PAYMENT_ERROR'
+                ]);
+                return;
             }
 
         } catch (\Exception $e) {
             error_log('Direct vote processing error: ' . $e->getMessage());
-            $this->redirect(APP_URL . '/vote-shortcode', 'An error occurred while processing your vote', 'error');
+            
+            // Return JSON error for AJAX requests
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'An error occurred while processing your vote: ' . $e->getMessage(),
+                'error_code' => 'PROCESSING_ERROR'
+            ]);
+            return;
         }
     }
 

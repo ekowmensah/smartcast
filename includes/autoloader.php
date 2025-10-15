@@ -3,6 +3,11 @@
  * SmartCast Autoloader
  */
 
+// Load configuration if not already loaded
+if (!defined('DB_HOST')) {
+    require_once __DIR__ . '/../config/config.php';
+}
+
 spl_autoload_register(function ($class) {
     // Convert namespace to file path
     $prefix = 'SmartCast\\';

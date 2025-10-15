@@ -142,4 +142,9 @@ class Database
     {
         return $this->connection->inTransaction();
     }
+    
+    public function lastInsertId()
+    {
+        return $this->connection->lastInsertId();
+    }
 }

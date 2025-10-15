@@ -25,6 +25,9 @@
 <div class="container mb-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">
+            <!-- Alert Container -->
+            <div id="alert-container" class="mb-3"></div>
+            
             <div class="card shadow-lg border-0">
                 <div class="card-body p-4">
                     <!-- Nominee Information -->
@@ -383,23 +386,211 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Form validation
+    // Form validation and AJAX submission
     document.getElementById('voteForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Always prevent default form submission
+        
         const voterName = document.getElementById('voter_name').value.trim();
         const voterPhone = document.getElementById('voter_phone').value.trim();
         
         if (!voterName || !voterPhone) {
-            e.preventDefault();
-            alert('Please fill in all required fields');
+            showAlert('Please fill in all required fields', 'error');
             return false;
         }
         
         if (parseInt(voteQuantityInput.value) < 1) {
-            e.preventDefault();
-            alert('Please select at least 1 vote');
+            showAlert('Please select at least 1 vote', 'error');
             return false;
         }
+        
+        // Submit via AJAX for popup support
+        submitVoteForm();
     });
+    
+    function submitVoteForm() {
+        const form = document.getElementById('voteForm');
+        const submitBtn = document.querySelector('.vote-submit-btn');
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        
+        // Prepare form data
+        const formData = new FormData(form);
+        
+        // Submit vote
+        fetch('<?= APP_URL ?>/vote/process', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.payment_initiated) {
+                // Check if we have a payment URL for mobile money
+                if (data.payment_url) {
+                    // Open Paystack in popup for mobile money verification
+                    showPaymentPopup(data);
+                } else {
+                    // Payment initiated - show payment status
+                    showPaymentStatus(data);
+                }
+            } else if (data.success) {
+                // Direct success (fallback)
+                showAlert(`
+                    <div class="alert-icon"><i class="fas fa-check-circle"></i></div>
+                    <div class="alert-content">
+                        <h4>Vote Successful! 🎉</h4>
+                        <p>Your vote for <strong><?= htmlspecialchars($contestant['name']) ?></strong> has been recorded.</p>
+                        <p><strong>Receipt:</strong> ${data.receipt}</p>
+                        <p><strong>Votes Cast:</strong> ${data.votes_cast}</p>
+                    </div>
+                `, 'success');
+            } else {
+                console.log('Vote failed:', data);
+                let errorMessage = data.message || 'Please try again.';
+                showAlert(`
+                    <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="alert-content">
+                        <h4>Vote Failed</h4>
+                        <p>${errorMessage}</p>
+                    </div>
+                `, 'error');
+            }
+        })
+        .catch(error => {
+            showAlert(`
+                <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="alert-content">
+                    <h4>Network Error</h4>
+                    <p>Please check your connection and try again.</p>
+                </div>
+            `, 'error');
+        })
+        .finally(() => {
+            // Reset loading state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-credit-card me-2"></i>Proceed to Payment';
+        });
+    }
+    
+    // Popup and alert functions (copied from vote-form.php)
+    let paymentPopup = null;
+    
+    function showAlert(content, type = 'info') {
+        const alertContainer = document.getElementById('alert-container');
+        const alertClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+        
+        alertContainer.innerHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${content}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    function showPaymentPopup(paymentData) {
+        const alertContainer = document.getElementById('alert-container');
+        
+        // Show payment popup message
+        alertContainer.innerHTML = `
+            <div class="alert alert-success">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-mobile-alt me-3 fs-4"></i>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">Payment Initiated 📱</h5>
+                        <p class="mb-2">Complete your mobile money payment in the popup window.</p>
+                        <p class="mb-2"><strong>Reference:</strong> ${paymentData.payment_reference}</p>
+                        <p class="mb-3"><strong>Provider:</strong> ${paymentData.provider || 'Mobile Money'}</p>
+                        <button onclick="openPaymentPopup('${paymentData.payment_url}')" 
+                                class="btn btn-primary btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i> Open Payment Window
+                        </button>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-spinner fa-spin me-1"></i>
+                                <span id="popup-status">Waiting for payment completion...</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Auto-open popup
+        setTimeout(() => {
+            openPaymentPopup(paymentData.payment_url);
+        }, 1000);
+        
+        // Start checking payment status
+        checkPaymentStatus(paymentData.transaction_id || paymentData.payment_reference, paymentData.status_check_url);
+    }
+    
+    function openPaymentPopup(paymentUrl) {
+        // Close existing popup if any
+        if (paymentPopup && !paymentPopup.closed) {
+            paymentPopup.close();
+        }
+        
+        // Open new popup
+        const popupFeatures = 'width=800,height=600,scrollbars=yes,resizable=yes,status=yes,location=yes,toolbar=no,menubar=no';
+        paymentPopup = window.open(paymentUrl, 'PaystackPayment', popupFeatures);
+        
+        // Focus on popup
+        if (paymentPopup) {
+            paymentPopup.focus();
+            
+            // Update status
+            const statusElement = document.getElementById('popup-status');
+            if (statusElement) {
+                statusElement.textContent = 'Payment window opened. Complete your mobile money payment.';
+            }
+            
+            // Monitor popup closure
+            const checkClosed = setInterval(() => {
+                if (paymentPopup.closed) {
+                    clearInterval(checkClosed);
+                    const statusElement = document.getElementById('popup-status');
+                    if (statusElement) {
+                        statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking payment status...';
+                    }
+                }
+            }, 1000);
+        } else {
+            // Popup blocked
+            showAlert(`
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                    <div>
+                        <h5 class="mb-1">Popup Blocked</h5>
+                        <p class="mb-2">Please allow popups for this site and try again.</p>
+                        <a href="${paymentUrl}" target="_blank" class="btn btn-primary btn-sm">
+                            Click here to open payment page manually
+                        </a>
+                    </div>
+                </div>
+            `, 'error');
+        }
+    }
+    
+    function checkPaymentStatus(transactionId, statusUrl) {
+        // For direct voting, we'll use a simple status check
+        // This can be enhanced later with proper status endpoints
+        console.log('Payment status checking for:', transactionId);
+        
+        // For now, just show a message that payment is being processed
+        setTimeout(() => {
+            const statusElement = document.getElementById('popup-status');
+            if (statusElement) {
+                statusElement.textContent = 'Payment processing... Please complete the payment in the popup window.';
+            }
+        }, 5000);
+    }
 });
 </script>
 

@@ -1172,8 +1172,14 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success && data.payment_initiated) {
-            // Payment initiated - show payment status
-            showPaymentStatus(data);
+            // Check if we have a payment URL for mobile money
+            if (data.payment_url) {
+                // Open Paystack in popup for mobile money verification
+                showPaymentPopup(data);
+            } else {
+                // Payment initiated - show payment status
+                showPaymentStatus(data);
+            }
         } else if (data.success) {
             // Direct success (fallback)
             showAlert(`
@@ -1229,6 +1235,46 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
         updateSubmitButton();
     });
 });
+
+function showPaymentPopup(paymentData) {
+    const alertContainer = document.getElementById('alert-container');
+    
+    // Show payment popup message
+    alertContainer.innerHTML = `
+        <div class="alert success">
+            <div class="alert-icon"><i class="fas fa-mobile-alt"></i></div>
+            <div class="alert-content">
+                <h4>Payment Initiated 📱</h4>
+                <p>Complete your mobile money payment in the popup window.</p>
+                <p><strong>Reference:</strong> ${paymentData.payment_reference}</p>
+                <p><strong>Provider:</strong> ${paymentData.provider || 'Mobile Money'}</p>
+                <div style="margin-top: 1rem;">
+                    <button onclick="openPaymentPopup('${paymentData.payment_url}')" 
+                            style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-external-link-alt"></i> Open Payment Window
+                    </button>
+                    <div style="margin-top: 10px;">
+                        <div class="payment-status-loader">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span id="popup-status">Waiting for payment completion...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Auto-open popup
+    setTimeout(() => {
+        openPaymentPopup(paymentData.payment_url);
+    }, 1000);
+    
+    // Start checking payment status
+    checkPaymentStatus(paymentData.transaction_id || paymentData.payment_reference, paymentData.status_check_url);
+}
 
 function showPaymentStatus(paymentData) {
     const alertContainer = document.getElementById('alert-container');
@@ -1288,8 +1334,13 @@ function checkPaymentStatus(transactionId, statusUrl) {
                         break;
                         
                     default:
+                        // Update both regular status and popup status
                         if (statusText) {
                             statusText.textContent = `Checking payment status... (${attempts}/${maxAttempts})`;
+                        }
+                        const popupStatus = document.getElementById('popup-status');
+                        if (popupStatus) {
+                            popupStatus.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking payment status... (${attempts}/${maxAttempts})`;
                         }
                 }
             }
@@ -1311,6 +1362,11 @@ function checkPaymentStatus(transactionId, statusUrl) {
 }
 
 function showPaymentSuccess(data) {
+    // Close payment popup if open
+    if (paymentPopup && !paymentPopup.closed) {
+        paymentPopup.close();
+    }
+    
     showAlert(`
         <div class="alert-icon"><i class="fas fa-check-circle"></i></div>
         <div class="alert-content">
@@ -1342,6 +1398,51 @@ function showPaymentFailed(data) {
             <p>Please try again or contact support if the problem persists.</p>
         </div>
     `, 'error');
+}
+
+let paymentPopup = null;
+
+function openPaymentPopup(paymentUrl) {
+    // Close existing popup if any
+    if (paymentPopup && !paymentPopup.closed) {
+        paymentPopup.close();
+    }
+    
+    // Open new popup
+    const popupFeatures = 'width=800,height=600,scrollbars=yes,resizable=yes,status=yes,location=yes,toolbar=no,menubar=no';
+    paymentPopup = window.open(paymentUrl, 'PaystackPayment', popupFeatures);
+    
+    // Focus on popup
+    if (paymentPopup) {
+        paymentPopup.focus();
+        
+        // Update status
+        const statusElement = document.getElementById('popup-status');
+        if (statusElement) {
+            statusElement.textContent = 'Payment window opened. Complete your mobile money payment.';
+        }
+        
+        // Monitor popup closure
+        const checkClosed = setInterval(() => {
+            if (paymentPopup.closed) {
+                clearInterval(checkClosed);
+                const statusElement = document.getElementById('popup-status');
+                if (statusElement) {
+                    statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking payment status...';
+                }
+            }
+        }, 1000);
+    } else {
+        // Popup blocked
+        showAlert(`
+            <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="alert-content">
+                <h4>Popup Blocked</h4>
+                <p>Please allow popups for this site and try again.</p>
+                <p><a href="${paymentUrl}" target="_blank" style="color: #667eea;">Click here to open payment page manually</a></p>
+            </div>
+        `, 'error');
+    }
 }
 
 function showPaymentExpired(data) {
