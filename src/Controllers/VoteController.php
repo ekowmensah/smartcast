@@ -1110,12 +1110,16 @@ class VoteController extends BaseController
                 return;
             }
             
-            // Get receipt details
+            // Get or create receipt details
             $receipt = $this->receiptModel->getReceiptByTransaction($transactionId);
             
             if (!$receipt) {
-                $this->redirect(APP_URL . '/vote-shortcode', 'Receipt not found for this transaction', 'error');
-                return;
+                // Create a receipt on-the-fly if it doesn't exist
+                $receipt = [
+                    'short_code' => $transaction['provider_reference'] ?? 'TXN_' . $transactionId,
+                    'created_at' => $transaction['created_at'],
+                    'transaction_id' => $transactionId
+                ];
             }
             
             // Get additional transaction details
