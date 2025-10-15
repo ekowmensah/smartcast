@@ -97,13 +97,23 @@ class RevenueShare extends BaseModel
     
     public function getRevenueByPeriod($tenantId, $period = 'day', $limit = 30)
     {
-        $dateFormat = match($period) {
-            'hour' => '%Y-%m-%d %H:00:00',
-            'day' => '%Y-%m-%d',
-            'week' => '%Y-%u',
-            'month' => '%Y-%m',
-            default => '%Y-%m-%d'
-        };
+        switch($period) {
+            case 'hour':
+                $dateFormat = '%Y-%m-%d %H:00:00';
+                break;
+            case 'day':
+                $dateFormat = '%Y-%m-%d';
+                break;
+            case 'week':
+                $dateFormat = '%Y-%u';
+                break;
+            case 'month':
+                $dateFormat = '%Y-%m';
+                break;
+            default:
+                $dateFormat = '%Y-%m-%d';
+                break;
+        }
         
         $sql = "
             SELECT 
