@@ -473,7 +473,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Popup and alert functions (copied from vote-form.php)
+    // Listen for messages from payment popup
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'PAYMENT_COMPLETE') {
+            const paymentData = event.data.data;
+            
+            // Close popup if still open
+            if (paymentPopup && !paymentPopup.closed) {
+                paymentPopup.close();
+            }
+            
+            // Show payment result on the page
+            if (paymentData.success) {
+                showPaymentSuccess(paymentData);
+            } else {
+                showPaymentFailed(paymentData);
+            }
+        }
+    });
+    
+    // Popup and alert functions
     let paymentPopup = null;
     
     function showAlert(content, type = 'info') {
@@ -590,6 +609,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 statusElement.textContent = 'Payment processing... Please complete the payment in the popup window.';
             }
         }, 5000);
+    }
+    
+    function showPaymentSuccess(data) {
+        // Close payment popup if open
+        if (paymentPopup && !paymentPopup.closed) {
+            paymentPopup.close();
+        }
+        
+        showAlert(`
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-3 fs-4 text-success"></i>
+                <div>
+                    <h5 class="mb-1">Payment Successful! 🎉</h5>
+                    <p class="mb-2">Your vote for <strong><?= htmlspecialchars($contestant['name']) ?></strong> has been recorded.</p>
+                    <p class="mb-1"><strong>Receipt Number:</strong> ${data.receipt_number || 'N/A'}</p>
+                    <p class="mb-1"><strong>Amount:</strong> GHS ${data.amount || 'N/A'}</p>
+                    <p class="mb-0"><strong>Votes Cast:</strong> ${data.votes_cast || 'N/A'}</p>
+                </div>
+            </div>
+        `, 'success');
+    }
+    
+    function showPaymentFailed(data) {
+        showAlert(`
+            <div class="d-flex align-items-center">
+                <i class="fas fa-times-circle me-3 fs-4 text-danger"></i>
+                <div>
+                    <h5 class="mb-1">Payment Failed ❌</h5>
+                    <p class="mb-2">${data.message || 'Payment could not be completed.'}</p>
+                    <p class="mb-0">Please try again or contact support if the problem persists.</p>
+                </div>
+            </div>
+        `, 'error');
     }
 });
 </script>

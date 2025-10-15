@@ -1400,6 +1400,25 @@ function showPaymentFailed(data) {
     `, 'error');
 }
 
+// Listen for messages from payment popup
+window.addEventListener('message', function(event) {
+    if (event.data.type === 'PAYMENT_COMPLETE') {
+        const paymentData = event.data.data;
+        
+        // Close popup if still open
+        if (paymentPopup && !paymentPopup.closed) {
+            paymentPopup.close();
+        }
+        
+        // Show payment result on the page
+        if (paymentData.success) {
+            showPaymentSuccess(paymentData);
+        } else {
+            showPaymentFailed(paymentData);
+        }
+    }
+});
+
 let paymentPopup = null;
 
 function openPaymentPopup(paymentUrl) {

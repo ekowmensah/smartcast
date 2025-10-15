@@ -908,20 +908,35 @@ class VoteController extends BaseController
                         $verificationResult = $paymentService->verifyPaymentAndProcessVote($reference);
                         
                         if ($verificationResult['success']) {
-                            // Redirect to success page
-                            $this->redirect(APP_URL . "/payment/status/{$transactionId}?status=success", 
-                                'Payment completed successfully!', 'success');
+                            // Close popup and notify parent window of success
+                            echo $this->generatePopupCloseScript([
+                                'success' => true,
+                                'status' => 'success',
+                                'message' => 'Payment completed successfully!',
+                                'transaction_id' => $transactionId,
+                                'receipt_number' => $verificationResult['receipt_number'] ?? null,
+                                'amount' => $verificationResult['amount'] ?? null,
+                                'votes_cast' => $verificationResult['votes_cast'] ?? null
+                            ]);
                             return;
                         } else {
-                            // Redirect to failure page
-                            $this->redirect(APP_URL . "/payment/status/{$transactionId}?status=failed", 
-                                'Payment verification failed', 'error');
+                            // Close popup and notify parent window of failure
+                            echo $this->generatePopupCloseScript([
+                                'success' => false,
+                                'status' => 'failed',
+                                'message' => 'Payment verification failed',
+                                'transaction_id' => $transactionId
+                            ]);
                             return;
                         }
                     } catch (\Exception $e) {
                         error_log("Payment verification error: " . $e->getMessage());
-                        $this->redirect(APP_URL . "/payment/status/{$transactionId}?status=error", 
-                            'Payment verification error', 'error');
+                        echo $this->generatePopupCloseScript([
+                            'success' => false,
+                            'status' => 'error',
+                            'message' => 'Payment verification error: ' . $e->getMessage(),
+                            'transaction_id' => $transactionId
+                        ]);
                         return;
                     }
                 }
@@ -1693,6 +1708,42 @@ class VoteController extends BaseController
             ]);
             return;
         }
+    }
+    
+    /**
+     * Generate script to close popup and communicate with parent window
+     */
+    private function generatePopupCloseScript($data)
+    {
+        $jsonData = json_encode($data);
+        return "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Payment Complete</title>
+        </head>
+        <body>
+            <div style='text-align: center; padding: 20px; font-family: Arial, sans-serif;'>
+                <h3>" . ($data['success'] ? '✅ Payment Successful!' : '❌ Payment Failed') . "</h3>
+                <p>" . htmlspecialchars($data['message']) . "</p>
+                <p><small>This window will close automatically...</small></p>
+            </div>
+            <script>
+                // Send result to parent window
+                if (window.opener && !window.opener.closed) {
+                    window.opener.postMessage({
+                        type: 'PAYMENT_COMPLETE',
+                        data: {$jsonData}
+                    }, '*');
+                }
+                
+                // Close popup after a short delay
+                setTimeout(function() {
+                    window.close();
+                }, 2000);
+            </script>
+        </body>
+        </html>";
     }
 
 }
