@@ -4,8 +4,7 @@ require_once __DIR__ . '/../../includes/autoloader.php';
 
 use SmartCast\Services\PaymentService;
 
-// Set JSON response header
-header('Content-Type: application/json');
+// Don't set JSON header initially - will be set conditionally
 
 try {
     // Get the request method and provider
@@ -22,6 +21,9 @@ try {
                 $paymentService = new PaymentService();
                 $verificationResult = $paymentService->verifyPaymentAndProcessVote($reference);
                 
+                // Set HTML content type for popup
+                header('Content-Type: text/html; charset=utf-8');
+                
                 // Generate popup close script
                 $data = [
                     'success' => $verificationResult['success'],
@@ -37,6 +39,7 @@ try {
                 
             } catch (\Exception $e) {
                 error_log("Payment verification error: " . $e->getMessage());
+                header('Content-Type: text/html; charset=utf-8');
                 echo generatePopupCloseScript([
                     'success' => false,
                     'status' => 'error',
@@ -45,6 +48,7 @@ try {
                 exit;
             }
         } else {
+            header('Content-Type: application/json');
             http_response_code(400);
             echo json_encode(['error' => 'Missing payment reference']);
             exit;
@@ -52,10 +56,14 @@ try {
     }
     
     if ($method !== 'POST') {
+        header('Content-Type: application/json');
         http_response_code(405);
         echo json_encode(['error' => 'Method not allowed']);
         exit;
     }
+    
+    // Set JSON header for POST webhook processing
+    header('Content-Type: application/json');
     
     // Get the raw POST data
     $input = file_get_contents('php://input');

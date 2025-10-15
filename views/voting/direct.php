@@ -546,8 +546,8 @@ document.addEventListener('DOMContentLoaded', function() {
             openPaymentPopup(paymentData.payment_url);
         }, 1000);
         
-        // Start checking payment status
-        checkPaymentStatus(paymentData.transaction_id || paymentData.payment_reference, paymentData.status_check_url);
+        // Don't start status checking for popup payments - wait for popup message instead
+        // The popup will send the result via postMessage
     }
     
     function openPaymentPopup(paymentUrl) {
