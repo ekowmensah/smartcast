@@ -1608,14 +1608,26 @@ function showPaymentSuccess(data) {
         paymentPopup.close();
     }
     
+    // Debug: Log the received data
+    console.log('Payment success data received:', data);
+    
+    // Extract data with proper fallbacks
+    const receiptNumber = data.receipt_number || data.payment_reference || data.transaction_id || 'N/A';
+    const amount = data.amount || 'N/A';
+    const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString() : new Date().toLocaleString();
+    const contestantName = data.contestant_name || '<?= htmlspecialchars($contestant['name']) ?>';
+    
+    // Debug: Log the extracted values
+    console.log('Extracted values:', { receiptNumber, amount, timestamp, contestantName });
+    
     showAlert(`
         <div class="alert-icon"><i class="fas fa-check-circle"></i></div>
         <div class="alert-content">
             <h4>Payment Successful! 🎉</h4>
-            <p>Your vote for <strong><?= htmlspecialchars($contestant['name']) ?></strong> has been recorded.</p>
-            <p><strong>Receipt Number:</strong> ${data.receipt_number}</p>
-            <p><strong>Amount:</strong> GHS ${data.amount}</p>
-            <p><strong>Time:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+            <p>Your vote for <strong>${contestantName}</strong> has been recorded.</p>
+            <p><strong>Receipt Number:</strong> ${receiptNumber}</p>
+            <p><strong>Amount:</strong> GHS ${amount}</p>
+            <p><strong>Time:</strong> ${timestamp}</p>
         </div>
     `, 'success');
     
