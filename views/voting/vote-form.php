@@ -966,6 +966,8 @@ body {
         <input type="hidden" id="contestant_id" name="contestant_id" value="<?= $contestant['id'] ?>">
         <input type="hidden" id="bundle_id" name="bundle_id">
         <input type="hidden" id="category_id" name="category_id" value="<?= $category['id'] ?? $contestant['category_id'] ?? '' ?>">
+        <input type="hidden" id="coupon_code" name="coupon_code" value="">
+        <input type="hidden" id="referral_code" name="referral_code" value="">
         
         <!-- Voting Interface -->
         <div class="voting-interface">

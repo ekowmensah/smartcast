@@ -237,6 +237,30 @@ class AuthController extends BaseController
                 'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
             ]);
             
+            // Send super admin notification about new tenant registration
+            try {
+                $emailService = new \SmartCast\Services\EmailService();
+                $tenantNotificationData = [
+                    'name' => $data['organization'],
+                    'email' => $data['email'],
+                    'phone' => $data['phone'],
+                    'plan' => $selectedPlan['name'],
+                    'tenant_id' => $tenantId,
+                    'user_id' => $userId
+                ];
+                
+                $emailResult = $emailService->sendNewTenantNotificationToSuperAdmin($tenantNotificationData);
+                
+                if ($emailResult['success']) {
+                    error_log("Super admin notification sent successfully for new tenant: " . $data['organization']);
+                } else {
+                    error_log("Failed to send super admin notification for new tenant: " . $emailResult['error']);
+                }
+            } catch (\Exception $e) {
+                error_log("Error sending super admin notification: " . $e->getMessage());
+                // Don't fail the registration if email fails
+            }
+            
             $message = 'Registration successful! Your account has been created and is pending administrative approval. ';
             if ($selectedPlan['trial_days'] > 0) {
                 $message .= 'Once approved, you will receive ' . $selectedPlan['trial_days'] . ' days of free trial access. ';
