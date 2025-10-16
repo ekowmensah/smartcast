@@ -1,48 +1,271 @@
 <?php include __DIR__ . '/../layout/header.php'; ?>
 
+<style>
+/* Modern Voting Page Header - Updated */
+.modern-voting-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+}
+
+.modern-voting-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.05)"/><circle cx="20" cy="80" r="0.5" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.header-content-modern {
+    position: relative;
+    z-index: 2;
+    padding: 40px 30px;
+    text-align: center;
+}
+
+.event-title-modern {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.1;
+    text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: white; /* Fallback */
+}
+
+.event-subtitle-modern {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    font-weight: 500;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+    color: white;
+}
+
+.event-stats-modern {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.stat-item-modern {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-item-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.6s;
+}
+
+.stat-item-modern:hover::before {
+    left: 100%;
+}
+
+.stat-item-modern:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.stat-icon-modern {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.8;
+    display: block;
+    color: white;
+}
+
+.stat-number-modern {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+    text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+    color: white;
+}
+
+.stat-label-modern {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+    color: white;
+}
+
+.status-badges-modern {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-badge-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    backdrop-filter: blur(15px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.status-badge-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.badge-active {
+    background: rgba(255, 193, 7, 0.9);
+    border-color: rgba(255, 193, 7, 0.5);
+    color: #000;
+    font-weight: 700;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content-modern {
+        padding: 30px 20px;
+    }
+    
+    .event-title-modern {
+        font-size: clamp(1.8rem, 6vw, 2.5rem);
+        margin-bottom: 1rem;
+    }
+    
+    .event-subtitle-modern {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .event-stats-modern {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-item-modern {
+        padding: 1rem 0.75rem;
+    }
+    
+    .stat-icon-modern {
+        font-size: 1.2rem;
+    }
+    
+    .stat-number-modern {
+        font-size: 1.8rem;
+    }
+    
+    .stat-label-modern {
+        font-size: 0.8rem;
+    }
+    
+    .status-badges-modern {
+        gap: 0.75rem;
+    }
+    
+    .status-badge-modern {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content-modern {
+        padding: 25px 15px;
+    }
+    
+    .event-stats-modern {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .stat-item-modern {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .stat-number-modern {
+        font-size: 1.6rem;
+    }
+    
+    .stat-label-modern {
+        font-size: 0.75rem;
+    }
+    
+    .status-badges-modern {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .status-badge-modern {
+        padding: 8px 14px;
+        font-size: 0.8rem;
+    }
+}
+</style>
+
 <div class="voting-page">
-    <!-- Hero Section -->
-    <div class="hero-section mb-5">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-lg-8">
-                    <div class="hero-content">
-                        <div class="event-badge mb-3">
-                            <span class="badge bg-gradient-success px-3 py-2">
-                                <i class="fas fa-circle pulse me-2"></i>
-                                Voting Active
-                            </span>
-                        </div>
-                        <h1 class="display-4 fw-bold text-dark mb-3">
-                            <?= htmlspecialchars($event['name']) ?>
-                        </h1>
-                        <p class="lead text-muted mb-4">
-                            Cast your vote and support your favorite contestant in this exciting competition
-                        </p>
-                        <div class="event-meta d-flex flex-wrap gap-4">
-                            <div class="meta-item">
-                                <i class="fas fa-calendar-alt text-primary me-2"></i>
-                                <span>Ends <?= date('M j, Y', strtotime($event['end_date'])) ?></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-clock text-primary me-2"></i>
-                                <span><?= date('H:i', strtotime($event['end_date'])) ?></span>
-                            </div>
-                            <div class="meta-item">
-                                <i class="fas fa-users text-primary me-2"></i>
-                                <span><?= count($contestants) ?> Contestants</span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Modern Hero Section -->
+    <div class="modern-voting-header">
+        <div class="header-content-modern">
+            <h1 class="event-title-modern"><?= htmlspecialchars($event['name']) ?></h1>
+            <p class="event-subtitle-modern">Choose your favorite nominee to vote for</p>
+            
+            <div class="event-stats-modern">
+                <div class="stat-item-modern">
+                    <i class="fas fa-users stat-icon-modern"></i>
+                    <div class="stat-number-modern"><?= count($contestants) ?></div>
+                    <div class="stat-label-modern">Contestants</div>
                 </div>
-                <div class="col-lg-4">
-                    <?php if (!empty($event['featured_image'])): ?>
-                        <div class="hero-image">
-                            <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
-                                 alt="<?= htmlspecialchars($event['name']) ?>"
-                                 class="img-fluid rounded-3 shadow-lg">
-                        </div>
-                    <?php endif; ?>
+                <div class="stat-item-modern">
+                    <i class="fas fa-layer-group stat-icon-modern"></i>
+                    <div class="stat-number-modern"><?= count($contestantsByCategory) ?></div>
+                    <div class="stat-label-modern">Categories</div>
+                </div>
+                <div class="stat-item-modern">
+                    <i class="fas fa-calendar-alt stat-icon-modern"></i>
+                    <div class="stat-number-modern"><?= date('d', strtotime($event['end_date'])) ?></div>
+                    <div class="stat-label-modern"><?= date('M Y', strtotime($event['end_date'])) ?></div>
+                </div>
+            </div>
+            
+            <div class="status-badges-modern">
+                <div class="status-badge-modern badge-active">
+                    <i class="fas fa-vote-yea"></i>
+                    <span>Voting Active</span>
                 </div>
             </div>
         </div>

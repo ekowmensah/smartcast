@@ -16,7 +16,7 @@ include __DIR__ . '/../layout/public_header.php';
 ?>
 
 <!-- Hero Section -->
-<section class="hero-section position-relative overflow-hidden min-vh-100 d-flex align-items-center">
+<section class="hero-section position-relative overflow-hidden d-flex align-items-center" style="min-height: calc(100vh - 80px);">
     <!-- Animated Background -->
     <div class="hero-bg position-absolute w-100 h-100">
         <div class="gradient-bg"></div>
@@ -483,6 +483,29 @@ include __DIR__ . '/../layout/public_header.php';
 
 <!-- Sleek Modern Styles -->
 <style>
+/* Override header padding for seamless hero section */
+main.page-content {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Hero section positioning */
+.hero-section {
+    margin-top: 0px;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        margin-top: 0px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        margin-top: 0px;
+    }
+}
+
 /* Utility Classes */
 .py-6 { padding-top: 4rem !important; padding-bottom: 4rem !important; }
 .mb-6 { margin-bottom: 4rem !important; }

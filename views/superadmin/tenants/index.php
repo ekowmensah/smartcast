@@ -142,7 +142,7 @@
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
                                         <?php if (!empty($tenant['logo'])): ?>
-                                            <img src="<?= htmlspecialchars($tenant['logo']) ?>" alt="Logo" class="rounded" width="40" height="40">
+                                            <img src="<?= htmlspecialchars(image_url($tenant['logo'])) ?>" alt="Logo" class="rounded" width="40" height="40">
                                         <?php else: ?>
                                             <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                                 <?= strtoupper(substr($tenant['name'] ?? 'T', 0, 1)) ?>

@@ -5,132 +5,129 @@
         <!-- Main Footer Content -->
         <div class="footer-main">
             <div class="footer-container">
-                <div class="footer-grid">
-                    <!-- Brand Section -->
-                    <div class="footer-brand">
-                        <div class="footer-logo-section">
-                            <img src="<?= APP_URL ?>/logo1.png" alt="SmartCast Logo" class="footer-logo">
-                            <div class="footer-brand-text">
-                                <h3 class="footer-brand-name"><?= APP_NAME ?></h3>
-                                <p class="footer-tagline">Ghana's Leading Digital Voting Platform</p>
-                            </div>
-                        </div>
-                        <p class="footer-description">
-                            Empowering democratic participation through secure, transparent, and accessible digital voting solutions. 
-                            Trusted by thousands across Ghana for events, competitions, and elections.
-                        </p>
-                        <div class="footer-stats">
-                            <div class="stat-item">
-                                <div class="stat-number">50K+</div>
-                                <div class="stat-label">Votes Cast</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">500+</div>
-                                <div class="stat-label">Events</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">99.9%</div>
-                                <div class="stat-label">Uptime</div>
-                            </div>
+                <!-- Brand Section -->
+                <div class="footer-brand">
+                    <div class="footer-logo-section">
+                        <img src="<?= APP_URL ?>/logo1.png" alt="SmartCast Logo" class="footer-logo">
+                        <div class="footer-brand-text">
+                            <h3 class="footer-brand-name"><?= APP_NAME ?></h3>
+                            <p class="footer-tagline">Ghana's Leading Digital Voting Platform</p>
                         </div>
                     </div>
-
-                    <!-- Quick Links -->
-                    <div class="footer-section">
-                        <h4 class="footer-section-title">
-                            <i class="fas fa-link"></i>
-                            Quick Links
-                        </h4>
-                        <ul class="footer-links">
-                            <li><a href="<?= PUBLIC_URL ?>"><i class="fas fa-home"></i> Home</a></li>
-                            <li><a href="<?= PUBLIC_URL ?>/events"><i class="fas fa-calendar-alt"></i> Browse Events</a></li>
-                            <li><a href="<?= APP_URL ?>/verify-receipt"><i class="fas fa-shield-check"></i> Verify Receipt</a></li>
-                            <li><a href="<?= PUBLIC_URL ?>/about"><i class="fas fa-info-circle"></i> About Us</a></li>
-                            <li><a href="<?= PUBLIC_URL ?>/contact"><i class="fas fa-envelope"></i> Contact</a></li>
-                            <li><a href="<?= PUBLIC_URL ?>/faq"><i class="fas fa-question-circle"></i> FAQ</a></li>
-                        </ul>
+                    <p class="footer-description">
+                        Empowering democratic participation through secure, transparent, and accessible digital voting solutions. 
+                        Trusted by thousands across Ghana for events, competitions, and elections.
+                    </p>
+                    <div class="footer-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">50K+</div>
+                            <div class="stat-label">Votes Cast</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">500+</div>
+                            <div class="stat-label">Events</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">99.9%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Services -->
-                    <div class="footer-section">
-                        <h4 class="footer-section-title">
-                            <i class="fas fa-cogs"></i>
-                            Our Services
-                        </h4>
-                        <ul class="footer-links">
-                         <!--   <li><a href="<?= PUBLIC_URL ?>/services/event-voting"><i class="fas fa-vote-yea"></i> Event Voting</a></li>-->
-                            <li><a href="#"><i class="fas fa-vote-yea"></i> Event Voting</a></li>
-                            <li><a href="#"><i class="fas fa-star"></i> Talent Shows</a></li>
-                            <li><a href="#"><i class="fas fa-trophy"></i> Competitions</a></li>
-                            <li><a href="#"><i class="fas fa-poll"></i> Opinion Polls</a></li>
-                            <li><a href="#"><i class="fas fa-balance-scale"></i> Elections</a></li>
-                            <li><a href="#"><i class="fas fa-tools"></i> Custom Solutions</a></li>
-                        </ul>
-                    </div>
+                <!-- Quick Links -->
+                <div class="footer-section">
+                    <h4 class="footer-section-title">
+                        <i class="fas fa-link"></i>
+                        Quick Links
+                    </h4>
+                    <ul class="footer-links">
+                        <li><a href="<?= PUBLIC_URL ?>"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/events"><i class="fas fa-calendar-alt"></i> Browse Events</a></li>
+                        <li><a href="<?= APP_URL ?>/verify-receipt"><i class="fas fa-shield-check"></i> Verify Receipt</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/about"><i class="fas fa-info-circle"></i> About Us</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/contact"><i class="fas fa-envelope"></i> Contact</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/faq"><i class="fas fa-question-circle"></i> FAQ</a></li>
+                    </ul>
+                </div>
 
-                    <!-- Support & Legal -->
-                    <div class="footer-section">
-                        <h4 class="footer-section-title">
-                            <i class="fas fa-life-ring"></i>
-                            Support & Legal
-                        </h4>
-                        <ul class="footer-links">
-                            <li><a href="#"><i class="fas fa-headset"></i> Help Center</a></li>
-                            <li><a href="#"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
-                            <li><a href="#"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
-                            <li><a href="#"><i class="fas fa-lock"></i> Security</a></li>
-                            <li><a href="#"><i class="fas fa-code"></i> API Documentation</a></li>
-                            <li><a href="#"><i class="fas fa-heartbeat"></i> System Status</a></li>
-                        </ul>
-                    </div>
+                <!-- Services -->
+                <div class="footer-section">
+                    <h4 class="footer-section-title">
+                        <i class="fas fa-cogs"></i>
+                        Our Services
+                    </h4>
+                    <ul class="footer-links">
+                        <li><a href="<?= PUBLIC_URL ?>/services/event-voting"><i class="fas fa-vote-yea"></i> Event Voting</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/services/talent-shows"><i class="fas fa-star"></i> Talent Shows</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/services/competitions"><i class="fas fa-trophy"></i> Competitions</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/services/polls"><i class="fas fa-poll"></i> Opinion Polls</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/services/elections"><i class="fas fa-balance-scale"></i> Elections</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/services/custom"><i class="fas fa-tools"></i> Custom Solutions</a></li>
+                    </ul>
+                </div>
 
-                    <!-- Contact & Social -->
-                    <div class="footer-section">
-                        <h4 class="footer-section-title">
+                <!-- Support & Legal -->
+                <div class="footer-section">
+                    <h4 class="footer-section-title">
+                        <i class="fas fa-life-ring"></i>
+                        Support & Legal
+                    </h4>
+                    <ul class="footer-links">
+                        <li><a href="<?= PUBLIC_URL ?>/support"><i class="fas fa-headset"></i> Help Center</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/privacy"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/terms"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/security"><i class="fas fa-lock"></i> Security</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/api-docs"><i class="fas fa-code"></i> API Documentation</a></li>
+                        <li><a href="<?= PUBLIC_URL ?>/status"><i class="fas fa-heartbeat"></i> System Status</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact & Social -->
+                <div class="footer-section">
+                    <h4 class="footer-section-title">
+                        <i class="fas fa-phone"></i>
+                        Get In Touch
+                    </h4>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <strong>Address</strong>
+                                <p>Accra, Ghana</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <div>
+                                <strong>Email</strong>
+                                <p>hello@smartcast.gh</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
                             <i class="fas fa-phone"></i>
-                            Get In Touch
-                        </h4>
-                        <div class="contact-info">
-                            <div class="contact-item">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <div>
-                                    <strong>Address</strong>
-                                    <p>Accra, Ghana</p>
-                                </div>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fas fa-envelope"></i>
-                                <div>
-                                    <strong>Email</strong>
-                                    <p>support@smartcastgh.com</p>
-                                </div>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fas fa-phone"></i>
-                                <div>
-                                    <strong>Phone</strong>
-                                    <p>+233 54 564 4749</p>
-                                </div>
+                            <div>
+                                <strong>Phone</strong>
+                                <p>+233 XX XXX XXXX</p>
                             </div>
                         </div>
-                        
-                        <div class="social-links">
-                            <a href="#" class="social-link facebook" title="Facebook">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a href="#" class="social-link twitter" title="Twitter">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a href="#" class="social-link instagram" title="Instagram">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                            <a href="#" class="social-link linkedin" title="LinkedIn">
-                                <i class="fab fa-linkedin-in"></i>
-                            </a>
-                            <a href="#" class="social-link youtube" title="YouTube">
-                                <i class="fab fa-youtube"></i>
-                            </a>
-                        </div>
+                    </div>
+                    
+                    <div class="social-links">
+                        <a href="#" class="social-link facebook" title="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-link twitter" title="Twitter">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-link instagram" title="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-link linkedin" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="social-link youtube" title="YouTube">
+                            <i class="fab fa-youtube"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -199,9 +196,6 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
     <!-- Custom Footer Styles -->
     <style>
         /* Stunning Footer Styles */
@@ -242,7 +236,7 @@
             padding: 4rem 0 2rem;
         }
 
-        .footer-grid {
+        .footer-container > * {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
             gap: 3rem;
@@ -570,7 +564,7 @@
 
         /* Responsive Design */
         @media (max-width: 1024px) {
-            .footer-grid {
+            .footer-container > * {
                 grid-template-columns: 1fr 1fr;
                 gap: 2rem;
             }
@@ -594,7 +588,7 @@
                 padding: 3rem 0 1.5rem;
             }
 
-            .footer-grid {
+            .footer-container > * {
                 grid-template-columns: 1fr;
                 gap: 2rem;
             }

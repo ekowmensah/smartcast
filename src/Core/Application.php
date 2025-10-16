@@ -226,8 +226,26 @@ class Application
             $router->post('/tenants/reject', 'SuperAdminController@rejectTenant');
             
             // User Management
+            $router->get('/users', 'SuperAdminController@users');
             $router->get('/users/admins', 'SuperAdminController@platformAdmins');
             $router->get('/users/activity', 'SuperAdminController@userActivity');
+            
+            // Content Management
+            $router->get('/events', 'SuperAdminController@events');
+            $router->get('/events/{id}', 'SuperAdminController@showEvent');
+            $router->post('/events/update-status', 'SuperAdminController@updateEventStatus');
+            $router->get('/events/close-expired', 'SuperAdminController@closeExpiredEvents');
+            $router->post('/events/close-expired', 'SuperAdminController@closeExpiredEvents');
+            
+            $router->get('/categories', 'SuperAdminController@categories');
+            $router->get('/categories/{id}', 'SuperAdminController@showCategory');
+            $router->post('/categories/delete', 'SuperAdminController@deleteCategory');
+            $router->post('/categories/toggle-contestant', 'SuperAdminController@toggleContestantInCategory');
+            
+            $router->get('/contestants', 'SuperAdminController@contestants');
+            $router->get('/contestants/{id}', 'SuperAdminController@showContestant');
+            $router->post('/contestants/update-status', 'SuperAdminController@updateContestantStatus');
+            $router->post('/contestants/delete', 'SuperAdminController@deleteContestant');
             
             // Financial Management
             $router->get('/financial/overview', 'SuperAdminController@financialOverview');

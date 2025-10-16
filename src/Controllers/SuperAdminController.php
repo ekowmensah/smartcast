@@ -5,6 +5,8 @@ namespace SmartCast\Controllers;
 use SmartCast\Models\Tenant;
 use SmartCast\Models\User;
 use SmartCast\Models\Event;
+use SmartCast\Models\Category;
+use SmartCast\Models\Contestant;
 use SmartCast\Models\Transaction;
 use SmartCast\Models\AuditLog;
 use SmartCast\Models\FraudEvent;
@@ -25,6 +27,8 @@ class SuperAdminController extends BaseController
     private $tenantModel;
     private $userModel;
     private $eventModel;
+    private $categoryModel;
+    private $contestantModel;
     private $transactionModel;
     private $auditModel;
     private $fraudModel;
@@ -46,6 +50,8 @@ class SuperAdminController extends BaseController
         $this->tenantModel = new Tenant();
         $this->userModel = new User();
         $this->eventModel = new Event();
+        $this->categoryModel = new Category();
+        $this->contestantModel = new Contestant();
         $this->transactionModel = new Transaction();
         $this->auditModel = new AuditLog();
         $this->fraudModel = new FraudEvent();
@@ -506,6 +512,575 @@ class SuperAdminController extends BaseController
         $stats['total_revenue'] = $revenueData['total_revenue'] ?? 0;
         
         return $stats;
+    }
+    
+    // ==================== CONTENT MANAGEMENT METHODS ====================
+    
+    /**
+     * Display all events across all tenants
+     */
+    public function events()
+    {
+        $sql = "
+            SELECT e.*, 
+                   t.name as tenant_name,
+                   u.email as created_by_email,
+                   COUNT(DISTINCT c.id) as contestant_count,
+                   COUNT(DISTINCT cat.id) as category_count,
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount ELSE 0 END), 0) as total_revenue,
+                   COUNT(DISTINCT tr.id) as transaction_count,
+                   COALESCE(SUM(v.quantity), 0) as total_votes
+            FROM events e
+            LEFT JOIN tenants t ON e.tenant_id = t.id
+            LEFT JOIN users u ON e.created_by = u.id
+            LEFT JOIN contestants c ON e.id = c.event_id AND c.active = 1
+            LEFT JOIN categories cat ON e.id = cat.event_id
+            LEFT JOIN votes v ON c.id = v.contestant_id
+            LEFT JOIN transactions tr ON v.transaction_id = tr.id
+            GROUP BY e.id
+            ORDER BY e.created_at DESC
+        ";
+        
+        $events = $this->eventModel->getDatabase()->select($sql);
+        
+        $content = $this->renderView('superadmin/events/index', [
+            'events' => $events,
+            'title' => 'Events Management'
+        ]);
+        
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'Events Management',
+            'breadcrumbs' => [
+                ['title' => 'Events Management']
+            ]
+        ]);
+    }
+    
+    /**
+     * Show event details
+     */
+    public function showEvent($eventId)
+    {
+        $sql = "
+            SELECT e.*, 
+                   t.name as tenant_name,
+                   t.email as tenant_email,
+                   u.email as created_by_email,
+                   COUNT(DISTINCT c.id) as contestant_count,
+                   COUNT(DISTINCT cat.id) as category_count,
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount ELSE 0 END), 0) as total_revenue,
+                   COUNT(DISTINCT tr.id) as transaction_count,
+                   COALESCE(SUM(v.quantity), 0) as total_votes
+            FROM events e
+            LEFT JOIN tenants t ON e.tenant_id = t.id
+            LEFT JOIN users u ON e.created_by = u.id
+            LEFT JOIN contestants c ON e.id = c.event_id AND c.active = 1
+            LEFT JOIN categories cat ON e.id = cat.event_id
+            LEFT JOIN votes v ON c.id = v.contestant_id
+            LEFT JOIN transactions tr ON v.transaction_id = tr.id
+            WHERE e.id = :event_id
+            GROUP BY e.id
+        ";
+        
+        $event = $this->eventModel->getDatabase()->selectOne($sql, ['event_id' => $eventId]);
+        
+        if (!$event) {
+            $this->redirect(SUPERADMIN_URL . '/events', 'Event not found', 'error');
+            return;
+        }
+        
+        // Get categories for this event
+        $categories = $this->categoryModel->getCategoriesByEvent($eventId);
+        
+        // Get contestants for this event
+        $contestants = $this->contestantModel->findAll(['event_id' => $eventId], 'display_order ASC, name ASC');
+        
+        // Get recent transactions
+        $recentTransactions = $this->getEventTransactions($eventId, 20);
+        
+        $content = $this->renderView('superadmin/events/show', [
+            'event' => $event,
+            'categories' => $categories,
+            'contestants' => $contestants,
+            'recentTransactions' => $recentTransactions,
+            'title' => 'Event Details: ' . $event['name']
+        ]);
+        
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'Event Details',
+            'breadcrumbs' => [
+                ['title' => 'Events Management', 'url' => SUPERADMIN_URL . '/events'],
+                ['title' => $event['name']]
+            ]
+        ]);
+    }
+    
+    /**
+     * Update event status (approve/reject/suspend)
+     */
+    public function updateEventStatus()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+        }
+        
+        $eventId = $_POST['event_id'] ?? null;
+        $status = $_POST['status'] ?? null;
+        $adminNotes = $_POST['admin_notes'] ?? '';
+        
+        if (!$eventId || !$status) {
+            return $this->json(['success' => false, 'message' => 'Missing required fields'], 400);
+        }
+        
+        $validStatuses = ['approved', 'pending', 'rejected', 'under_review'];
+        if (!in_array($status, $validStatuses)) {
+            return $this->json(['success' => false, 'message' => 'Invalid status'], 400);
+        }
+        
+        try {
+            $event = $this->eventModel->find($eventId);
+            if (!$event) {
+                return $this->json(['success' => false, 'message' => 'Event not found'], 404);
+            }
+            
+            // Update event admin status and corresponding event status
+            $eventStatus = match($status) {
+                'approved' => 'active',
+                'rejected' => 'suspended',
+                'under_review' => 'draft',
+                'pending' => 'draft',
+                default => 'draft'
+            };
+            
+            $this->eventModel->update($eventId, [
+                'admin_status' => $status,
+                'admin_notes' => $adminNotes,
+                'status' => $eventStatus
+            ]);
+            
+            // Log the action
+            $this->auditModel->create([
+                'user_id' => $this->session->getUserId(),
+                'action' => 'event_status_updated',
+                'details' => json_encode([
+                    'event_id' => $eventId,
+                    'event_name' => $event['name'],
+                    'old_status' => $event['admin_status'],
+                    'new_status' => $status,
+                    'admin_notes' => $adminNotes
+                ]),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Event status updated successfully',
+                'status' => $status
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Display all categories across all events
+     */
+    public function categories()
+    {
+        $sql = "
+            SELECT cat.*, 
+                   e.name as event_name,
+                   e.code as event_code,
+                   t.name as tenant_name,
+                   COUNT(DISTINCT cc.contestant_id) as contestant_count,
+                   COALESCE(SUM(v.quantity), 0) as total_votes
+            FROM categories cat
+            LEFT JOIN events e ON cat.event_id = e.id
+            LEFT JOIN tenants t ON cat.tenant_id = t.id
+            LEFT JOIN contestant_categories cc ON cat.id = cc.category_id AND cc.active = 1
+            LEFT JOIN votes v ON cc.contestant_id = v.contestant_id
+            GROUP BY cat.id
+            ORDER BY cat.created_at DESC
+        ";
+        
+        $categories = $this->categoryModel->getDatabase()->select($sql);
+        
+        $content = $this->renderView('superadmin/categories/index', [
+            'categories' => $categories,
+            'title' => 'Categories Management'
+        ]);
+        
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'Categories Management',
+            'breadcrumbs' => [
+                ['title' => 'Categories Management']
+            ]
+        ]);
+    }
+    
+    /**
+     * Show category details
+     */
+    public function showCategory($categoryId)
+    {
+        $sql = "
+            SELECT cat.*, 
+                   e.name as event_name,
+                   e.code as event_code,
+                   t.name as tenant_name,
+                   COUNT(DISTINCT cc.contestant_id) as contestant_count,
+                   COALESCE(SUM(v.quantity), 0) as total_votes
+            FROM categories cat
+            LEFT JOIN events e ON cat.event_id = e.id
+            LEFT JOIN tenants t ON cat.tenant_id = t.id
+            LEFT JOIN contestant_categories cc ON cat.id = cc.category_id AND cc.active = 1
+            LEFT JOIN votes v ON cc.contestant_id = v.contestant_id
+            WHERE cat.id = :category_id
+            GROUP BY cat.id
+        ";
+        
+        $category = $this->categoryModel->getDatabase()->selectOne($sql, ['category_id' => $categoryId]);
+        
+        if (!$category) {
+            $this->redirect(SUPERADMIN_URL . '/categories', 'Category not found', 'error');
+            return;
+        }
+        
+        // Get contestants in this category
+        $contestants = $this->getCategoryContestants($categoryId);
+        
+        $content = $this->renderView('superadmin/categories/show', [
+            'category' => $category,
+            'contestants' => $contestants,
+            'title' => 'Category Details: ' . $category['name']
+        ]);
+        
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'Category Details',
+            'breadcrumbs' => [
+                ['title' => 'Categories Management', 'url' => SUPERADMIN_URL . '/categories'],
+                ['title' => $category['name']]
+            ]
+        ]);
+    }
+    
+    /**
+     * Display all contestants across all events
+     */
+    public function contestants()
+    {
+        $sql = "
+            SELECT c.*, 
+                   e.name as event_name,
+                   e.code as event_code,
+                   t.name as tenant_name,
+                   COALESCE(SUM(v.quantity), 0) as total_votes,
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount ELSE 0 END), 0) as total_revenue,
+                   COUNT(DISTINCT tr.id) as transaction_count,
+                   GROUP_CONCAT(DISTINCT cat.name SEPARATOR ', ') as categories,
+                   GROUP_CONCAT(DISTINCT CONCAT(cat.name, ':', cc.short_code) SEPARATOR '|') as category_shortcodes
+            FROM contestants c
+            LEFT JOIN events e ON c.event_id = e.id
+            LEFT JOIN tenants t ON c.tenant_id = t.id
+            LEFT JOIN votes v ON c.id = v.contestant_id
+            LEFT JOIN transactions tr ON v.transaction_id = tr.id
+            LEFT JOIN contestant_categories cc ON c.id = cc.contestant_id AND cc.active = 1
+            LEFT JOIN categories cat ON cc.category_id = cat.id
+            GROUP BY c.id
+            ORDER BY c.created_at DESC
+        ";
+        
+        $contestants = $this->contestantModel->getDatabase()->select($sql);
+        
+        $content = $this->renderView('superadmin/contestants/index', [
+            'contestants' => $contestants,
+            'title' => 'Contestants Management'
+        ]);
+        
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'Contestants Management',
+            'breadcrumbs' => [
+                ['title' => 'Contestants Management']
+            ]
+        ]);
+    }
+    
+    /**
+     * Show contestant details
+     */
+    public function showContestant($contestantId)
+    {
+        $sql = "
+            SELECT c.*, 
+                   e.name as event_name,
+                   e.code as event_code,
+                   t.name as tenant_name,
+                   t.email as tenant_email,
+                   COALESCE(SUM(v.quantity), 0) as total_votes,
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount ELSE 0 END), 0) as total_revenue,
+                   COUNT(DISTINCT tr.id) as transaction_count
+            FROM contestants c
+            LEFT JOIN events e ON c.event_id = e.id
+            LEFT JOIN tenants t ON c.tenant_id = t.id
+            LEFT JOIN votes v ON c.id = v.contestant_id
+            LEFT JOIN transactions tr ON v.transaction_id = tr.id
+            WHERE c.id = :contestant_id
+            GROUP BY c.id
+        ";
+        
+        $contestant = $this->contestantModel->getDatabase()->selectOne($sql, ['contestant_id' => $contestantId]);
+        
+        if (!$contestant) {
+            $this->redirect(SUPERADMIN_URL . '/contestants', 'Contestant not found', 'error');
+            return;
+        }
+        
+        // Get categories for this contestant
+        $categories = $this->getContestantCategories($contestantId);
+        
+        // Get recent votes/transactions
+        $recentVotes = $this->getContestantVotes($contestantId, 20);
+        
+        $content = $this->renderView('superadmin/contestants/show', [
+            'contestant' => $contestant,
+            'categories' => $categories,
+            'recentVotes' => $recentVotes,
+            'title' => 'Contestant Details: ' . $contestant['name']
+        ]);
+        
+        echo $this->renderLayout('superadmin_layout', $content, [
+            'title' => 'Contestant Details',
+            'breadcrumbs' => [
+                ['title' => 'Contestants Management', 'url' => SUPERADMIN_URL . '/contestants'],
+                ['title' => $contestant['name']]
+            ]
+        ]);
+    }
+    
+    /**
+     * Update contestant status (activate/deactivate)
+     */
+    public function updateContestantStatus()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+        }
+        
+        $contestantId = $_POST['contestant_id'] ?? null;
+        $active = $_POST['active'] ?? null;
+        
+        if (!$contestantId || $active === null) {
+            return $this->json(['success' => false, 'message' => 'Missing required fields'], 400);
+        }
+        
+        try {
+            $contestant = $this->contestantModel->find($contestantId);
+            if (!$contestant) {
+                return $this->json(['success' => false, 'message' => 'Contestant not found'], 404);
+            }
+            
+            // Update contestant status
+            $this->contestantModel->update($contestantId, [
+                'active' => $active ? 1 : 0
+            ]);
+            
+            // Log the action
+            $this->auditModel->create([
+                'user_id' => $this->session->getUserId(),
+                'action' => 'contestant_status_updated',
+                'details' => json_encode([
+                    'contestant_id' => $contestantId,
+                    'contestant_name' => $contestant['name'],
+                    'old_status' => $contestant['active'],
+                    'new_status' => $active ? 1 : 0
+                ]),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Contestant status updated successfully',
+                'active' => $active ? 1 : 0
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    // ==================== HELPER METHODS ====================
+    
+    private function getEventTransactions($eventId, $limit = 20)
+    {
+        $sql = "
+            SELECT tr.*, tr.msisdn as phone, v.quantity, c.name as contestant_name
+            FROM transactions tr
+            JOIN votes v ON tr.id = v.transaction_id
+            JOIN contestants c ON v.contestant_id = c.id
+            WHERE c.event_id = :event_id
+            ORDER BY tr.created_at DESC
+            LIMIT :limit
+        ";
+        
+        return $this->transactionModel->getDatabase()->select($sql, [
+            'event_id' => $eventId,
+            'limit' => $limit
+        ]);
+    }
+    
+    private function getCategoryContestants($categoryId)
+    {
+        $sql = "
+            SELECT c.*, cc.active as category_active,
+                   COALESCE(SUM(v.quantity), 0) as total_votes
+            FROM contestants c
+            JOIN contestant_categories cc ON c.id = cc.contestant_id
+            LEFT JOIN votes v ON c.id = v.contestant_id
+            WHERE cc.category_id = :category_id
+            GROUP BY c.id
+            ORDER BY c.display_order ASC, c.name ASC
+        ";
+        
+        return $this->contestantModel->getDatabase()->select($sql, ['category_id' => $categoryId]);
+    }
+    
+    private function getContestantCategories($contestantId)
+    {
+        $sql = "
+            SELECT cat.*, cc.active as contestant_active, cc.short_code
+            FROM categories cat
+            JOIN contestant_categories cc ON cat.id = cc.category_id
+            WHERE cc.contestant_id = :contestant_id
+            ORDER BY cat.display_order ASC, cat.name ASC
+        ";
+        
+        return $this->categoryModel->getDatabase()->select($sql, ['contestant_id' => $contestantId]);
+    }
+    
+    private function getContestantVotes($contestantId, $limit = 20)
+    {
+        $sql = "
+            SELECT v.*, tr.amount, tr.status, tr.msisdn as phone, tr.created_at as transaction_date
+            FROM votes v
+            JOIN transactions tr ON v.transaction_id = tr.id
+            WHERE v.contestant_id = :contestant_id
+            ORDER BY tr.created_at DESC
+            LIMIT :limit
+        ";
+        
+        return $this->contestantModel->getDatabase()->select($sql, [
+            'contestant_id' => $contestantId,
+            'limit' => $limit
+        ]);
+    }
+    
+    // ==================== END CONTENT MANAGEMENT ====================
+    
+    /**
+     * Close expired events automatically
+     */
+    public function closeExpiredEvents()
+    {
+        try {
+            $currentDateTime = date('Y-m-d H:i:s');
+            
+            // Find events that should be closed (past end_date but not already closed)
+            $sql = "
+                SELECT id, name, end_date, status, admin_status
+                FROM events 
+                WHERE end_date < :current_time 
+                AND status IN ('active', 'draft') 
+                AND admin_status = 'approved'
+            ";
+            
+            $expiredEvents = $this->eventModel->getDatabase()->select($sql, [
+                'current_time' => $currentDateTime
+            ]);
+            
+            $closedCount = 0;
+            $errors = [];
+            
+            foreach ($expiredEvents as $event) {
+                try {
+                    // Update event status to closed
+                    $this->eventModel->update($event['id'], [
+                        'status' => 'closed',
+                        'closed_at' => $currentDateTime
+                    ]);
+                    
+                    // Log the action
+                    $this->auditModel->create([
+                        'user_id' => $this->session->getUserId(),
+                        'action' => 'event_auto_closed',
+                        'details' => json_encode([
+                            'event_id' => $event['id'],
+                            'event_name' => $event['name'],
+                            'end_date' => $event['end_date'],
+                            'closed_at' => $currentDateTime
+                        ]),
+                        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+                    ]);
+                    
+                    $closedCount++;
+                    
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to close event '{$event['name']}': " . $e->getMessage();
+                }
+            }
+            
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                // AJAX request
+                return $this->json([
+                    'success' => true,
+                    'message' => "Successfully closed {$closedCount} expired events",
+                    'closed_count' => $closedCount,
+                    'errors' => $errors
+                ]);
+            } else {
+                // Direct access - redirect back with message
+                $message = "Successfully closed {$closedCount} expired events";
+                if (!empty($errors)) {
+                    $message .= ". Errors: " . implode(', ', $errors);
+                }
+                $this->redirect(SUPERADMIN_URL . '/events', $message, 'success');
+            }
+            
+        } catch (\Exception $e) {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                return $this->json(['success' => false, 'message' => 'Error closing events: ' . $e->getMessage()], 500);
+            } else {
+                $this->redirect(SUPERADMIN_URL . '/events', 'Error closing events: ' . $e->getMessage(), 'error');
+            }
+        }
+    }
+    
+    /**
+     * Get events that should be closed
+     */
+    public function getExpiredEvents()
+    {
+        $currentDateTime = date('Y-m-d H:i:s');
+        
+        $sql = "
+            SELECT e.id, e.name, e.end_date, e.status, e.admin_status,
+                   t.name as tenant_name,
+                   COUNT(DISTINCT c.id) as contestant_count,
+                   COALESCE(SUM(v.quantity), 0) as total_votes
+            FROM events e
+            LEFT JOIN tenants t ON e.tenant_id = t.id
+            LEFT JOIN contestants c ON e.id = c.event_id AND c.active = 1
+            LEFT JOIN votes v ON c.id = v.contestant_id
+            WHERE e.end_date < :current_time 
+            AND e.status IN ('active', 'draft') 
+            AND e.admin_status = 'approved'
+            GROUP BY e.id
+            ORDER BY e.end_date DESC
+        ";
+        
+        return $this->eventModel->getDatabase()->select($sql, [
+            'current_time' => $currentDateTime
+        ]);
     }
     
     private function getPlatformAnalytics()
@@ -2875,6 +3450,165 @@ class SuperAdminController extends BaseController
                 'message' => 'Error fetching alerts: ' . $e->getMessage(),
                 'alerts' => []
             ], 500);
+        }
+    }
+    
+    /**
+     * Delete a category
+     */
+    public function deleteCategory()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+        }
+        
+        $categoryId = $_POST['category_id'] ?? null;
+        
+        if (!$categoryId || !is_numeric($categoryId)) {
+            return $this->json(['success' => false, 'message' => 'Invalid category ID'], 400);
+        }
+        
+        try {
+            $category = $this->categoryModel->find($categoryId);
+            if (!$category) {
+                return $this->json(['success' => false, 'message' => 'Category not found'], 404);
+            }
+            
+            // Delete contestant associations first
+            $this->categoryModel->getDatabase()->execute(
+                "DELETE FROM contestant_categories WHERE category_id = :category_id",
+                ['category_id' => $categoryId]
+            );
+            
+            // Delete the category
+            $this->categoryModel->delete($categoryId);
+            
+            // Log the action
+            $this->auditModel->create([
+                'user_id' => $this->session->getUserId(),
+                'action' => 'category_deleted',
+                'details' => json_encode([
+                    'category_id' => $categoryId,
+                    'category_name' => $category['name'],
+                    'event_id' => $category['event_id']
+                ]),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Category deleted successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'message' => 'Delete failed: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Toggle contestant status in category
+     */
+    public function toggleContestantInCategory()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+        }
+        
+        $contestantId = $_POST['contestant_id'] ?? null;
+        $categoryId = $_POST['category_id'] ?? null;
+        $active = $_POST['active'] ?? null;
+        
+        if (!$contestantId || !$categoryId || $active === null) {
+            return $this->json(['success' => false, 'message' => 'Missing required fields'], 400);
+        }
+        
+        try {
+            // Update contestant category status
+            $this->categoryModel->getDatabase()->execute(
+                "UPDATE contestant_categories SET active = :active WHERE contestant_id = :contestant_id AND category_id = :category_id",
+                [
+                    'active' => $active ? 1 : 0,
+                    'contestant_id' => $contestantId,
+                    'category_id' => $categoryId
+                ]
+            );
+            
+            // Log the action
+            $this->auditModel->create([
+                'user_id' => $this->session->getUserId(),
+                'action' => 'contestant_category_toggled',
+                'details' => json_encode([
+                    'contestant_id' => $contestantId,
+                    'category_id' => $categoryId,
+                    'active' => $active ? 1 : 0
+                ]),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Contestant category status updated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Delete a contestant
+     */
+    public function deleteContestant()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+        }
+        
+        $contestantId = $_POST['contestant_id'] ?? null;
+        
+        if (!$contestantId || !is_numeric($contestantId)) {
+            return $this->json(['success' => false, 'message' => 'Invalid contestant ID'], 400);
+        }
+        
+        try {
+            $contestant = $this->contestantModel->find($contestantId);
+            if (!$contestant) {
+                return $this->json(['success' => false, 'message' => 'Contestant not found'], 404);
+            }
+            
+            // Delete related records first
+            $this->contestantModel->getDatabase()->execute(
+                "DELETE FROM contestant_categories WHERE contestant_id = :contestant_id",
+                ['contestant_id' => $contestantId]
+            );
+            
+            $this->contestantModel->getDatabase()->execute(
+                "DELETE FROM votes WHERE contestant_id = :contestant_id",
+                ['contestant_id' => $contestantId]
+            );
+            
+            // Delete the contestant
+            $this->contestantModel->delete($contestantId);
+            
+            // Log the action
+            $this->auditModel->create([
+                'user_id' => $this->session->getUserId(),
+                'action' => 'contestant_deleted',
+                'details' => json_encode([
+                    'contestant_id' => $contestantId,
+                    'contestant_name' => $contestant['name'],
+                    'event_id' => $contestant['event_id']
+                ]),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Contestant deleted successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'message' => 'Delete failed: ' . $e->getMessage()], 500);
         }
     }
 }

@@ -123,6 +123,34 @@
                 </ul>
             </li>
             
+            <!-- Content Management -->
+            <li class="nav-group">
+                <a class="nav-link nav-group-toggle" href="#">
+                    <i class="nav-icon fas fa-layer-group"></i>
+                    Content Management
+                </a>
+                <ul class="nav-group-items">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= SUPERADMIN_URL ?>/events">
+                            <i class="nav-icon fas fa-calendar-alt"></i>
+                            Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= SUPERADMIN_URL ?>/categories">
+                            <i class="nav-icon fas fa-tags"></i>
+                            Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= SUPERADMIN_URL ?>/contestants">
+                            <i class="nav-icon fas fa-users"></i>
+                            Contestants
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            
             <!-- Financial Management -->
             <li class="nav-group">
                 <a class="nav-link nav-group-toggle" href="#">

@@ -148,7 +148,7 @@
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
                                         <?php if (!empty($admin['avatar'])): ?>
-                                            <img src="<?= htmlspecialchars($admin['avatar']) ?>" alt="Avatar" class="rounded-circle" width="40" height="40">
+                                            <img src="<?= htmlspecialchars(image_url($admin['avatar'])) ?>" alt="Avatar" class="rounded-circle" width="40" height="40">
                                         <?php else: ?>
                                             <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                                 <?= strtoupper(substr($admin['name'] ?? 'A', 0, 1)) ?>

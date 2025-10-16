@@ -1,7 +1,7 @@
-
+<?php include __DIR__ . '/../layout/header.php'; ?>
 
 <style>
-/* Professional Voting Form - Ultra Modern Design */
+/* Compact Voting Form - Simplified Design */
 * {
     margin: 0;
     padding: 0;
@@ -12,62 +12,41 @@ body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #2d3748;
-    line-height: 1.6;
+    line-height: 1.5;
     min-height: 100vh;
-    animation: gradientShift 10s ease infinite;
 }
 
-@keyframes gradientShift {
-    0%, 100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); }
-    50% { background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%); }
-}
-
-/* Container & Layout */
-.professional-vote-container {
-    max-width: 1200px;
+/* Compact Container */
+.compact-vote-container {
+    max-width: 600px;
     margin: 0 auto;
-    padding: 1.5rem;
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 1rem;
-    align-items: start;
-}
-
-.sidebar-container {
-    position: sticky;
-    top: 1.5rem;
-    height: fit-content;
-}
-
-.main-content {
+    padding: 1rem;
     min-height: 100vh;
 }
 
 .back-navigation {
-    grid-column: 1 / -1;
-    margin-bottom: 0.2rem;
+    margin-bottom: 1rem;
 }
 
 .back-link {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: #4a5568;
+    color: white;
     text-decoration: none;
     font-weight: 500;
-    padding: 0.15rem 0.3rem;
+    padding: 0.5rem 1rem;
     border-radius: 0.5rem;
     transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .back-link:hover {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.2);
     color: #2d3748;
     text-decoration: none;
     transform: translateX(-2px);
@@ -77,7 +56,7 @@ body {
 .nominee-showcase {
     background: linear-gradient(135deg, rgba(26, 32, 44, 0.95) 0%, rgba(45, 55, 72, 0.95) 50%, rgba(74, 85, 104, 0.95) 100%);
     color: white;
-    padding: 1.5rem;
+    padding: 3rem;
     border-radius: 2rem;
     margin-bottom: 2rem;
     position: relative;
@@ -112,10 +91,10 @@ body {
 /* Nominee Card */
 .nominee-card {
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 1.5rem;
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.2);
+    border-radius: 2rem;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(30px);
     position: relative;
@@ -147,359 +126,175 @@ body {
 .nominee-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .nominee-avatar {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 4px solid rgba(255, 255, 255, 0.3);
     flex-shrink: 0;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .nominee-avatar:hover {
-    transform: scale(1.05) rotate(3deg);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
 }
 
 .nominee-avatar-placeholder {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(226, 232, 240, 0.8), rgba(203, 213, 224, 0.8));
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: #a0aec0;
     flex-shrink: 0;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .nominee-avatar-placeholder:hover {
-    transform: scale(1.05);
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-}
-
-.nominee-details h1 {
-    font-size: 1.5rem;
+    transform: scale(1.1);
     font-weight: 700;
     color: #1a202c;
     margin-bottom: 0.5rem;
 }
 
-.nominee-meta {
+.compact-nominee-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    align-items: center;
 }
 
-.category-tag {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
+.category-tag, .code-tag {
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
-    font-size: 0.775rem;
-    font-weight: 500;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
-.code-tag {
-    background: #f7fafc;
-    color: #4a5568;
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    border: 1px solid #e2e8f0;
-}
+.category-tag { background: #e6fffa; color: #234e52; }
+.code-tag { background: #f0f4ff; color: #3730a3; }
 
 .vote-count {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
     color: #e53e3e;
     font-weight: 600;
-}
-
-/* Voting Interface */
-.voting-interface {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 1.5rem;
-    padding: 1.1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(30px);
-    animation: slideInUp 0.8s ease-out 0.2s both;
-    position: relative;
-}
-
-.voting-interface::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    left: -2px;
-    right: -2px;
-    bottom: -2px;
-    background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
-    border-radius: 1.5rem;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.voting-interface:hover::after {
-    opacity: 0.1;
-}
-
-.interface-header {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.interface-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 0.5rem;
-}
-
-.interface-subtitle {
-    color: #718096;
     font-size: 0.875rem;
 }
 
-/* Vote Input Methods */
-.vote-methods {
+.compact-interface-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.25rem;
+    text-align: center;
+}
+
+.compact-interface-subtitle {
+    color: #718096;
+    font-size: 0.875rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.compact-vote-methods {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.vote-method {
-    border: 2px solid rgba(226, 232, 240, 0.5);
-    border-radius: 1rem;
+.compact-vote-method {
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
     padding: 1rem;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    position: relative;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    transform: scale(1);
+    transition: all 0.3s ease;
+    background: #f7fafc;
+    text-align: center;
 }
 
-.vote-method:hover {
+.compact-vote-method:hover, .compact-vote-method.active {
     border-color: #667eea;
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
-    transform: translateY(-2px) scale(1.01);
-    background: rgba(255, 255, 255, 0.95);
+    background: #f0f4ff;
 }
 
-.vote-method.active {
-    border-color: #667eea;
-    background: linear-gradient(135deg, rgba(240, 244, 255, 0.9), rgba(232, 240, 254, 0.9));
-    transform: scale(1.02);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25);
-}
-
-.method-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.method-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+.compact-method-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    background: #667eea;
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1rem;
+    margin: 0 auto 0.5rem;
 }
 
-.method-title {
-    font-size: 1rem;
+.compact-method-title {
     font-weight: 600;
     color: #1a202c;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
 }
 
-.method-description {
+.compact-method-description {
     color: #718096;
-    font-size: 0.8rem;
-    margin-bottom: 0.75rem;
-    line-height: 1.3;
+    font-size: 0.75rem;
 }
 
-/* Custom Vote Input */
-.custom-vote-input {
-    display: none;
-}
-
-.vote-method.active .custom-vote-input {
-    display: block;
-}
-
-.vote-input-group {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: center;
-}
-
-.vote-counter {
+.compact-vote-counter {
     display: flex;
     align-items: center;
     border: 2px solid #e2e8f0;
     border-radius: 0.5rem;
-    overflow: hidden;
+    background: white;
+    margin: 1rem auto;
+    width: fit-content;
 }
 
-.counter-btn {
+.compact-counter-btn {
     background: #f7fafc;
     border: none;
-    padding: 0.5rem;
+    padding: 0.75rem;
     cursor: pointer;
-    color: #4a5568;
-    transition: all 0.2s ease;
-    font-size: 1rem;
     font-weight: 600;
-    width: 32px;
-    height: 32px;
+    color: #4a5568;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.counter-btn:hover {
-    background: #edf2f7;
-    color: #2d3748;
-}
-
-.counter-input {
+.compact-counter-input {
     border: none;
-    padding: 0.5rem;
+    padding: 0.75rem;
+    width: 80px;
     text-align: center;
-    font-size: 1rem;
     font-weight: 600;
-    color: #1a202c;
-    width: 60px;
-    background: white;
 }
 
-.counter-input:focus {
-    outline: none;
-}
-
-.vote-total {
+.compact-vote-total {
+    font-weight: 700;
     color: #667eea;
-    font-weight: 600;
     font-size: 1rem;
-}
-
-/* Package Selection */
-.packages-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
-}
-
-.package-option {
-    border: 2px solid rgba(226, 232, 240, 0.5);
-    border-radius: 1rem;
-    padding: 0.3rem;
     text-align: center;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    transform: scale(1);
+    margin-top: 0.5rem;
 }
 
-.package-option:hover {
-    border-color: #667eea;
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.25);
-    background: rgba(255, 255, 255, 0.95);
-}
-
-.package-option.selected {
-    border-color: #667eea;
-    background: linear-gradient(135deg, rgba(240, 244, 255, 0.9), rgba(232, 240, 254, 0.9));
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.package-popular {
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #f093fb, #f5576c);
-    color: white;
-    padding: 0.025rem 0.2rem;
-    border-radius: 0.75rem;
-    font-size: 0.625rem;
-    font-weight: 300;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.package-votes {
-    font-size: 1.1rem;
-    font-weight: 400;
-    color: #667eea;
-    margin-bottom: 0.25rem;
-}
-
-.package-price {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a202c;
-    margin-bottom: 0.125rem;
-}
-
-.package-unit {
-    font-size: 0.75rem;
-    color: #718096;
-}
-
-/* Contact Form */
-.contact-section {
-    background: white;
-    border-radius: 1.5rem;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-}
-
-.form-group {
-    position: relative;
-}
-
-.form-label {
+.compact-form-label {
     display: block;
     font-size: 0.875rem;
     font-weight: 600;
@@ -507,197 +302,57 @@ body {
     margin-bottom: 0.5rem;
 }
 
-.form-input {
+.compact-form-input {
     width: 100%;
     padding: 0.75rem;
     border: 2px solid #e5e7eb;
-    border-radius: 0.75rem;
+    border-radius: 0.5rem;
     font-size: 1rem;
-    transition: all 0.3s ease;
     background: #f9fafb;
 }
 
-.form-input:focus {
+.compact-form-input:focus {
     outline: none;
     border-color: #667eea;
     background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.form-help {
+.compact-form-help {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: #9ca3af;
     margin-top: 0.25rem;
 }
 
-/* Vote Summary */
-.vote-summary {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    border-radius: 1rem;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #e2e8f0;
-}
-
-/* Hide mobile vote summary on desktop */
-#mobile-vote-summary {
-    display: none !important;
-}
-
-/* Show sidebar vote summary on desktop */
-.sidebar-container .vote-summary {
-    display: block;
-}
-
-.summary-header {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a202c;
-    margin-bottom: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.summary-items {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.summary-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #e2e8f0;
-    font-size: 0.875rem;
-}
-
-.summary-item:last-child {
-    border-bottom: none;
-    font-weight: 600;
-    font-size: 1rem;
-    color: #667eea;
-}
-
-.summary-label {
-    color: #6b7280;
-}
-
-.summary-value {
-    font-weight: 500;
-    color: #1a202c;
-}
-
-/* Submit Button */
-.submit-section {
-    text-align: center;
-}
-
-.vote-submit-btn {
+.compact-vote-submit-btn {
+    width: 100%;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 1rem 2.5rem;
-    border-radius: 1.5rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    min-width: 200px;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
-.vote-submit-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+.compact-vote-submit-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
-.vote-submit-btn:hover::before {
-    left: 100%;
-}
-
-.vote-submit-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
-}
-
-.vote-submit-btn:disabled {
+.compact-vote-submit-btn:disabled {
     background: #cbd5e0;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
-.btn-content {
+.compact-btn-content {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
 }
 
-.btn-loader {
-    display: none;
-}
-
-.vote-submit-btn.loading .btn-content {
-    opacity: 0;
-}
-
-.vote-submit-btn.loading .btn-loader {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-/* Alert Styles */
-.alert {
-    padding: 1rem 1.5rem;
-    border-radius: 0.75rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-}
-
-.alert.success {
-    background: linear-gradient(135deg, #f0fff4, #dcfce7);
-    border-color: #22c55e;
-    color: #15803d;
-}
-
-.alert.error {
-    background: linear-gradient(135deg, #fef2f2, #fee2e2);
-    border-color: #ef4444;
-    color: #dc2626;
-}
-
-.alert-icon {
-    font-size: 1.25rem;
-    flex-shrink: 0;
-    margin-top: 0.125rem;
-}
-
-.alert-content h4 {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
 
 .alert-content p {
     margin-bottom: 0.25rem;
@@ -741,69 +396,38 @@ body {
 @media (max-width: 768px) {
     .professional-vote-container {
         padding: 1rem;
-        display: block;
-        grid-template-columns: none;
-        gap: 0;
-    }
-    
-    .sidebar-container {
-        position: static;
-        margin-bottom: 1.5rem;
-    }
-    
-    .main-content {
-        min-height: auto;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .back-navigation {
-        grid-column: auto;
-        margin-bottom: 0.5rem;
     }
     
     .vote-methods {
         grid-template-columns: 1fr;
-        gap: 0.75rem;
+        gap: 1rem;
     }
     
     .nominee-header {
         flex-direction: column;
         text-align: center;
-        gap: 0.75rem;
+        gap: 1rem;
     }
     
     .nominee-avatar, .nominee-avatar-placeholder {
-        width: 100px;
-        height: 100px;
-        font-size: 2.5rem;
+        width: 120px;
+        height: 120px;
+        font-size: 3rem;
     }
     
     .packages-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
     }
     
     .package-option {
-        padding: 0.5rem;
-    }
-    
-    .package-votes {
-        font-size: 1.25rem;
-    }
-    
-    .package-price {
-        font-size: 0.875rem;
-    }
-    
-    .package-unit {
-        font-size: 0.625rem;
+        padding: 1rem;
     }
     
     .vote-input-group {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.75rem;
+        gap: 1rem;
     }
     
     .vote-submit-btn {
@@ -813,74 +437,31 @@ body {
     }
     
     .nominee-card, .voting-interface, .contact-section {
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    /* Mobile: Move vote summary above submit button */
-    .submit-section {
-        order: 2;
-    }
-    
-    #mobile-vote-summary {
-        order: 1;
-        margin-bottom: 1rem;
-        margin-top: 1rem;
-    }
-    
-    /* Hide sidebar vote summary on mobile */
-    .sidebar-container .vote-summary {
-        display: none !important;
-    }
-    
-    /* Show mobile vote summary on mobile */
-    #mobile-vote-summary {
-        display: block !important;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
     }
 }
 
 @media (max-width: 480px) {
     .packages-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.375rem;
-    }
-    
-    .package-option {
-        padding: 0.375rem;
-    }
-    
-    .package-votes {
-        font-size: 1rem;
-    }
-    
-    .package-price {
-        font-size: 0.75rem;
-    }
-    
-    .package-unit {
-        font-size: 0.5rem;
+        grid-template-columns: 1fr;
     }
     
     .nominee-details h1 {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
     }
     
     .interface-title {
-        font-size: 1.125rem;
+        font-size: 1.25rem;
     }
 }
 </style>
 
-<div class="particles">
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-    <div class="particle"></div>
-</div>
 
-<div class="professional-vote-container">
+
+
+
+<div class="compact-vote-container">
     <!-- Back Navigation -->
     <div class="back-navigation">
         <?php
@@ -893,103 +474,82 @@ body {
         </a>
     </div>
 
-    <!-- Sticky Sidebar with Nominee Information -->
-    <div class="sidebar-container">
-        <!-- Alert Container -->
-        <div id="alert-container"></div>
+    <!-- Alert Container -->
+    <div id="alert-container"></div>
 
-        <!-- Nominee Information Card -->
-        <div class="nominee-card">
-            <div class="nominee-header">
-                <?php if (!empty($contestant['image_url'])): ?>
-                    <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
-                         alt="<?= htmlspecialchars($contestant['name']) ?>"
-                         class="nominee-avatar">
-                <?php else: ?>
-                    <div class="nominee-avatar-placeholder">
-                        <i class="fas fa-user"></i>
-                    </div>
-                <?php endif; ?>
-                
-                <div class="nominee-details">
-                    <h1><?= htmlspecialchars($contestant['name']) ?></h1>
-                    <div class="nominee-meta">
-                        <?php if (isset($category) && $category): ?>
-                            <span class="category-tag">
-                                <i class="fas fa-tag"></i>
-                                <?= htmlspecialchars($category['name']) ?>
-                            </span>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($contestant['short_code'])): ?>
-                            <span class="code-tag">
-                                <i class="fas fa-hashtag"></i>
-                                <?= htmlspecialchars($contestant['short_code']) ?>
-                            </span>
-                        <?php endif; ?>
-                        
-                      <!--  <div class="vote-count">
-                            <i class="fas fa-heart"></i>
-                            <span><?= number_format($contestant['total_votes'] ?? 0) ?> votes</span>
-                        </div> -->
+    <!-- Compact Nominee Information Card -->
+    <div class="compact-nominee-card">
+        <div class="compact-nominee-header">
+            <?php if (!empty($contestant['image_url'])): ?>
+                <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
+                     alt="<?= htmlspecialchars($contestant['name']) ?>"
+                     class="compact-nominee-avatar">
+            <?php else: ?>
+                <div class="compact-nominee-avatar-placeholder">
+                    <i class="fas fa-user"></i>
+                </div>
+            <?php endif; ?>
+            
+            <div class="compact-nominee-details">
+                <h1><?= htmlspecialchars($contestant['name']) ?></h1>
+                <div class="compact-nominee-meta">
+                    <?php if (isset($category) && $category): ?>
+                        <span class="category-tag">
+                            <i class="fas fa-tag"></i>
+                            <?= htmlspecialchars($category['name']) ?>
+                        </span>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($contestant['short_code'])): ?>
+                        <span class="code-tag">
+                            <i class="fas fa-hashtag"></i>
+                            <?= htmlspecialchars($contestant['short_code']) ?>
+                        </span>
+                    <?php endif; ?>
+                    
+                    <div class="vote-count">
+                        <i class="fas fa-heart"></i>
+                        <span><?= number_format($contestant['total_votes'] ?? 0) ?> votes</span>
                     </div>
                 </div>
-            </div>
-            
-            <?php if (!empty($contestant['bio'])): ?>
-                <p style="color: #6b7280; line-height: 1.6; margin-top: 1rem;">
-                    <?= htmlspecialchars($contestant['bio']) ?>
-                </p>
-            <?php endif; ?>
-        </div>
-
-        <!-- Vote Summary in Sidebar -->
-        <div id="vote-summary" class="vote-summary" style="display: none;">
-            <div class="summary-header">
-                <i class="fas fa-receipt"></i>
-                Vote Summary
-            </div>
-            <div class="summary-items" id="summary-content">
-                <!-- Summary will be populated by JavaScript -->
             </div>
         </div>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="main-content">
+    <!-- Compact Voting Form -->
     <form id="votingForm">
         <input type="hidden" id="contestant_id" name="contestant_id" value="<?= $contestant['id'] ?>">
         <input type="hidden" id="bundle_id" name="bundle_id">
         <input type="hidden" id="category_id" name="category_id" value="<?= $category['id'] ?? $contestant['category_id'] ?? '' ?>">
         
-        <!-- Voting Interface -->
-        <div class="voting-interface">
-            <div class="interface-header">
-                <h2 class="interface-title">Cast Your Vote</h2>
-                <p class="interface-subtitle">Choose how you want to vote for this nominee</p>
+        <!-- Compact Voting Interface -->
+        <div class="compact-voting-interface">
+            <div class="compact-interface-header">
+                <h2 class="compact-interface-title">Cast Your Vote</h2>
+                <p class="compact-interface-subtitle">Choose how many votes to cast</p>
             </div>
             
-            <!-- Vote Methods -->
-            <div class="vote-methods">
+            <!-- Compact Vote Methods -->
+            <div class="compact-vote-methods">
                 <!-- Custom Vote Count -->
-                <div class="vote-method" id="custom-method" onclick="selectVoteMethod('custom')">
-                    <div class="method-header">
-                        <div class="method-icon">
+                <div class="compact-vote-method active" id="custom-method" onclick="selectVoteMethod('custom')">
+                    <div class="compact-method-header">
+                        <div class="compact-method-icon">
                             <i class="fas fa-edit"></i>
                         </div>
-                        <div class="method-title">Custom Amount</div>
+                        <div class="compact-method-title">Custom Amount</div>
                     </div>
-                    <div class="method-description">
-                        Enter the exact number of votes you want to cast
+                    <div class="compact-method-description">
+                        Enter exact number of votes
                     </div>
-                    <div class="custom-vote-input">
-                        <div class="vote-input-group">
-                            <div class="vote-counter">
-                                <button type="button" class="counter-btn" onclick="changeVoteCount(-1)">−</button>
-                                <input type="number" id="custom-votes" class="counter-input" value="1" min="1" max="10000" onchange="updateCustomVotes()">
-                                <button type="button" class="counter-btn" onclick="changeVoteCount(1)">+</button>
+                    <div class="compact-custom-vote-input">
+                        <div class="compact-vote-input-group">
+                            <div class="compact-vote-counter">
+                                <button type="button" class="compact-counter-btn" onclick="changeVoteCount(-1)">−</button>
+                                <input type="number" id="custom-votes" class="compact-counter-input" value="1" min="1" max="10000" onchange="updateCustomVotes()">
+                                <button type="button" class="compact-counter-btn" onclick="changeVoteCount(1)">+</button>
                             </div>
-                            <div class="vote-total">
+                            <div class="compact-vote-total">
                                 Total: GH₵<span id="custom-total"><?= number_format($vote_price, 2) ?></span>
                             </div>
                         </div>
@@ -997,40 +557,41 @@ body {
                 </div>
                 
                 <!-- Package Selection -->
-                <div class="vote-method" id="package-method" onclick="selectVoteMethod('package')">
-                    <div class="method-header">
-                        <div class="method-icon">
+                <div class="compact-vote-method" id="package-method" onclick="selectVoteMethod('package')">
+                    <div class="compact-method-header">
+                        <div class="compact-method-icon">
                             <i class="fas fa-box"></i>
                         </div>
-                        <div class="method-title">Vote Packages</div>
+                        <div class="compact-method-title">Vote Packages</div>
                     </div>
-                    <div class="method-description">
-                        Choose from pre-defined vote packages with better rates
+                    <div class="compact-method-description">
+                        Pre-defined packages with better rates
                     </div>
                 </div>
             </div>
             
-            <!-- Package Options (shown when package method is selected) -->
-            <div id="packages-container" style="display: none;">
+            <!-- Package Options -->
+            <div id="packages-container" class="compact-packages-container" style="display: none;">
                 <?php if (empty($bundles)): ?>
-                    <p style="text-align: center; color: #666; padding: 2rem;">
-                        No vote packages available. Please refresh the page.
+                    <p style="text-align: center; color: #666; padding: 1rem;">
+                        No vote packages available.
                     </p>
                 <?php else: ?>
-                <div class="packages-grid">
+                <div class="compact-packages-grid">
                     <?php foreach ($bundles as $index => $bundle): ?>
-                    <div class="package-option" data-bundle-id="<?= $bundle['id'] ?>"
+                    <div class="compact-package-option" data-bundle-id="<?= $bundle['id'] ?>"
                          onclick="selectPackage(<?= $bundle['id'] ?>, <?= $bundle['votes'] ?>, <?= $bundle['price'] ?>)">
                         
                         <?php if ($index === 1): ?>
-                            <div class="package-popular">Most Popular</div>
+                            <div class="compact-package-popular">Popular</div>
                         <?php endif; ?>
                         
-                        
-                        <div style="color: #718096; margin-bottom: 0.2rem; font-size: 0.875rem;">
-                          <span class="package-votes"><?= $bundle['votes'] ?></span> Vote<?= $bundle['votes'] > 1 ? 's' : '' ?> / GH₵<?= number_format($bundle['price'], 2) ?>
+                        <div class="compact-package-votes"><?= $bundle['votes'] ?></div>
+                        <div style="color: #718096; margin-bottom: 0.5rem; font-size: 0.75rem;">
+                            Vote<?= $bundle['votes'] > 1 ? 's' : '' ?>
                         </div>
-                        <div class="package-unit">GH₵<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per Vote</div>
+                        <div class="compact-package-price">GH₵<?= number_format($bundle['price'], 2) ?></div>
+                        <div class="compact-package-unit">GH₵<?= number_format($bundle['price'] / $bundle['votes'], 2) ?> per vote</div>
                     </div>
                     <?php endforeach; ?>
                 </div>
@@ -1038,51 +599,48 @@ body {
             </div>
         </div>
 
-        <!-- Contact Information -->
-        <div class="contact-section">
-            <div class="interface-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0;">
-                <div style="flex: 1;">
-                    <h3 class="interface-title" style="margin-bottom: 0.25rem;">Contact Information</h3>
-                    <p class="interface-subtitle" style="margin-bottom: 0;">We need your phone number to process the vote</p>
-                </div>
-                <div class="form-group" style="margin: 0; min-width: 250px; flex-shrink: 0;">
-                    <label class="form-label" style="margin-bottom: 0.25rem;">Mobile Number *</label>
-                    <input type="tel" id="msisdn" name="msisdn" class="form-input" 
-                           placeholder="+233 545 644 749" required>
-                </div>
+        <!-- Compact Contact Information -->
+        <div class="compact-contact-section">
+            <div class="compact-interface-header">
+                <h3 class="compact-interface-title">Contact Information</h3>
+                <p class="compact-interface-subtitle">Phone number required for payment</p>
+            </div>
+            
+            <div class="compact-form-group">
+                <label class="compact-form-label">Mobile Number *</label>
+                <input type="tel" id="msisdn" name="msisdn" class="compact-form-input" 
+                       placeholder="+233 24 123 4567" required>
+                <div class="compact-form-help">Include country code (e.g., +233 for Ghana)</div>
             </div>
         </div>
 
-        <!-- Mobile Vote Summary (hidden on desktop, shown on mobile above submit button) -->
-        <div id="mobile-vote-summary" class="vote-summary" style="display: none;">
-            <div class="summary-header">
+        <!-- Compact Vote Summary -->
+        <div id="vote-summary" class="compact-vote-summary" style="display: none;">
+            <div class="compact-summary-header">
                 <i class="fas fa-receipt"></i>
                 Vote Summary
             </div>
-            <div class="summary-items" id="mobile-summary-content">
+            <div class="compact-summary-items" id="summary-content">
                 <!-- Summary will be populated by JavaScript -->
             </div>
         </div>
 
-        <!-- Submit Button -->
-        <div class="submit-section">
-            <button type="submit" id="vote-button" class="vote-submit-btn" disabled>
-                <div class="btn-content">
+        <!-- Compact Submit Button -->
+        <div class="compact-submit-section">
+            <button type="submit" id="vote-button" class="compact-vote-submit-btn" disabled>
+                <div class="compact-btn-content">
                     <i class="fas fa-vote-yea"></i>
                     <span>Cast Your Vote</span>
                 </div>
-                <div class="btn-loader">
+                <div class="compact-btn-loader">
                     <i class="fas fa-spinner fa-spin"></i>
                 </div>
             </button>
         </div>
     </form>
-    </div> <!-- End main-content -->
-</div> <!-- End professional-vote-container -->
-
+</div>
 
 <script>
-// Professional Voting System JavaScript
 let currentVoteMethod = null;
 let selectedBundle = null;
 let customVoteCount = 1;
@@ -1175,8 +733,6 @@ function selectPackage(bundleId, votes, price) {
 function updateVoteSummary() {
     const summaryDiv = document.getElementById('vote-summary');
     const summaryContent = document.getElementById('summary-content');
-    const mobileSummaryDiv = document.getElementById('mobile-vote-summary');
-    const mobileSummaryContent = document.getElementById('mobile-summary-content');
     
     let votes = 0;
     let total = 0;
@@ -1193,7 +749,7 @@ function updateVoteSummary() {
     }
     
     if (votes > 0) {
-        const summaryHTML = `
+        summaryContent.innerHTML = `
             <div class="summary-item">
                 <span class="summary-label">Nominee:</span>
                 <span class="summary-value"><?= htmlspecialchars($contestant['name']) ?></span>
@@ -1211,15 +767,9 @@ function updateVoteSummary() {
                 <span class="summary-value">GH₵${total.toFixed(2)}</span>
             </div>
         `;
-        
-        // Update both desktop and mobile summaries
-        summaryContent.innerHTML = summaryHTML;
-        mobileSummaryContent.innerHTML = summaryHTML;
         summaryDiv.style.display = 'block';
-        mobileSummaryDiv.style.display = 'block';
     } else {
         summaryDiv.style.display = 'none';
-        mobileSummaryDiv.style.display = 'none';
     }
 }
 
@@ -1625,4 +1175,4 @@ function showAlert(content, type) {
 }
 </script>
 
-
+<?php include __DIR__ . '/../layout/footer.php'; ?>
