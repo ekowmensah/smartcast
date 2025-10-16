@@ -26,3 +26,4 @@ node_modules/
 Thumbs.db
 
 smartcast_new.sql
+.env.example
