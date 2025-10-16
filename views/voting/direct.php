@@ -134,10 +134,11 @@
                                         <input type="number" 
                                                class="form-control text-center" 
                                                id="vote_quantity" 
-                                               name="vote_quantity" 
+                                               name="custom_votes" 
                                                value="1" 
                                                min="1" 
                                                max="1000">
+                                        <input type="hidden" name="vote_method" value="custom">
                                         <button class="btn btn-outline-secondary" type="button" id="increaseVotes">
                                             <i class="fas fa-plus"></i>
                                         </button>
@@ -181,8 +182,8 @@
                                             <input type="text" class="form-control" id="voter_name" name="voter_name" required>
                                         </div>
                                         <div class="col-12 mb-2">
-                                            <label for="voter_phone" class="form-label">Phone Number *</label>
-                                            <input type="tel" class="form-control" id="voter_phone" name="voter_phone" required>
+                                            <label for="msisdn" class="form-label">Phone Number *</label>
+                                            <input type="tel" class="form-control" id="msisdn" name="msisdn" required>
                                         </div>
                                         <div class="col-12 mb-2">
                                             <label for="voter_email" class="form-label">Email (Optional)</label>
@@ -391,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault(); // Always prevent default form submission
         
         const voterName = document.getElementById('voter_name').value.trim();
-        const voterPhone = document.getElementById('voter_phone').value.trim();
+        const voterPhone = document.getElementById('msisdn').value.trim();
         
         if (!voterName || !voterPhone) {
             showAlert('Please fill in all required fields', 'error');

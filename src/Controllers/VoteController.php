@@ -182,12 +182,15 @@ class VoteController extends BaseController
         ]);
     }
     
-    public function processVote($eventSlug)
+    public function processVote($eventSlug = null)
     {
-        // Resolve event from slug or ID
-        $event = $this->resolveEvent($eventSlug);
+        // Resolve event from slug or ID (for standard voting)
+        $event = null;
+        if ($eventSlug) {
+            $event = $this->resolveEvent($eventSlug);
+        }
         
-        // Handle fallback from POST data if needed
+        // Handle fallback from POST data (for direct/shortcode voting)
         if (!$event && isset($_POST['event_id'])) {
             $event = $this->eventModel->find($_POST['event_id']);
         }
@@ -1504,211 +1507,7 @@ class VoteController extends BaseController
         }
     }
 
-    /**
-     * Process direct vote from shortcode voting
-     */
-    public function processDirectVote()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect(APP_URL . '/vote-shortcode', 'Invalid request method', 'error');
-            return;
-        }
-
-        try {
-            // Get form data
-            $contestantId = $_POST['contestant_id'] ?? null;
-            $categoryId = $_POST['category_id'] ?? null;
-            $eventId = $_POST['event_id'] ?? null;
-            $voteQuantity = intval($_POST['vote_quantity'] ?? 1);
-            $bundleId = $_POST['bundle_id'] ?? null;
-            $voterName = trim($_POST['voter_name'] ?? '');
-            $voterPhone = trim($_POST['voter_phone'] ?? '');
-            $voterEmail = trim($_POST['voter_email'] ?? '');
-            $source = $_POST['source'] ?? 'direct';
-
-            // Validation
-            if (!$contestantId || !$categoryId || !$eventId) {
-                $this->redirect(APP_URL . '/vote-shortcode', 'Missing required parameters', 'error');
-                return;
-            }
-
-            if (empty($voterName) || empty($voterPhone)) {
-                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
-                    'Please fill in all required fields', 'error');
-                return;
-            }
-
-            if ($voteQuantity < 1) {
-                $this->redirect(APP_URL . "/vote?contestant_id={$contestantId}&category_id={$categoryId}&event_id={$eventId}&source={$source}", 
-                    'Please select at least 1 vote', 'error');
-                return;
-            }
-
-            // Get event details
-            $event = $this->eventModel->find($eventId);
-            if (!$event || !$this->isVotingAllowed($event)) {
-                $this->redirect(APP_URL . '/vote-shortcode', 'Voting is not available for this event', 'error');
-                return;
-            }
-
-            // Get contestant details
-            $contestant = $this->contestantModel->find($contestantId);
-            if (!$contestant) {
-                $this->redirect(APP_URL . '/vote-shortcode', 'Contestant not found', 'error');
-                return;
-            }
-
-            // Calculate total amount and handle bundle logic (matching normal voting)
-            $totalAmount = 0;
-            $bundleUsed = null;
-            $finalBundleId = $bundleId;
-
-            if ($bundleId) {
-                // Using a specific bundle
-                $bundle = $this->bundleModel->find($bundleId);
-                if ($bundle && $bundle['active']) {
-                    $totalAmount = $bundle['price'];
-                    $voteQuantity = $bundle['votes']; // Override quantity with bundle votes
-                    $bundleUsed = $bundle;
-                    $finalBundleId = $bundle['id'];
-                }
-            } else {
-                // Custom votes - need to create/find a default bundle (matching normal voting)
-                $bundles = $this->bundleModel->getBundlesByEvent($eventId);
-                
-                if (empty($bundles)) {
-                    // Create a default bundle for custom votes if none exist
-                    $votePrice = $event['vote_price'] ?? 0.50;
-                    $defaultBundleId = $this->bundleModel->create([
-                        'event_id' => $eventId,
-                        'name' => 'Single Vote',
-                        'votes' => 1,
-                        'price' => $votePrice,
-                        'active' => 1
-                    ]);
-                    $finalBundleId = $defaultBundleId;
-                } else {
-                    // Use first available bundle as reference for foreign key
-                    $finalBundleId = $bundles[0]['id'];
-                }
-                
-                // Calculate custom vote price
-                $totalAmount = $voteQuantity * $event['vote_price'];
-            }
-
-            // Start database transaction (matching normal voting)
-            $this->transactionModel->getDatabase()->getConnection()->beginTransaction();
-
-            try {
-                // Create transaction (using only existing database columns)
-                $transactionData = [
-                    'tenant_id' => $event['tenant_id'],
-                    'event_id' => $eventId,
-                    'contestant_id' => $contestantId,
-                    'category_id' => $categoryId,
-                    'bundle_id' => $finalBundleId, // Use finalBundleId to ensure non-null value
-                    'amount' => $totalAmount,
-                    'msisdn' => $voterPhone, // Use msisdn field like normal voting
-                    'status' => 'pending',
-                    'provider' => 'momo',
-                    'coupon_code' => null,
-                    'referral_code' => null
-                ];
-
-                $transactionId = $this->transactionModel->createTransaction($transactionData);
-
-                if (!$transactionId) {
-                    throw new \Exception('Failed to create transaction');
-                }
-
-                // Initiate payment using MoMoPaymentService for popup support
-                $paymentData = [
-                    'amount' => $totalAmount,
-                    'phone' => $voterPhone,
-                    'description' => "Vote for {$contestant['name']} in {$event['name']}",
-                    'currency' => 'GHS',
-                    'email' => $voterEmail,
-                    'customer_name' => $voterName,
-                    'metadata' => [
-                        'event_id' => $eventId,
-                        'contestant_id' => $contestantId,
-                        'category_id' => $categoryId,
-                        'votes' => $voteQuantity,
-                        'bundle_id' => $finalBundleId,
-                        'transaction_id' => $transactionId
-                    ],
-                    'tenant_id' => $event['tenant_id']
-                ];
-
-                error_log('Initiating payment with data: ' . json_encode($paymentData));
-
-                $momoService = new \SmartCast\Services\MoMoPaymentService();
-                $paymentResponse = $momoService->initiatePayment($paymentData);
-                error_log('Payment response: ' . json_encode($paymentResponse));
-
-                if (!$paymentResponse['success']) {
-                    throw new \Exception('Payment initiation failed: ' . ($paymentResponse['message'] ?? 'Unknown error'));
-                }
-
-                // Update transaction with payment reference (matching normal voting)
-                $this->transactionModel->update($transactionId, [
-                    'provider_reference' => $paymentResponse['payment_reference'] ?? null
-                ]);
-
-                // Store voter information in session for display
-                $_SESSION["transaction_{$transactionId}_voter_info"] = [
-                    'voter_name' => $voterName,
-                    'voter_email' => $voterEmail,
-                    'vote_quantity' => $voteQuantity,
-                    'source' => $source
-                ];
-
-                // Commit the transaction
-                $this->transactionModel->getDatabase()->getConnection()->commit();
-
-                // Return JSON response for AJAX handling
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'payment_initiated' => true,
-                    'transaction_id' => $transactionId,
-                    'payment_reference' => $paymentResponse['payment_reference'] ?? null,
-                    'payment_url' => $paymentResponse['payment_url'] ?? null,
-                    'provider' => $paymentResponse['provider'] ?? null,
-                    'message' => $paymentResponse['message'] ?? 'Payment initiated successfully',
-                    'status_check_url' => APP_URL . "/api/payment/status/{$transactionId}"
-                ]);
-                return;
-
-            } catch (\Exception $e) {
-                // Rollback the transaction
-                $this->transactionModel->getDatabase()->getConnection()->rollback();
-                
-                error_log('Payment processing error: ' . $e->getMessage());
-                
-                // Return JSON error for AJAX requests
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Payment processing failed: ' . $e->getMessage(),
-                    'error_code' => 'PAYMENT_ERROR'
-                ]);
-                return;
-            }
-
-        } catch (\Exception $e) {
-            error_log('Direct vote processing error: ' . $e->getMessage());
-            
-            // Return JSON error for AJAX requests
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'An error occurred while processing your vote: ' . $e->getMessage(),
-                'error_code' => 'PROCESSING_ERROR'
-            ]);
-            return;
-        }
-    }
+    // processDirectVote method removed - now using unified processVote method for both standard and direct voting
     
     /**
      * Generate script to close popup and communicate with parent window

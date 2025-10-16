@@ -57,10 +57,10 @@ class Application
         $this->router->get('/events/{eventSlug}/vote/{contestantSlug}', 'VoteController@showVoteForm'); // Vote form for specific nominee
         $this->router->post('/events/{eventSlug}/vote/process', 'VoteController@processVote'); // Process the vote
         
-        // Shortcode voting
+        // Shortcode voting - now uses same processing as standard voting
         $this->router->get('/vote-shortcode', 'VoteController@showShortcodeVoting'); // Shortcode voting page
         $this->router->get('/vote', 'VoteController@showDirectVoting'); // Direct voting with parameters
-        $this->router->post('/vote/process', 'VoteController@processDirectVote'); // Process direct vote
+        $this->router->post('/vote/process', 'VoteController@processVote'); // Process direct vote using same logic as standard voting
         
         // Payment routes
         $this->router->get('/payment/status/{transactionId}', 'VoteController@showPaymentStatus'); // Payment status page
