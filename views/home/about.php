@@ -399,7 +399,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Email Support</h5>
                 <p class="text-muted mb-2">Get help with your voting events</p>
-                <a href="mailto:support@smartcast.com.gh" class="text-primary fw-semibold">support@smartcast.com.gh</a>
+                <a href="mailto:support@smartcastgh.com" class="text-primary fw-semibold">support@smartcastgh.com</a>
             </div>
             <div class="col-lg-4 text-center">
                 <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
@@ -407,7 +407,7 @@
                 </div>
                 <h5 class="fw-bold mb-2">Phone Support</h5>
                 <p class="text-muted mb-2">Speak with our team directly</p>
-                <a href="tel:+233200000000" class="text-success fw-semibold">+233 20 000 0000</a>
+                <a href="tel:+233545644749" class="text-success fw-semibold">+233 54 564 4749</a>
             </div>
             <div class="col-lg-4 text-center">
                 <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
