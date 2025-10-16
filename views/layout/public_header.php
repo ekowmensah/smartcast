@@ -23,23 +23,87 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="<?= APP_URL ?>/public/manifest.json">
     
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Secure digital voting platform for events, competitions, and democratic processes in Ghana. Vote with mobile money integration.">
-    <meta name="keywords" content="voting, digital voting, Ghana, mobile money, elections, competitions, talent shows">
-    <meta name="author" content="SmartCast">
+    <!-- Enhanced SEO Meta Tags -->
+    <meta name="description" content="<?= $seo_description ?? 'SmartCast - Ghana\'s leading digital voting platform. Secure online voting for events, competitions, talent shows, and elections with MTN, Vodafone, AirtelTigo mobile money integration. Real-time results, fraud prevention, SMS receipts.' ?>">
+    <meta name="keywords" content="<?= $seo_keywords ?? 'digital voting Ghana, online voting platform, mobile money voting, MTN mobile money, Vodafone Cash, AirtelTigo Money, talent show voting, competition voting, secure voting system, real-time voting results, SMS voting receipts, Ghana elections, event voting, contestant voting, democratic voting, fraud-free voting, Paystack voting, Hubtel voting, Ghana voting app, digital democracy Ghana' ?>">
+    <meta name="author" content="SmartCast Ghana">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="geo.region" content="GH">
+    <meta name="geo.country" content="Ghana">
+    <meta name="geo.placename" content="Accra, Ghana">
+    <meta name="ICBM" content="5.6037, -0.1870">
+    <meta name="distribution" content="global">
+    <meta name="rating" content="general">
+    <meta name="revisit-after" content="1 days">
+    <meta name="classification" content="voting, technology, democracy">
+    <link rel="canonical" href="<?= $canonical_url ?? APP_URL . $_SERVER['REQUEST_URI'] ?>">
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="<?= $title ?? 'SmartCast' ?> - Digital Voting Platform">
-    <meta property="og:description" content="Secure digital voting platform for events, competitions, and democratic processes in Ghana">
-    <meta property="og:image" content="<?= APP_URL ?>/public/assets/images/icon-512.png">
-    <meta property="og:url" content="<?= APP_URL ?>">
+    <meta property="og:title" content="<?= $og_title ?? ($title ?? 'SmartCast') . ' - Ghana\'s #1 Digital Voting Platform' ?>">
+    <meta property="og:description" content="<?= $og_description ?? 'Vote securely with mobile money! MTN, Vodafone, AirtelTigo supported. Real-time results, SMS receipts, fraud prevention. Ghana\'s most trusted digital voting platform for events, competitions & elections.' ?>">
+    <meta property="og:image" content="<?= $og_image ?? APP_URL . '/public/assets/images/icon-512.png' ?>">
+    <meta property="og:url" content="<?= $canonical_url ?? APP_URL . $_SERVER['REQUEST_URI'] ?>">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SmartCast Ghana">
+    <meta property="og:locale" content="en_GH">
+    <meta property="article:author" content="SmartCast Ghana">
+    <meta property="fb:app_id" content="your-facebook-app-id">
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="<?= $title ?? 'SmartCast' ?> - Digital Voting Platform">
-    <meta name="twitter:description" content="Secure digital voting platform for events, competitions, and democratic processes in Ghana">
-    <meta name="twitter:image" content="<?= APP_URL ?>/public/assets/images/icon-512.png">
+    <meta name="twitter:site" content="@SmartCastGH">
+    <meta name="twitter:creator" content="@SmartCastGH">
+    <meta name="twitter:title" content="<?= $twitter_title ?? ($title ?? 'SmartCast') . ' - Ghana Digital Voting Platform' ?>">
+    <meta name="twitter:description" content="<?= $twitter_description ?? 'Secure mobile money voting in Ghana 🇬🇭 MTN • Vodafone • AirtelTigo supported. Real-time results, SMS receipts, fraud prevention. #DigitalVoting #Ghana' ?>">
+    <meta name="twitter:image" content="<?= $twitter_image ?? APP_URL . '/public/assets/images/icon-512.png' ?>">
+    <meta name="twitter:image:alt" content="SmartCast - Ghana's Digital Voting Platform">
+    
+    <!-- Additional SEO Meta Tags -->
+    <meta name="mobile-web-app-title" content="SmartCast">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-config" content="<?= APP_URL ?>/public/browserconfig.xml">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "SmartCast",
+        "alternateName": "SmartCast Ghana Digital Voting Platform",
+        "description": "Ghana's leading digital voting platform with mobile money integration for secure online voting",
+        "url": "<?= APP_URL ?>",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "GHS"
+        },
+        "creator": {
+            "@type": "Organization",
+            "name": "SmartCast Ghana",
+            "url": "<?= APP_URL ?>",
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "GH",
+                "addressRegion": "Greater Accra",
+                "addressLocality": "Accra"
+            }
+        },
+        "featureList": [
+            "Mobile Money Integration",
+            "Real-time Voting Results",
+            "SMS Receipt System",
+            "Fraud Prevention",
+            "Multi-language Support",
+            "Secure Payment Processing"
+        ],
+        "screenshot": "<?= APP_URL ?>/public/assets/images/icon-512.png"
+    }
+    </script>
     
     <!-- CoreUI CSS -->
     <link href="<?= COREUI_CSS ?>" rel="stylesheet">

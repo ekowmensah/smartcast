@@ -28,11 +28,13 @@ class HomeController extends BaseController
         // Get real statistics
         $stats = $this->getHomeStatistics();
         
-        $this->view('home/index', [
+        // Get SEO data for homepage
+        $seoData = \SEOHelper::getSEOData('home');
+        
+        $this->view('home/index', array_merge([
             'events' => $events,
-            'stats' => $stats,
-            'title' => 'Welcome to SmartCast'
-        ]);
+            'stats' => $stats
+        ], $seoData));
     }
     
     public function about()
@@ -40,10 +42,12 @@ class HomeController extends BaseController
         // Get platform statistics for about page
         $stats = $this->getHomeStatistics();
         
-        $this->view('home/about', [
-            'stats' => $stats,
-            'title' => 'About SmartCast - Digital Voting Platform'
-        ]);
+        // Get SEO data for about page
+        $seoData = \SEOHelper::getSEOData('about');
+        
+        $this->view('home/about', array_merge([
+            'stats' => $stats
+        ], $seoData));
     }
     
     /**

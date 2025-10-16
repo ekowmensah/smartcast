@@ -1019,4 +1019,138 @@ style.textContent = `
 document.head.appendChild(style);
 </script>
 
+<!-- SEO Content Section -->
+<section class="seo-content-section py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="seo-content">
+                    <h2 class="h3 fw-bold text-center mb-4">Digital Voting Platform Ghana - SmartCast</h2>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h3 class="h5 fw-semibold mb-3">Mobile Money Voting in Ghana</h3>
+                            <p class="text-muted">
+                                Experience seamless <strong>digital voting in Ghana</strong> with SmartCast's secure platform. 
+                                Vote using <strong>MTN Mobile Money</strong>, <strong>Vodafone Cash</strong>, or <strong>AirtelTigo Money</strong> 
+                                for talent shows, competitions, and democratic processes across Ghana.
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h3 class="h5 fw-semibold mb-3">Secure Voting System</h3>
+                            <p class="text-muted">
+                                Our <strong>secure voting system</strong> ensures fraud prevention with bank-level encryption. 
+                                Get <strong>real-time voting results</strong> and <strong>SMS voting receipts</strong> for complete 
+                                transparency in every Ghana voting event.
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h3 class="h5 fw-semibold mb-3">Ghana Voting Events</h3>
+                            <p class="text-muted">
+                                Join thousands participating in <strong>talent show voting</strong>, <strong>competition voting</strong>, 
+                                and <strong>event voting in Ghana</strong>. Our platform supports all types of democratic voting 
+                                with mobile money integration for easy participation.
+                            </p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h3 class="h5 fw-semibold mb-3">Why Choose SmartCast Ghana</h3>
+                            <p class="text-muted">
+                                As <strong>Ghana's leading voting platform</strong>, we provide <strong>fraud-free voting</strong>, 
+                                instant mobile money payments, and transparent results. Perfect for organizers seeking a 
+                                reliable <strong>digital democracy solution in Ghana</strong>.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Keywords for SEO -->
+                    <div class="mt-4 text-center">
+                        <small class="text-muted d-none">
+                            Keywords: digital voting Ghana, mobile money voting, MTN mobile money, Vodafone Cash, 
+                            AirtelTigo Money, talent show voting, competition voting, secure voting system, 
+                            real-time voting results, SMS voting receipts, Ghana elections, event voting, 
+                            contestant voting, democratic voting, fraud-free voting, Ghana voting app
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section for SEO -->
+<section class="faq-section py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="h3 fw-bold text-center mb-5">Frequently Asked Questions</h2>
+                
+                <div class="accordion" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                How do I vote using mobile money in Ghana?
+                            </button>
+                        </h3>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <p>Voting with mobile money on SmartCast is simple! Choose your contestant, select mobile money as payment method, 
+                                enter your MTN, Vodafone, or AirtelTigo number, and complete the secure payment. You'll receive an SMS receipt 
+                                confirming your vote was counted.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                Is SmartCast voting secure and fraud-free?
+                            </button>
+                        </h3>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <p>Yes! SmartCast uses bank-level encryption and fraud prevention technology. Every vote is verified, 
+                                tracked, and secured. Our transparent system provides real-time results and verifiable receipts 
+                                for complete trust in the voting process.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                What types of events can use SmartCast for voting?
+                            </button>
+                        </h3>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <p>SmartCast supports all types of voting events in Ghana including talent shows, beauty pageants, 
+                                music competitions, sports awards, community elections, corporate voting, and any democratic process 
+                                requiring secure, transparent voting with mobile money integration.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h3 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                How quickly can I see voting results?
+                            </button>
+                        </h3>
+                        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body">
+                                <p>SmartCast provides real-time voting results that update instantly as votes are cast. 
+                                You can watch live leaderboards, track contestant performance, and see transparent 
+                                vote counts throughout the entire voting period.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <?php include __DIR__ . '/../layout/public_footer.php'; ?>

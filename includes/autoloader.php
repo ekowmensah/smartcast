@@ -15,18 +15,33 @@ spl_autoload_register(function ($class) {
     
     // Check if the class uses the namespace prefix
     $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) {
-        return;
+    if (strncmp($prefix, $class, $len) === 0) {
+        // Get the relative class name
+        $relative_class = substr($class, $len);
+        
+        // Replace namespace separators with directory separators
+        $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+        
+        // If the file exists, require it
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
     }
     
-    // Get the relative class name
-    $relative_class = substr($class, $len);
+    // Handle classes without namespace (like SEOHelper)
+    $possible_paths = [
+        __DIR__ . '/../src/Helpers/' . $class . '.php',
+        __DIR__ . '/../src/Models/' . $class . '.php',
+        __DIR__ . '/../src/Controllers/' . $class . '.php',
+        __DIR__ . '/../src/Services/' . $class . '.php',
+        __DIR__ . '/../src/Core/' . $class . '.php'
+    ];
     
-    // Replace namespace separators with directory separators
-    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-    
-    // If the file exists, require it
-    if (file_exists($file)) {
-        require $file;
+    foreach ($possible_paths as $file) {
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
     }
 });
