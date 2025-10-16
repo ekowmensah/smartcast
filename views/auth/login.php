@@ -296,6 +296,44 @@
         shapes.forEach((shape, index) => {
             shape.style.animationDelay = `${index * 0.5}s`;
         });
+        
+        // Clear session storage when visiting login page
+        localStorage.removeItem('user_logged_in');
+        sessionStorage.clear();
+        
+        // Show session expired message if redirected from session timeout
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('session_expired') === '1') {
+            // Create and show session expired alert
+            const alertHtml = `
+                <div class="alert alert-warning alert-dismissible fade show" role="alert" style="margin-bottom: 1rem;">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong>Session Expired:</strong> Your session has expired due to inactivity. Please log in again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            const formContainer = document.querySelector('.auth-form');
+            if (formContainer) {
+                formContainer.insertAdjacentHTML('afterbegin', alertHtml);
+            }
+        }
+        
+        if (urlParams.get('logged_out') === '1') {
+            // Create and show logged out message
+            const alertHtml = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert" style="margin-bottom: 1rem;">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <strong>Logged Out:</strong> You have been successfully logged out.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            const formContainer = document.querySelector('.auth-form');
+            if (formContainer) {
+                formContainer.insertAdjacentHTML('afterbegin', alertHtml);
+            }
+        }
     });
     </script>
 </body>

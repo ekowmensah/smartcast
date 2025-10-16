@@ -353,6 +353,28 @@
 
     <!-- CoreUI JavaScript -->
     <script src="<?= COREUI_JS ?>"></script>
+    
+    <!-- Session Management -->
+    <script src="<?= APP_URL ?>/public/js/session-manager.js"></script>
+    
+    <!-- Initialize Session Management for Admins -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize session manager with extended timeout for admins
+        if (typeof SessionManager !== 'undefined') {
+            window.sessionManager = new SessionManager({
+                idleTime: 20 * 60 * 1000,      // 20 minutes for admins
+                warningTime: 3 * 60 * 1000,    // 3 minutes warning
+                checkInterval: 60 * 1000,      // Check every minute
+                logoutUrl: '/logout',
+                loginUrl: '/login'
+            });
+            
+            console.log('Admin session management initialized - 20 minute timeout');
+        }
+    });
+    </script>
+    
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/admin.js"></script>
 </body>

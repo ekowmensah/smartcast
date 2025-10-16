@@ -380,11 +380,33 @@
     <script src="<?= COREUI_JS ?>"></script>
     <!-- Bootstrap JavaScript (required for dropdowns and other components) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Session Management -->
+    <script src="<?= APP_URL ?>/public/js/session-manager.js"></script>
+    
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/organizer.js"></script>
     <!-- Image Helper -->
     <script src="<?= APP_URL ?>/public/assets/js/image-helper.js"></script>
     <script>window.APP_URL = '<?= APP_URL ?>';</script>
+    
+    <!-- Initialize Session Management for Organizers -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize session manager with extended timeout for organizers
+        if (typeof SessionManager !== 'undefined') {
+            window.sessionManager = new SessionManager({
+                idleTime: 1 * 60 * 1000,      // 10 minutes for organizers
+                warningTime: 5 * 60 * 1000,    // 5 minutes warning
+                checkInterval: 60 * 1000,      // Check every minute
+                logoutUrl: '/logout',
+                loginUrl: '/login'
+            });
+            
+            console.log('Organizer session management initialized - 30 minute timeout');
+        }
+    });
+    </script>
     
     <!-- Fix CoreUI dropdowns -->
     <script>

@@ -50,6 +50,12 @@ class Application
         $this->router->post('/register', 'AuthController@register');
         $this->router->post('/logout', 'AuthController@logout');
         
+        // Session management routes
+        $this->router->post('/api/extend-session', 'SessionController@extendSession');
+        $this->router->get('/api/session/check', 'SessionController@checkSession');
+        $this->router->get('/api/session/config', 'SessionController@getSessionConfig');
+        $this->router->get('/logout', 'SessionController@logout');
+        
         // Event routes
         $this->router->get('/events', 'EventController@index');
         $this->router->get('/events/{eventSlug}', 'EventController@show');
