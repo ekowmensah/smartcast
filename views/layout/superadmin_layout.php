@@ -472,28 +472,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- CoreUI JavaScript -->
     <script src="<?= COREUI_JS ?>"></script>
-    
-    <!-- Session Management -->
-    <script src="<?= APP_URL ?>/public/js/session-manager.js"></script>
-    
-    <!-- Initialize Session Management for Super Admins -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize session manager with extended timeout for super admins
-        if (typeof SessionManager !== 'undefined') {
-            window.sessionManager = new SessionManager({
-                idleTime: 1 * 60 * 1000,      // 1 minutes for super admins
-                warningTime: 10 * 60 * 1000,   // 10 minutes warning
-                checkInterval: 2 * 60 * 1000,  // Check every 2 minutes
-                logoutUrl: '/logout',
-                loginUrl: '/login'
-            });
-            
-            console.log('Super Admin session management initialized - 60 minute timeout');
-        }
-    });
-    </script>
-    
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/superadmin.js"></script>
 </body>
