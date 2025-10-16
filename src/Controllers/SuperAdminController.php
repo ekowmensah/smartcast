@@ -15,6 +15,7 @@ use SmartCast\Models\SmsGateway;
 use SmartCast\Models\SmsLog;
 use SmartCast\Services\PayoutService;
 use SmartCast\Services\SmsService;
+use SmartCast\Services\NotificationService;
 
 /**
  * Super Admin Dashboard Controller
@@ -34,6 +35,7 @@ class SuperAdminController extends BaseController
     private $smsGateway;
     private $smsLog;
     private $smsService;
+    private $notificationService;
     
     public function __construct()
     {
@@ -54,6 +56,7 @@ class SuperAdminController extends BaseController
         $this->smsGateway = new SmsGateway();
         $this->smsLog = new SmsLog();
         $this->smsService = new SmsService();
+        $this->notificationService = new NotificationService();
     }
     
     public function dashboard()
@@ -197,7 +200,26 @@ class SuperAdminController extends BaseController
                 'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
             ]);
             
-            // TODO: Send approval email notification to tenant
+            // Send approval notifications (email and SMS)
+            try {
+                $notificationResults = $this->notificationService->sendTenantApprovalNotifications($tenant);
+                
+                // Log notification results
+                $this->auditModel->create([
+                    'user_id' => $this->session->getUserId(),
+                    'action' => 'tenant_approval_notifications_sent',
+                    'details' => json_encode([
+                        'tenant_id' => $tenantId,
+                        'email_result' => $notificationResults['email'],
+                        'sms_result' => $notificationResults['sms']
+                    ]),
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+                ]);
+                
+            } catch (\Exception $e) {
+                error_log("Tenant approval notification error: " . $e->getMessage());
+                // Continue with success response even if notifications fail
+            }
             
             return $this->json([
                 'success' => true, 

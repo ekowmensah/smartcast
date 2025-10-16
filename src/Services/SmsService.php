@@ -314,7 +314,7 @@ class SmsService
     /**
      * Get active SMS gateway
      */
-    private function getActiveGateway()
+    public function getActiveGateway()
     {
         return $this->smsGateway->getActiveGateway();
     }

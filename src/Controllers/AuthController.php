@@ -32,7 +32,15 @@ class AuthController extends BaseController
             $this->redirect('/admin');
         }
         
-        $this->view('auth/login');
+        // Get flash messages
+        $flashMessages = [
+            'success' => $this->session->flash('success'),
+            'info' => $this->session->flash('info'),
+            'warning' => $this->session->flash('warning'),
+            'error' => $this->session->flash('error')
+        ];
+        
+        $this->view('auth/login', ['flashMessages' => $flashMessages]);
     }
     
     public function login()
@@ -142,6 +150,7 @@ class AuthController extends BaseController
         $errors = $this->validateInput($data, [
             'organization' => ['required' => true, 'min' => 3, 'max' => 255],
             'email' => ['required' => true, 'email' => true],
+            'phone' => ['required' => true, 'min' => 10, 'max' => 15],
             'password' => ['required' => true, 'min' => 8],
             'confirm_password' => ['required' => true],
             'plan_id' => ['required' => true]
@@ -155,6 +164,16 @@ class AuthController extends BaseController
         // Check if email already exists
         if ($this->userModel->findByEmail($data['email'])) {
             $errors['email'] = 'Email already exists';
+        }
+        
+        // Validate phone number format (Ghana/Nigeria)
+        if (isset($data['phone']) && !empty($data['phone'])) {
+            $phone = preg_replace('/[^0-9]/', '', $data['phone']); // Remove non-numeric characters
+            
+            // Check for valid Ghana/Nigeria phone formats
+            if (!preg_match('/^(233|234|0)[0-9]{9,10}$/', $phone)) {
+                $errors['phone'] = 'Please enter a valid Ghana or Nigeria phone number';
+            }
         }
         
         // Validate selected plan
@@ -180,6 +199,7 @@ class AuthController extends BaseController
             $tenantId = $this->tenantModel->create([
                 'name' => $data['organization'],
                 'email' => $data['email'],
+                'phone' => $data['phone'],
                 'plan' => $selectedPlan['slug'],
                 'current_plan_id' => $selectedPlan['id'],
                 'subscription_status' => 'trial',
@@ -217,11 +237,11 @@ class AuthController extends BaseController
                 'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
             ]);
             
-            $message = 'Registration successful! Your organization is pending admin approval. ';
+            $message = 'Registration successful! Your account has been created and is pending administrative approval. ';
             if ($selectedPlan['trial_days'] > 0) {
-                $message .= 'Once approved, you will have ' . $selectedPlan['trial_days'] . ' days free trial. ';
+                $message .= 'Once approved, you will receive ' . $selectedPlan['trial_days'] . ' days of free trial access. ';
             }
-            $message .= 'You will receive an email notification when your account is approved.';
+            $message .= 'You will be notified via email when your account has been approved and is ready for use.';
             
             $this->redirect('/login', $message, 'success');
             

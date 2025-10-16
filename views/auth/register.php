@@ -4,255 +4,280 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - <?= APP_NAME ?></title>
-    
-    <!-- CoreUI CSS -->
-    <link href="<?= COREUI_CSS ?>" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="<?= APP_URL ?>/public/css/auth.css" rel="stylesheet">
-    <style>
-        .plan-card {
-            transition: all 0.3s ease;
-            border: 2px solid #dee2e6;
-        }
-        
-        .plan-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .plan-card.selected-plan {
-            border-color: #28a745 !important;
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
-        }
-        
-        .plan-card .form-check-input:checked {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        
-        .plan-card .card-body {
-            position: relative;
-        }
-        
-        .plan-card.selected-plan::after {
-            content: '\f00c';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: #28a745;
-            font-size: 1.2em;
-        }
-    </style>
 </head>
-<body class="c-app" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <!-- Navigation Header -->
-    <header class="navbar navbar-expand-lg navbar-dark bg-transparent">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="<?= APP_URL ?>">
-                <i class="fas fa-vote-yea me-2"></i><?= APP_NAME ?>
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-coreui-toggle="collapse" data-coreui-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= APP_URL ?>">
-                            <i class="fas fa-home me-1"></i>Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= APP_URL ?>/pricing">
-                            <i class="fas fa-tags me-1"></i>Pricing
-                        </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<?= APP_URL ?>/login">
-                            <i class="fas fa-sign-in-alt me-1"></i>Login
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <span class="nav-link text-warning">
-                            <i class="fas fa-user-plus me-1"></i>Register
-                        </span>
-                    </li>
-                </ul>
-            </div>
+<body class="auth-body">
+    <!-- Background Elements -->
+    <div class="auth-background">
+        <div class="auth-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
         </div>
-    </header>
+    </div>
 
-    <div class="container-fluid py-4">
-        <div class="row justify-content-center">
-            <div class="col-12 col-xl-10">
-                <div class="card shadow">
-                    <div class="card-body p-4">
-                        <div class="text-center mb-4">
-                            <i class="fas fa-user-plus fa-3x text-primary mb-3 auth-logo"></i>
-                            <h3>Create Your <?= APP_NAME ?> Account</h3>
-                            <p class="text-muted">Start managing your voting events today</p>
+    <!-- Main Container -->
+    <div class="container-fluid h-100">
+        <div class="row h-100 g-0">
+            <!-- Left Panel - Hidden on Large screens -->
+            <div class="col-lg-7 d-none d-lg-flex d-xl-none auth-left-panel">
+                <div class="auth-content">
+                    <div class="auth-brand mb-5">
+                        <img src="<?= APP_URL ?>/logo1.png" alt="SmartCast Logo" class="auth-logo-img">
+                        <h1 class="auth-brand-text"><?= APP_NAME ?></h1>
+                        <p class="auth-tagline">Ghana's Leading Digital Voting Platform</p>
+                    </div>
+
+                    <div class="auth-features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Easy Registration</h4>
+                                <p>Get started in minutes with our simple registration process</p>
+                            </div>
                         </div>
 
-                <?php if (isset($error)): ?>
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <?= htmlspecialchars($error) ?>
-                    </div>
-                <?php endif; ?>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Flexible Plans</h4>
+                                <p>Choose from multiple plans designed for organizations of all sizes</p>
+                            </div>
+                        </div>
 
-                <form method="POST" action="<?= APP_URL ?>/register" class="needs-validation" novalidate>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="organization" class="form-label">Organization Name *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-building"></i>
-                                    </span>
-                                    <input type="text" 
-                                           class="form-control <?= isset($errors['organization']) ? 'is-invalid' : '' ?>" 
-                                           id="organization" 
-                                           name="organization" 
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-rocket"></i>
+                            </div>
+                            <div class="feature-content">
+                                <h4>Quick Setup</h4>
+                                <p>Create your first voting event within minutes of registration</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="auth-stats mt-5">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-number">10K+</div>
+                                <div class="stat-label">Events</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-number">500K+</div>
+                                <div class="stat-label">Votes Cast</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-number">99.9%</div>
+                                <div class="stat-label">Uptime</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Form Panel -->
+            <div class="col-lg-5 col-xl-12 col-12 d-flex align-items-center justify-content-center min-vh-100">
+                <div class="auth-form-container auth-form-container-wide">
+                    <!-- Mobile Logo -->
+                    <div class="d-lg-none text-center mb-4">
+                        <img src="<?= APP_URL ?>/logo1.png" alt="SmartCast Logo" class="mobile-logo">
+                        <h2 class="mobile-brand-text mt-2"><?= APP_NAME ?></h2>
+                    </div>
+
+                    <!-- Desktop Logo for Large Screens -->
+                    <div class="d-none d-xl-block text-center mb-4">
+                        <img src="<?= APP_URL ?>/logo1.png" alt="SmartCast Logo" class="desktop-header-logo">
+                        <h2 class="desktop-header-title mt-3">SmartCast</h2>
+                    </div>
+
+                    <div class="auth-form-card">
+                        <div class="auth-form-header">
+                            <h3 class="auth-form-title">Create Account</h3>
+                            <p class="auth-form-subtitle">Join SmartCast and start managing your voting events</p>
+                        </div>
+
+                        <?php if (isset($error)): ?>
+                            <div class="alert alert-danger alert-modern">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <?= htmlspecialchars($error) ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <form method="POST" action="<?= APP_URL ?>/register" class="auth-form needs-validation" novalidate>
+                            <div class="form-group mb-4">
+                                <label for="organization" class="form-label">Organization Name</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-building input-icon"></i>
+                                    <input type="text"
+                                           id="organization"
+                                           class="form-control form-control-modern"
+                                           name="organization"
+                                           placeholder="Enter your organization name"
                                            value="<?= htmlspecialchars($data['organization'] ?? '') ?>"
                                            required>
+                                    <div class="invalid-feedback">
+                                        Please provide an organization name.
+                                    </div>
                                 </div>
                                 <?php if (isset($errors['organization'])): ?>
-                                    <div class="invalid-feedback d-block">
+                                    <div class="text-danger small mt-1">
                                         <?= htmlspecialchars($errors['organization']) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email Address *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-envelope"></i>
-                                    </span>
-                                    <input type="email" 
-                                           class="form-control <?= isset($errors['email']) ? 'is-invalid' : '' ?>" 
-                                           id="email" 
-                                           name="email" 
+
+                            <div class="form-group mb-4">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-envelope input-icon"></i>
+                                    <input type="email"
+                                           id="email"
+                                           class="form-control form-control-modern"
+                                           name="email"
+                                           placeholder="Enter your email address"
                                            value="<?= htmlspecialchars($data['email'] ?? '') ?>"
                                            required>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid email address.
+                                    </div>
                                 </div>
                                 <?php if (isset($errors['email'])): ?>
-                                    <div class="invalid-feedback d-block">
+                                    <div class="text-danger small mt-1">
                                         <?= htmlspecialchars($errors['email']) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-                                    <input type="password" 
-                                           class="form-control <?= isset($errors['password']) ? 'is-invalid' : '' ?>" 
-                                           id="password" 
-                                           name="password" 
+                            <div class="form-group mb-4">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-phone input-icon"></i>
+                                    <input type="tel"
+                                           id="phone"
+                                           class="form-control form-control-modern"
+                                           name="phone"
+                                           placeholder="Enter your phone number (e.g., 0545644749)"
+                                           value="<?= htmlspecialchars($data['phone'] ?? '') ?>"
                                            required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
-                                        <i class="fas fa-eye"></i>
+                                    <div class="invalid-feedback">
+                                        Please provide a valid phone number.
+                                    </div>
+                                </div>
+                                <small class="text-muted">format (e.g., 0545644749 or 233545644749)</small>
+                                <?php if (isset($errors['phone'])): ?>
+                                    <div class="text-danger small mt-1">
+                                        <?= htmlspecialchars($errors['phone']) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <input type="password"
+                                           id="password"
+                                           class="form-control form-control-modern"
+                                           name="password"
+                                           placeholder="Create a password (min 8 characters)"
+                                           required>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('password')" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye" id="password-eye"></i>
                                     </button>
+                                    <div class="invalid-feedback">
+                                        Please provide a password.
+                                    </div>
                                 </div>
                                 <small class="text-muted">Minimum 8 characters</small>
                                 <?php if (isset($errors['password'])): ?>
-                                    <div class="invalid-feedback d-block">
+                                    <div class="text-danger small mt-1">
                                         <?= htmlspecialchars($errors['password']) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="confirm_password" class="form-label">Confirm Password *</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i class="fas fa-lock"></i>
-                                    </span>
-                                    <input type="password" 
-                                           class="form-control <?= isset($errors['confirm_password']) ? 'is-invalid' : '' ?>" 
-                                           id="confirm_password" 
-                                           name="confirm_password" 
+
+                            <div class="form-group mb-4">
+                                <label for="confirm_password" class="form-label">Confirm Password</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <input type="password"
+                                           id="confirm_password"
+                                           class="form-control form-control-modern"
+                                           name="confirm_password"
+                                           placeholder="Confirm your password"
                                            required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">
-                                        <i class="fas fa-eye"></i>
+                                    <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')" aria-label="Toggle confirm password visibility">
+                                        <i class="fas fa-eye" id="confirm_password-eye"></i>
                                     </button>
+                                    <div class="invalid-feedback">
+                                        Please confirm your password.
+                                    </div>
                                 </div>
                                 <?php if (isset($errors['confirm_password'])): ?>
-                                    <div class="invalid-feedback d-block">
+                                    <div class="text-danger small mt-1">
                                         <?= htmlspecialchars($errors['confirm_password']) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Subscription Plan Selection -->
-                    <div class="mb-4">
-                        <label class="form-label">Choose Your Plan *</label>
-                        <?php if (isset($errors['plan_id'])): ?>
-                            <div class="text-danger small mb-2">
-                                <?= htmlspecialchars($errors['plan_id']) ?>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <div class="row">
-                            <?php foreach ($plans ?? [] as $plan): ?>
-                            <div class="col-lg-3 col-md-6 mb-3">
-                                <div class="card plan-card h-100 <?= $plan['is_popular'] ? 'border-primary' : '' ?>" onclick="selectPlan(<?= $plan['id'] ?>)">
-                                    <?php if ($plan['is_popular']): ?>
-                                        <div class="card-header bg-primary text-white text-center py-2">
-                                            <small><i class="fas fa-star me-1"></i>Most Popular</small>
+                            <!-- Subscription Plan Selection -->
+                            <div class="plan-selection-section">
+                                <label class="form-label">Choose Your Plan</label>
+                                <?php if (isset($errors['plan_id'])): ?>
+                                    <div class="text-danger small mb-3">
+                                        <?= htmlspecialchars($errors['plan_id']) ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <div class="plans-grid">
+                                    <?php foreach ($plans ?? [] as $index => $plan): ?>
+                                    <div class="plan-card-modern <?= $plan['is_popular'] ? 'plan-popular' : '' ?>"
+                                         onclick="selectPlan(<?= $plan['id'] ?>)">
+                                        <?php if ($plan['is_popular']): ?>
+                                            <div class="plan-badge">
+                                                <i class="fas fa-star"></i>
+                                                Most Popular
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <div class="plan-header">
+                                            <h5 class="plan-name"><?= htmlspecialchars($plan['name']) ?></h5>
+                                            <div class="plan-price">
+                                                <?= $plan['price_display'] ?>
+                                                <?php if ($plan['trial_days'] > 0): ?>
+                                                    <small class="plan-trial">
+                                                        <i class="fas fa-gift"></i>
+                                                        <?= $plan['trial_days'] ?> days free
+                                                    </small>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
-                                    <?php endif; ?>
-                                    
-                                    <div class="card-body text-center p-2">
-                                        <h6 class="card-title mb-2"><?= htmlspecialchars($plan['name']) ?></h6>
-                                        <div class="h6 text-primary mb-2">
-                                            <?= $plan['price_display'] ?>
+
+                                        <div class="plan-features">
+                                            <div class="plan-feature">
+                                                <i class="fas fa-calendar-alt"></i>
+                                                <span><strong>Events:</strong> <?= $plan['events_display'] ?></span>
+                                            </div>
+                                            <div class="plan-feature">
+                                                <i class="fas fa-users"></i>
+                                                <span><strong>Contestants:</strong> <?= $plan['contestants_display'] ?></span>
+                                            </div>
                                         </div>
-                                        
-                                        <ul class="list-unstyled small text-start mb-2">
-                                            <li class="mb-1">
-                                                <i class="fas fa-calendar-alt text-info me-1"></i>
-                                                <strong>Events:</strong> <?= $plan['events_display'] ?>
-                                            </li>
-                                            <li class="mb-1">
-                                                <i class="fas fa-users text-success me-1"></i>
-                                                <strong>Contestants:</strong> <?= $plan['contestants_display'] ?>
-                                            </li>
-                                            <?php if ($plan['trial_days'] > 0): ?>
-                                            <li class="mb-1">
-                                                <i class="fas fa-gift text-warning me-1"></i>
-                                                <strong><?= $plan['trial_days'] ?> days trial</strong>
-                                            </li>
-                                            <?php endif; ?>
-                                        </ul>
-                                        
-                                        <div class="form-check mt-3">
-                                            <input class="form-check-input" type="radio" name="plan_id" 
-                                                   id="plan_<?= $plan['id'] ?>" value="<?= $plan['id'] ?>" 
-                                                   <?php 
-                                                   // Auto-select plan from URL parameter or form data
+
+                                        <div class="plan-radio">
+                                            <input class="form-check-input" type="radio" name="plan_id"
+                                                   id="plan_<?= $plan['id'] ?>" value="<?= $plan['id'] ?>"
+                                                   <?php
                                                    $isSelected = false;
                                                    if (isset($selectedPlanId) && $selectedPlanId == $plan['id']) {
                                                        $isSelected = true;
@@ -266,113 +291,66 @@
                                             </label>
                                         </div>
                                     </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
+
+                            <div class="form-group mb-4">
+                                <div class="form-check d-flex align-items-start">
+                                    <input type="checkbox" class="form-check-input me-3 mt-1" id="terms" name="terms" required style="transform: scale(1.1);">
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="#" class="text-decoration-none">Terms of Service</a>
+                                        and <a href="#" class="text-decoration-none">Privacy Policy</a> *
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-modern w-100 mb-4">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Create Account
+                            </button>
+                        </form>
+
+                        <div class="auth-form-footer">
+                            <div class="divider">
+                                <span>Already have an account?</span>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <a href="<?= APP_URL ?>/login" class="btn btn-outline-primary btn-modern">
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    Sign In Instead
+                                </a>
+                            </div>
+
+                            <div class="auth-links mt-4">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <a href="<?= APP_URL ?>/" class="auth-link">
+                                            <i class="fas fa-home me-1"></i>
+                                            Homepage
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="<?= APP_URL ?>/pricing" class="auth-link">
+                                            <i class="fas fa-tags me-1"></i>
+                                            Pricing
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
-                            <label class="form-check-label" for="terms">
-                                I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> 
-                                and <a href="#" class="text-decoration-none">Privacy Policy</a> *
-                            </label>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 mb-3">
-                        <i class="fas fa-user-plus me-2"></i>
-                        Create Account
-                    </button>
-                </form>
-
-                <div class="text-center">
-                    <p class="mb-0">
-                        Already have an account? 
-                        <a href="<?= APP_URL ?>/login" class="text-decoration-none">
-                            Sign in here
-                        </a>
-                    </p>
                 </div>
             </div>
         </div>
-        
-        <div class="row mt-4">
-            <div class="col-md-4 text-center">
     </div>
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- CoreUI JavaScript -->
-    <script src="<?= COREUI_JS ?>"></script>
-    
     <!-- Custom JavaScript -->
     <script>
-    function togglePassword(fieldId) {
-        const field = document.getElementById(fieldId);
-        const button = field.nextElementSibling;
-        const icon = button.querySelector('i');
-        
-        if (field.type === 'password') {
-            field.type = 'text';
-            icon.classList.remove('fa-eye');
-            icon.classList.add('fa-eye-slash');
-        } else {
-            field.type = 'password';
-            icon.classList.remove('fa-eye-slash');
-            icon.classList.add('fa-eye');
-        }
-    }
-    
-    function selectPlan(planId) {
-        // Remove selected class from all plan cards
-        document.querySelectorAll('.plan-card').forEach(card => {
-            card.classList.remove('border-success', 'selected-plan');
-        });
-        
-        // Select the radio button
-        const radio = document.getElementById('plan_' + planId);
-        if (radio) {
-            radio.checked = true;
-            
-            // Add selected styling to the card
-            const card = radio.closest('.plan-card');
-            if (card) {
-                card.classList.add('border-success', 'selected-plan');
-            }
-        }
-    }
-    
-    // Initialize plan selection styling
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add click handlers to plan cards
-        document.querySelectorAll('.plan-card').forEach(card => {
-            card.style.cursor = 'pointer';
-            
-            // Check if this plan is already selected
-            const radio = card.querySelector('input[type="radio"]');
-            if (radio && radio.checked) {
-                card.classList.add('border-success', 'selected-plan');
-            }
-        });
-        
-        // Add change handlers to radio buttons
-        document.querySelectorAll('input[name="plan_id"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.checked) {
-                    selectPlan(this.value);
-                }
-            });
-        });
-        
-        // Auto-trigger visual selection for pre-selected plan
-        const selectedRadio = document.querySelector('input[name="plan_id"]:checked');
-        if (selectedRadio) {
-            selectPlan(selectedRadio.value);
-        }
-    });
-
-    // Form validation
+    // Form Validation
     (function() {
         'use strict';
         window.addEventListener('load', function() {
@@ -388,6 +366,100 @@
             });
         }, false);
     })();
+
+    // Password Toggle Function
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const button = field.parentElement.querySelector('.password-toggle');
+        const icon = button.querySelector('i');
+
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Plan Selection Function
+    function selectPlan(planId) {
+        // Remove selected class from all plan cards
+        document.querySelectorAll('.plan-card-modern').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // Select the radio button
+        const radio = document.getElementById('plan_' + planId);
+        if (radio) {
+            radio.checked = true;
+
+            // Add selected styling to the card
+            const card = radio.closest('.plan-card-modern');
+            if (card) {
+                card.classList.add('selected');
+            }
+        }
+    }
+
+    // Enhanced Form Interactions
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add focus effects to inputs
+        const inputs = document.querySelectorAll('.form-control-modern');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('input-focused');
+            });
+
+            input.addEventListener('blur', function() {
+                this.parentElement.classList.remove('input-focused');
+                if (this.value) {
+                    this.parentElement.classList.add('input-filled');
+                } else {
+                    this.parentElement.classList.remove('input-filled');
+                }
+            });
+
+            // Check if input has value on load
+            if (input.value) {
+                input.parentElement.classList.add('input-filled');
+            }
+        });
+
+        // Add click handlers to plan cards
+        document.querySelectorAll('.plan-card-modern').forEach(card => {
+            card.style.cursor = 'pointer';
+
+            // Check if this plan is already selected
+            const radio = card.querySelector('input[type="radio"]');
+            if (radio && radio.checked) {
+                card.classList.add('selected');
+            }
+        });
+
+        // Add change handlers to radio buttons
+        document.querySelectorAll('input[name="plan_id"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    selectPlan(this.value);
+                }
+            });
+        });
+
+        // Auto-trigger visual selection for pre-selected plan
+        const selectedRadio = document.querySelector('input[name="plan_id"]:checked');
+        if (selectedRadio) {
+            selectPlan(selectedRadio.value);
+        }
+
+        // Animate shapes
+        const shapes = document.querySelectorAll('.shape');
+        shapes.forEach((shape, index) => {
+            shape.style.animationDelay = `${index * 0.5}s`;
+        });
+    });
     </script>
 </body>
 </html>

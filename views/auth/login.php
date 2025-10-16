@@ -107,6 +107,34 @@
                             </div>
                         <?php endif; ?>
 
+                        <?php if (isset($flashMessages['success']) && $flashMessages['success']): ?>
+                            <div class="alert alert-success alert-modern">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <?= htmlspecialchars($flashMessages['success']) ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($flashMessages['info']) && $flashMessages['info']): ?>
+                            <div class="alert alert-info alert-modern">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <?= htmlspecialchars($flashMessages['info']) ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($flashMessages['warning']) && $flashMessages['warning']): ?>
+                            <div class="alert alert-warning alert-modern">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <?= htmlspecialchars($flashMessages['warning']) ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (isset($flashMessages['error']) && $flashMessages['error']): ?>
+                            <div class="alert alert-danger alert-modern">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <?= htmlspecialchars($flashMessages['error']) ?>
+                            </div>
+                        <?php endif; ?>
+
                         <form method="POST" action="<?= APP_URL ?>/login" class="auth-form needs-validation" novalidate>
                             <div class="form-group mb-4">
                                 <label for="email" class="form-label">Email Address</label>
