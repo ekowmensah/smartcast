@@ -344,6 +344,9 @@ class VoteController extends BaseController
             // Start transaction
             $this->transactionModel->getDatabase()->beginTransaction();
             
+            // Extract votes from bundle for response
+            $votes = $bundle['votes'] ?? 1;
+            
             // Create pending transaction
             $transactionData = [
                 'tenant_id' => $event['tenant_id'],

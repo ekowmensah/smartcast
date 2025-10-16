@@ -39,7 +39,7 @@ class MoMoPaymentService
         if (empty($email)) {
             // Create a valid email from phone number
             $hash = substr(md5($phone), 0, 8);
-            $email = "voter{$hash}@smartcast.app";
+            $email = "voter{$hash}@smartcastgh.com";
         }
         
         // Prepare payment data for PaymentService

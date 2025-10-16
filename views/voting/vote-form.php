@@ -1442,13 +1442,37 @@ function showPaymentStatus(paymentData) {
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
-    // Start checking payment status
-    checkPaymentStatus(paymentData.transaction_id, paymentData.status_check_url);
+    // Start checking payment status and store controller globally
+    window.currentStatusController = checkPaymentStatus(paymentData.transaction_id, paymentData.status_check_url);
 }
 
-function checkPaymentStatus(transactionId, statusUrl) {
+function showPopupClosedOptions(transactionId, statusUrl) {
+    showAlert(`
+        <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="alert-content">
+            <h4>Payment Window Closed</h4>
+            <p>The payment window was closed. Your payment may still be processing.</p>
+            <div style="margin-top: 1rem;">
+                <button onclick="continueStatusCheck('${transactionId}', '${statusUrl}')" 
+                        style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 10px;">
+                    <i class="fas fa-sync"></i> Continue Checking
+                </button>
+                <button onclick="window.location.href='/events/<?= $eventSlug ?>/vote'" 
+                        style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-arrow-left"></i> Back to Voting
+                </button>
+            </div>
+            <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                You can also check your payment status later using your transaction reference.
+            </p>
+        </div>
+    `, 'warning');
+}
+
+function continueStatusCheck(transactionId, statusUrl) {
+    // Continue checking but with reduced frequency
     let attempts = 0;
-    const maxAttempts = 60; // Check for 5 minutes (every 5 seconds)
+    const maxAttempts = 24; // Check for 2 more minutes (every 5 seconds)
     
     const statusChecker = setInterval(() => {
         attempts++;
@@ -1456,8 +1480,6 @@ function checkPaymentStatus(transactionId, statusUrl) {
         fetch(statusUrl)
         .then(response => response.json())
         .then(data => {
-            const statusText = document.getElementById('status-text');
-            
             if (data.success) {
                 switch (data.payment_status) {
                     case 'success':
@@ -1476,14 +1498,83 @@ function checkPaymentStatus(transactionId, statusUrl) {
                         break;
                         
                     default:
-                        // Update both regular status and popup status
-                        if (statusText) {
-                            statusText.textContent = `Checking payment status... (${attempts}/${maxAttempts})`;
+                        // Update status
+                        const alertContainer = document.querySelector('.alert.warning .alert-content h4');
+                        if (alertContainer) {
+                            alertContainer.textContent = `Still Checking... (${attempts}/${maxAttempts})`;
                         }
-                        const popupStatus = document.getElementById('popup-status');
-                        if (popupStatus) {
-                            popupStatus.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking payment status... (${attempts}/${maxAttempts})`;
-                        }
+                }
+            }
+            
+            if (attempts >= maxAttempts) {
+                clearInterval(statusChecker);
+                showPaymentTimeout();
+            }
+        })
+        .catch(error => {
+            console.error('Status check error:', error);
+            clearInterval(statusChecker);
+            showPaymentError();
+        });
+    }, 5000);
+}
+
+function checkPaymentStatus(transactionId, statusUrl) {
+    let attempts = 0;
+    const maxAttempts = 60; // Check for 5 minutes (every 5 seconds)
+    let popupClosed = false;
+    let statusChecker;
+    
+    // Function to update status display
+    const updateStatusDisplay = (message, isError = false) => {
+        const statusText = document.getElementById('status-text');
+        const popupStatus = document.getElementById('popup-status');
+        
+        if (statusText) {
+            statusText.textContent = message;
+        }
+        if (popupStatus) {
+            const icon = isError ? 'fas fa-exclamation-triangle' : 'fas fa-spinner fa-spin';
+            popupStatus.innerHTML = `<i class="${icon}"></i> ${message}`;
+        }
+    };
+    
+    statusChecker = setInterval(() => {
+        attempts++;
+        
+        // If popup was closed, reduce checking frequency after 30 seconds
+        if (popupClosed && attempts > 6) {
+            clearInterval(statusChecker);
+            showPopupClosedOptions(transactionId, statusUrl);
+            return;
+        }
+        
+        fetch(statusUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                switch (data.payment_status) {
+                    case 'success':
+                        clearInterval(statusChecker);
+                        showPaymentSuccess(data);
+                        break;
+                        
+                    case 'failed':
+                        clearInterval(statusChecker);
+                        showPaymentFailed(data);
+                        break;
+                        
+                    case 'expired':
+                        clearInterval(statusChecker);
+                        showPaymentExpired(data);
+                        break;
+                        
+                    default:
+                        // Update status display
+                        const statusMessage = popupClosed 
+                            ? `Checking payment status... (${attempts}/6 - popup closed)`
+                            : `Checking payment status... (${attempts}/${maxAttempts})`;
+                        updateStatusDisplay(statusMessage);
                 }
             }
             
@@ -1501,6 +1592,14 @@ function checkPaymentStatus(transactionId, statusUrl) {
             }
         });
     }, 5000); // Check every 5 seconds
+    
+    // Return function to notify when popup is closed
+    return {
+        notifyPopupClosed: () => {
+            popupClosed = true;
+            updateStatusDisplay('Payment popup closed. Still checking for completion...', true);
+        }
+    };
 }
 
 function showPaymentSuccess(data) {
@@ -1587,9 +1686,9 @@ function openPaymentPopup(paymentUrl) {
         const checkClosed = setInterval(() => {
             if (paymentPopup.closed) {
                 clearInterval(checkClosed);
-                const statusElement = document.getElementById('popup-status');
-                if (statusElement) {
-                    statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking payment status...';
+                // Notify status checker that popup was closed
+                if (window.currentStatusController) {
+                    window.currentStatusController.notifyPopupClosed();
                 }
             }
         }, 1000);
