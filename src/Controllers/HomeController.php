@@ -35,6 +35,17 @@ class HomeController extends BaseController
         ]);
     }
     
+    public function about()
+    {
+        // Get platform statistics for about page
+        $stats = $this->getHomeStatistics();
+        
+        $this->view('home/about', [
+            'stats' => $stats,
+            'title' => 'About SmartCast - Digital Voting Platform'
+        ]);
+    }
+    
     /**
      * Get real statistics for homepage
      */

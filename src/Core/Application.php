@@ -42,6 +42,7 @@ class Application
     {
         // Public routes
         $this->router->get('/', 'HomeController@index');
+        $this->router->get('/about', 'HomeController@about');
         $this->router->get('/pricing', 'AuthController@showPricing');
         $this->router->get('/login', 'AuthController@showLogin');
         $this->router->post('/login', 'AuthController@login');

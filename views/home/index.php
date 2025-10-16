@@ -57,10 +57,10 @@ include __DIR__ . '/../layout/public_header.php';
                     <?php if (!isset($_SESSION['user_id'])): ?>
                         <div class="hero-actions mb-5">
                             <a href="<?= APP_URL ?>/register" class="btn btn-warning btn-lg me-3 px-5 py-3 rounded-pill shadow-lg hover-lift">
-                                <i class="fas fa-rocket me-2"></i>Start Free Trial
+                                <i class="fas fa-rocket me-2"></i>100% Free
                             </a>
                             <a href="<?= APP_URL ?>/events" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill hover-lift">
-                                <i class="fas fa-play me-2"></i>Watch Demo
+                                <i class="fas fa-play me-2"></i>Vote Now
                             </a>
                         </div>
                     <?php else: ?>
@@ -460,7 +460,7 @@ include __DIR__ . '/../layout/public_header.php';
                     <h2 class="display-5 fw-bold mb-4 text-white">Ready to Transform Your Events?</h2>
                     <p class="lead mb-0 text-light">
                         Join thousands of event organizers who trust SmartCast for their voting needs. 
-                        Start your free trial today and experience the future of digital voting.
+                        Start your FREE Events today and experience the future of digital voting.
                     </p>
                 </div>
             </div>
@@ -468,7 +468,7 @@ include __DIR__ . '/../layout/public_header.php';
                 <div class="cta-actions">
                     <?php if (!isset($_SESSION['user_id'])): ?>
                         <a href="<?= APP_URL ?>/register" class="btn btn-warning btn-lg px-5 py-3 rounded-pill shadow-lg hover-lift">
-                            <i class="fas fa-rocket me-2"></i>Start Free Trial
+                            <i class="fas fa-rocket me-2"></i>Start Now. 100% Free
                         </a>
                     <?php else: ?>
                         <a href="<?= ORGANIZER_URL ?>/events/create" class="btn btn-warning btn-lg px-5 py-3 rounded-pill shadow-lg hover-lift">
