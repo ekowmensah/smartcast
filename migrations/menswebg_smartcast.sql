@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Oct 13, 2025 at 01:07 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost:3306
+-- Generation Time: Oct 16, 2025 at 04:28 AM
+-- Server version: 10.6.18-MariaDB
+-- PHP Version: 8.1.28
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `smartcast`
+-- Database: `menswebg_smartcast`
 --
 
 -- --------------------------------------------------------
@@ -111,7 +111,62 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `details`, `ip_address`, `c
 (263, NULL, 'vote_cast', '{\"transaction_id\":98,\"event_id\":39,\"contestant_id\":89,\"amount\":\"1.00\"}', '::1', '2025-10-13 06:51:58'),
 (264, 3, 'logout', '[]', '::1', '2025-10-13 09:17:16'),
 (265, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '::1', '2025-10-13 09:19:27'),
-(266, NULL, 'vote_cast', '{\"transaction_id\":100,\"event_id\":41,\"contestant_id\":207,\"amount\":\"7.00\"}', '::1', '2025-10-13 10:15:18');
+(266, NULL, 'vote_cast', '{\"transaction_id\":100,\"event_id\":41,\"contestant_id\":207,\"amount\":\"7.00\"}', '::1', '2025-10-13 10:15:18'),
+(267, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.157.28\"}', '154.161.157.28', '2025-10-13 15:35:11'),
+(268, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.161.157.28', '2025-10-13 15:35:16'),
+(269, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.171.75\"}', '154.161.171.75', '2025-10-13 15:47:39'),
+(270, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.171.75\"}', '154.161.171.75', '2025-10-13 15:48:10'),
+(271, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.171.75\"}', '154.161.171.75', '2025-10-13 15:49:52'),
+(272, NULL, 'vote_cast', '{\"transaction_id\":101,\"event_id\":41,\"contestant_id\":207,\"amount\":\"4000.00\"}', '154.161.171.75', '2025-10-13 15:54:48'),
+(273, NULL, 'vote_cast', '{\"transaction_id\":102,\"event_id\":41,\"contestant_id\":208,\"amount\":\"10000.00\"}', '154.161.171.75', '2025-10-13 15:56:43'),
+(274, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.161.171.75', '2025-10-13 16:03:24'),
+(275, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.160.27.52\"}', '154.160.27.52', '2025-10-13 17:00:29'),
+(276, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.160.27.52\"}', '154.160.27.52', '2025-10-13 17:00:35'),
+(277, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.160.27.52\"}', '154.160.27.52', '2025-10-13 17:00:48'),
+(278, NULL, 'vote_cast', '{\"transaction_id\":103,\"event_id\":41,\"contestant_id\":207,\"amount\":\"1.00\"}', '154.160.27.52', '2025-10-13 17:01:58'),
+(279, NULL, 'vote_cast', '{\"transaction_id\":104,\"event_id\":41,\"contestant_id\":208,\"amount\":\"1.00\"}', '154.160.27.52', '2025-10-13 17:03:44'),
+(280, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.160.4.234\"}', '154.160.4.234', '2025-10-13 21:51:47'),
+(281, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.160.4.234\"}', '154.160.4.234', '2025-10-13 21:52:00'),
+(282, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.160.4.234', '2025-10-13 21:52:25'),
+(283, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.145.215\"}', '154.161.145.215', '2025-10-14 03:57:32'),
+(284, NULL, 'login_failed', '{\"email\":\"vincent5@gmail.com\",\"ip\":\"154.161.145.215\"}', '154.161.145.215', '2025-10-14 03:57:53'),
+(285, NULL, 'login_failed', '{\"email\":\"vincent5@gmail.com\",\"ip\":\"154.161.145.215\"}', '154.161.145.215', '2025-10-14 03:57:59'),
+(286, NULL, 'login_failed', '{\"email\":\"vincent5@gmail.com\",\"ip\":\"154.161.145.215\"}', '154.161.145.215', '2025-10-14 03:58:04'),
+(287, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.1.141\"}', '154.161.1.141', '2025-10-14 08:25:39'),
+(288, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.161.1.141', '2025-10-14 08:25:49'),
+(289, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-14 11:19:00'),
+(290, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-14 11:23:05'),
+(291, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-14 16:35:58'),
+(292, NULL, 'vote_completion', '{\"transaction_id\":105,\"vote_id\":85,\"event_id\":43,\"contestant_id\":215,\"amount\":\"3.00\",\"vote_count\":null,\"sms_sent\":false,\"sms_error\":\"No active SMS gateway configured\"}', '154.161.43.144', '2025-10-14 21:52:17'),
+(293, NULL, 'vote_cast', '{\"transaction_id\":105,\"event_id\":43,\"contestant_id\":215,\"amount\":\"3.00\"}', '154.161.43.144', '2025-10-14 21:52:17'),
+(294, NULL, 'vote_completion', '{\"transaction_id\":106,\"vote_id\":86,\"event_id\":43,\"contestant_id\":215,\"amount\":\"4.00\",\"vote_count\":null,\"sms_sent\":true,\"sms_error\":null}', '154.161.43.144', '2025-10-14 21:54:41'),
+(295, NULL, 'vote_cast', '{\"transaction_id\":106,\"event_id\":43,\"contestant_id\":215,\"amount\":\"4.00\"}', '154.161.43.144', '2025-10-14 21:54:41'),
+(296, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.160.27.2\"}', '154.160.27.2', '2025-10-14 21:59:12'),
+(297, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-14 21:59:17'),
+(298, 3, 'plan_updated', '{\"plan_id\":\"5\",\"plan_name\":\"Free\",\"changes_applied_to_subscribers\":true}', '154.160.27.2', '2025-10-14 22:00:08'),
+(299, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.43.144\"}', '154.161.43.144', '2025-10-14 22:03:56'),
+(300, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.161.43.144', '2025-10-14 22:04:08'),
+(301, 3, 'logout', '[]', '154.161.43.144', '2025-10-14 22:05:19'),
+(302, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '154.161.43.144', '2025-10-14 22:05:24'),
+(303, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.160.27.2\"}', '154.160.27.2', '2025-10-15 13:58:48'),
+(304, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-15 13:58:52'),
+(305, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-15 22:55:39'),
+(306, NULL, 'vote_completion', '{\"transaction_id\":117,\"vote_id\":87,\"event_id\":43,\"contestant_id\":214,\"amount\":\"1.00\",\"vote_count\":null,\"sms_sent\":true,\"sms_error\":null}', '154.160.27.2', '2025-10-15 23:02:56'),
+(307, NULL, 'vote_cast', '{\"transaction_id\":117,\"event_id\":43,\"contestant_id\":214,\"amount\":\"1.00\"}', '154.160.27.2', '2025-10-15 23:02:56'),
+(308, NULL, 'vote_completion', '{\"transaction_id\":148,\"vote_id\":98,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\",\"vote_count\":null,\"sms_sent\":true,\"sms_error\":null}', '154.160.27.2', '2025-10-16 00:33:49'),
+(309, NULL, 'vote_cast', '{\"transaction_id\":148,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\"}', '154.160.27.2', '2025-10-16 00:33:49'),
+(310, NULL, 'vote_completion', '{\"transaction_id\":151,\"vote_id\":100,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\",\"vote_count\":null,\"sms_sent\":true,\"sms_error\":null}', '154.160.27.2', '2025-10-16 00:38:37'),
+(311, NULL, 'vote_cast', '{\"transaction_id\":151,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\"}', '154.160.27.2', '2025-10-16 00:38:37'),
+(312, NULL, 'vote_completion', '{\"transaction_id\":149,\"vote_id\":102,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\",\"vote_count\":null,\"sms_sent\":true,\"sms_error\":null}', '154.160.27.2', '2025-10-16 00:47:46'),
+(313, NULL, 'vote_cast', '{\"transaction_id\":149,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\"}', '154.160.27.2', '2025-10-16 00:47:46'),
+(314, NULL, 'login_failed', '{\"email\":\"ekowme@gmail.com\",\"ip\":\"154.161.58.235\"}', '154.161.58.235', '2025-10-16 01:13:43'),
+(315, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.161.58.235', '2025-10-16 01:13:52'),
+(316, NULL, 'vote_completion', '{\"transaction_id\":155,\"vote_id\":104,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\",\"vote_count\":null,\"sms_sent\":true,\"sms_error\":null}', '154.160.27.2', '2025-10-16 11:53:56'),
+(317, NULL, 'vote_cast', '{\"transaction_id\":155,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\"}', '154.160.27.2', '2025-10-16 11:53:56'),
+(318, 17, 'login', '{\"email\":\"ekowmee@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-16 11:57:44'),
+(319, NULL, 'vote_completion', '{\"transaction_id\":157,\"vote_id\":105,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\",\"vote_count\":null,\"sms_sent\":true,\"sms_error\":null}', '154.160.27.2', '2025-10-16 12:11:10'),
+(320, NULL, 'vote_cast', '{\"transaction_id\":157,\"event_id\":43,\"contestant_id\":210,\"amount\":\"1.00\"}', '154.160.27.2', '2025-10-16 12:11:10'),
+(321, 3, 'login', '{\"email\":\"ekowme@gmail.com\",\"success\":true}', '154.160.27.2', '2025-10-16 12:22:59');
 
 -- --------------------------------------------------------
 
@@ -130,18 +185,6 @@ CREATE TABLE `categories` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `categories`
---
-
-INSERT INTO `categories` (`id`, `event_id`, `tenant_id`, `name`, `description`, `created_by`, `display_order`, `created_at`, `updated_at`) VALUES
-(161, 41, 22, 'Best Music Group', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(162, 41, 22, 'Hiplife Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(163, 41, 22, 'Gospel Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(164, 41, 22, 'Reggae Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(165, 41, 22, 'Hilife Song of the Year', '', 17, 0, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(166, 43, 22, 'CONTESTANTS', 'ALL CONTESTANTS', 17, 0, '2025-10-13 09:52:28', '2025-10-13 09:52:28');
 
 -- --------------------------------------------------------
 
@@ -164,26 +207,6 @@ CREATE TABLE `contestants` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `contestants`
---
-
-INSERT INTO `contestants` (`id`, `tenant_id`, `event_id`, `name`, `contestant_code`, `image_url`, `bio`, `display_order`, `active`, `created_by`, `created_at`, `updated_at`) VALUES
-(202, 22, 41, 'Sarkodie', 'T2217', 'public/uploads/nominees/nominees_68ecc06a5863d.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(203, 22, 41, 'Kofi Kinaata', 'T2218', 'public/uploads/nominees/nominees_68ecc06a7ef31.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(204, 22, 41, 'Obrafour', 'T2219', 'public/uploads/nominees/nominees_68ecc06a9a105.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(205, 22, 41, 'Lord Kenya', 'T2220', 'public/uploads/nominees/nominees_68ecc06a9e3fa.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(206, 22, 41, 'Medikal', 'T2221', 'public/uploads/nominees/nominees_68ecc06aac5c2.jpeg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(207, 22, 41, 'Dadie Opanka', 'T2222', 'public/uploads/nominees/nominees_68ecbff310b2c.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(208, 22, 41, 'Shatta Wale', 'T2223', 'public/uploads/nominees/nominees_68ecbfda50617.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(209, 22, 41, 'Stonebwoy', 'T2224', 'public/uploads/nominees/nominees_68ecbe00308f3.jpg', '', 0, 1, 17, '2025-10-13 08:53:20', '2025-10-13 09:26:15'),
-(210, 22, 43, 'NANA ADJOA', 'T2225', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(211, 22, 43, 'ROSEMARY', 'T2226', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(212, 22, 43, 'KING PALUTA', 'T2227', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(213, 22, 43, 'JOHN DOE', 'T2228', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(214, 22, 43, 'JESSICA', 'T2229', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(215, 22, 43, 'MANSAH', 'T2230', NULL, '', 0, 1, 17, '2025-10-13 09:52:28', '2025-10-13 09:52:28');
-
 -- --------------------------------------------------------
 
 --
@@ -201,40 +224,6 @@ CREATE TABLE `contestant_categories` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `contestant_categories`
---
-
-INSERT INTO `contestant_categories` (`id`, `contestant_id`, `category_id`, `short_code`, `display_order`, `active`, `created_at`, `updated_at`) VALUES
-(211, 202, 161, 'YL05', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(212, 202, 162, 'TP67', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(213, 202, 163, 'CL88', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(214, 202, 164, 'JN50', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(215, 202, 165, 'LR14', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(216, 203, 161, 'MM90', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(217, 203, 162, 'FL74', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(218, 203, 163, 'WF83', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(219, 203, 164, 'UC70', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(220, 203, 165, 'SB09', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(221, 204, 162, 'NA62', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(222, 204, 165, 'XF08', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(223, 205, 163, 'WK41', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(224, 206, 161, 'VE66', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(225, 206, 162, 'MH42', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(226, 206, 164, 'FF04', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(227, 207, 162, 'AM06', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(228, 208, 162, 'YH29', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(229, 208, 165, 'NR32', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(230, 209, 162, 'FP50', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(231, 209, 164, 'AY43', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(232, 209, 165, 'QK57', 0, 1, '2025-10-13 09:26:15', '2025-10-13 09:26:15'),
-(233, 210, 166, 'PX27', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(234, 211, 166, 'JX62', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(235, 212, 166, 'RS01', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(236, 213, 166, 'JZ56', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(237, 214, 166, 'RA54', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28'),
-(238, 215, 166, 'HV69', 0, 1, '2025-10-13 09:52:28', '2025-10-13 09:52:28');
-
 -- --------------------------------------------------------
 
 --
@@ -250,7 +239,7 @@ CREATE TABLE `events` (
   `featured_image` varchar(500) DEFAULT NULL,
   `start_date` datetime DEFAULT NULL,
   `end_date` datetime DEFAULT NULL,
-  `vote_price` decimal(10,2) DEFAULT 0.50 COMMENT 'Price per vote in GHS',
+  `vote_price` decimal(10,2) DEFAULT 0.50 COMMENT 'Price per vote in USD',
   `active` tinyint(1) DEFAULT 1,
   `status` enum('draft','active','suspended','closed','archived') DEFAULT 'draft',
   `visibility` enum('private','public','unlisted') DEFAULT 'private',
@@ -268,15 +257,6 @@ CREATE TABLE `events` (
   `deactivated_at` timestamp NULL DEFAULT NULL,
   `deactivated_by` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `events`
---
-
-INSERT INTO `events` (`id`, `tenant_id`, `name`, `code`, `description`, `featured_image`, `start_date`, `end_date`, `vote_price`, `active`, `status`, `visibility`, `admin_status`, `admin_notes`, `created_by`, `suspended_reason`, `suspended_by`, `suspended_at`, `closed_at`, `archived_at`, `created_at`, `updated_at`, `results_visible`, `deactivated_at`, `deactivated_by`) VALUES
-(41, 22, 'Ghana Music Awards 25', 'GHANAMUSIC', '', 'public/uploads/events/events_68ecb14632ac9.jpeg', '2025-10-13 07:55:00', '2025-10-15 07:55:00', 1.00, 1, 'active', 'public', 'pending', NULL, 17, NULL, NULL, NULL, NULL, NULL, '2025-10-13 07:59:02', '2025-10-13 09:38:06', 0, NULL, NULL),
-(42, 22, 'Breman Excellence Awards', 'BREMANEXCE', '', 'public/uploads/events/events_68ecb487de9ae.jpg', '2025-10-13 08:12:00', '2025-10-16 08:12:00', 1.00, 1, 'draft', 'public', 'approved', NULL, 17, NULL, NULL, NULL, NULL, NULL, '2025-10-13 08:12:56', '2025-10-13 08:16:00', 1, NULL, NULL),
-(43, 22, 'MISS BREMAN ODWIRA', 'MISSBREMAN', '', 'public/uploads/events/events_68eccbdc82b13.jpeg', '2025-10-13 09:50:00', '2025-10-18 09:51:00', 1.00, 1, 'active', 'public', 'pending', NULL, 17, NULL, NULL, NULL, NULL, NULL, '2025-10-13 09:52:28', '2025-10-13 10:09:08', 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -376,13 +356,6 @@ CREATE TABLE `leaderboard_cache` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `leaderboard_cache`
---
-
-INSERT INTO `leaderboard_cache` (`id`, `event_id`, `contestant_id`, `category_id`, `total_votes`, `updated_at`) VALUES
-(104, 41, 207, 162, 7, '2025-10-13 10:15:18');
-
 -- --------------------------------------------------------
 
 --
@@ -397,6 +370,84 @@ CREATE TABLE `otp_requests` (
   `consumed` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_gateways`
+--
+
+CREATE TABLE `payment_gateways` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `provider` varchar(50) NOT NULL,
+  `config` text NOT NULL COMMENT 'JSON configuration including API keys, URLs, etc.',
+  `supported_methods` text NOT NULL COMMENT 'JSON array of supported payment methods',
+  `is_active` tinyint(1) NOT NULL DEFAULT 0,
+  `is_default` tinyint(1) NOT NULL DEFAULT 0,
+  `priority` int(11) NOT NULL DEFAULT 1 COMMENT 'Lower number = higher priority',
+  `tenant_id` int(11) DEFAULT NULL COMMENT 'NULL for global gateways',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `payment_gateways`
+--
+
+INSERT INTO `payment_gateways` (`id`, `name`, `provider`, `config`, `supported_methods`, `is_active`, `is_default`, `priority`, `tenant_id`, `created_at`, `updated_at`) VALUES
+(1, 'Paystack', 'paystack', '{\"public_key\":\"pk_live_8ae357bd04d06ce84d9f29d6ed4fb4936a8f3866\",\"secret_key\":\"sk_live_fe4a5e50d0bd6f168dc3c024ebf8aac63e08b0be\",\"webhook_secret\":\"\",\"base_url\":\"https:\\/\\/api.paystack.co\",\"currency\":\"GHS\"}', '[\"mobile_money\", \"card\", \"bank_transfer\"]', 1, 1, 1, NULL, '2025-10-14 19:10:37', '2025-10-15 02:29:25'),
+(2, 'Hubtel', 'hubtel', '{\"client_id\": \"\", \"client_secret\": \"\", \"merchant_account\": \"\", \"base_url\": \"https://api.hubtel.com\", \"currency\": \"GHS\"}', '[\"mobile_money\", \"card\"]', 0, 0, 2, NULL, '2025-10-14 19:10:37', '2025-10-14 19:10:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_transactions`
+--
+
+CREATE TABLE `payment_transactions` (
+  `id` int(11) NOT NULL,
+  `reference` varchar(100) NOT NULL COMMENT 'Internal payment reference',
+  `gateway_id` int(11) NOT NULL,
+  `gateway_reference` varchar(255) DEFAULT NULL COMMENT 'Gateway transaction ID',
+  `amount` decimal(10,2) NOT NULL,
+  `currency` varchar(3) NOT NULL DEFAULT 'GHS',
+  `payment_method` enum('mobile_money','card','bank_transfer','other') NOT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `customer_name` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `metadata` text DEFAULT NULL COMMENT 'JSON metadata',
+  `status` enum('pending','success','failed','cancelled','expired') NOT NULL DEFAULT 'pending',
+  `gateway_response` text DEFAULT NULL COMMENT 'JSON response from gateway',
+  `webhook_verified` tinyint(1) NOT NULL DEFAULT 0,
+  `tenant_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `related_type` enum('vote','subscription','bundle','other') DEFAULT NULL,
+  `related_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payment_webhook_logs`
+--
+
+CREATE TABLE `payment_webhook_logs` (
+  `id` int(11) NOT NULL,
+  `gateway_provider` varchar(50) NOT NULL,
+  `event_type` varchar(100) DEFAULT NULL,
+  `payload` text NOT NULL,
+  `signature` varchar(255) DEFAULT NULL,
+  `processed` tinyint(1) NOT NULL DEFAULT 0,
+  `processing_result` text DEFAULT NULL,
+  `transaction_reference` varchar(100) DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -418,7 +469,7 @@ CREATE TABLE `payouts` (
   `payout_type` enum('manual','automatic','instant') DEFAULT 'manual',
   `payout_method_id` int(11) DEFAULT NULL,
   `recipient_details` text NOT NULL,
-  `status` enum('queued','processing','success','failed','cancelled') DEFAULT 'queued',
+  `status` enum('pending','approved','processing','paid','failed','rejected','cancelled','queued','success') DEFAULT NULL,
   `provider_reference` varchar(100) DEFAULT NULL,
   `failure_reason` text DEFAULT NULL,
   `processed_at` timestamp NULL DEFAULT NULL,
@@ -584,13 +635,6 @@ CREATE TABLE `revenue_shares` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `revenue_shares`
---
-
-INSERT INTO `revenue_shares` (`id`, `transaction_id`, `tenant_id`, `amount`, `revenue_type`, `percentage_applied`, `original_amount`, `description`, `fee_rule_id`, `created_at`) VALUES
-(47, 100, 22, 2.45, 'platform_fee', NULL, 0.00, NULL, 9, '2025-10-13 10:15:18');
-
 -- --------------------------------------------------------
 
 --
@@ -632,6 +676,98 @@ CREATE TABLE `risk_blocks` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `sms_gateways`
+--
+
+CREATE TABLE `sms_gateways` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `type` enum('mnotify','hubtel') NOT NULL,
+  `api_key` varchar(255) NOT NULL,
+  `client_id` varchar(255) DEFAULT NULL,
+  `client_secret` varchar(255) DEFAULT NULL,
+  `sender_id` varchar(50) NOT NULL,
+  `base_url` varchar(255) DEFAULT NULL,
+  `test_phone` varchar(20) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `priority` int(11) DEFAULT 1,
+  `config` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`config`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sms_gateways`
+--
+
+INSERT INTO `sms_gateways` (`id`, `name`, `type`, `api_key`, `client_id`, `client_secret`, `sender_id`, `base_url`, `test_phone`, `is_active`, `priority`, `config`, `created_at`, `updated_at`) VALUES
+(1, 'mNotify', 'mnotify', 'sOc85q3BJOCmGfuaqAxg4SWYg', '', '', 'Mensweb', NULL, '233545644749', 1, 1, NULL, '2025-10-14 18:21:19', '2025-10-14 19:19:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sms_logs`
+--
+
+CREATE TABLE `sms_logs` (
+  `id` int(11) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `message` text NOT NULL,
+  `gateway_id` int(11) DEFAULT NULL,
+  `gateway_type` varchar(20) NOT NULL,
+  `status` enum('pending','sent','failed','delivered','undelivered') DEFAULT 'pending',
+  `response` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`response`)),
+  `vote_id` int(11) DEFAULT NULL,
+  `transaction_id` int(11) DEFAULT NULL,
+  `retry_count` int(11) DEFAULT 0,
+  `last_retry_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sms_logs`
+--
+
+INSERT INTO `sms_logs` (`id`, `phone`, `message`, `gateway_id`, `gateway_type`, `status`, `response`, `vote_id`, `transaction_id`, `retry_count`, `last_retry_at`, `created_at`) VALUES
+(1, '0545644749', 'Message generation failed', NULL, 'unknown', 'failed', '{\"error\":\"No active SMS gateway configured\"}', NULL, NULL, 0, NULL, '2025-10-14 21:52:17'),
+(2, '0545644749', 'Thank you for voting!\n\nNominee: MANSAH\nEvent: MISS BREMAN ODWIRA\nCategory: CONTESTANTS\nVotes: 4\nAmount: GH₵4.00\nReceipt: XR2APNC6\n\nThank you for your participation!', 1, 'mnotify', 'sent', '{\"success\":true,\"http_code\":200,\"response\":{\"status\":\"success\",\"code\":\"2000\",\"message\":\"messages sent successfully\",\"summary\":{\"_id\":\"7E80E387-2CD6-4F17-BA5A-C5BD68725A9F\",\"message_id\":\"20251014233545644749V2\",\"type\":\"API QUICK SMS\",\"total_sent\":1,\"contacts\":1,\"total_rejected\":0,\"numbers_sent\":[\"+233545644749\"],\"credit_used\":3,\"credit_left\":881,\"wallet_used\":0}},\"raw_response\":\"{\\\"status\\\":\\\"success\\\",\\\"code\\\":\\\"2000\\\",\\\"message\\\":\\\"messages sent successfully\\\",\\\"summary\\\":{\\\"_id\\\":\\\"7E80E387-2CD6-4F17-BA5A-C5BD68725A9F\\\",\\\"message_id\\\":\\\"20251014233545644749V2\\\",\\\"type\\\":\\\"API QUICK SMS\\\",\\\"total_sent\\\":1,\\\"contacts\\\":1,\\\"total_rejected\\\":0,\\\"numbers_sent\\\":[\\\"+233545644749\\\"],\\\"credit_used\\\":3,\\\"credit_left\\\":881,\\\"wallet_used\\\":0}}\"}', NULL, NULL, 0, NULL, '2025-10-14 21:54:41'),
+(3, '0545644749', 'Thank you for voting!\n\nNominee: JESSICA\nEvent: MISS BREMAN ODWIRA\nCategory: CONTESTANTS\nVotes: 1\nAmount: GH₵1.00\nReceipt: GAN7O6V9\n\nThank you for your participation!', 1, 'mnotify', 'sent', '{\"success\":true,\"http_code\":200,\"response\":{\"status\":\"success\",\"code\":\"2000\",\"message\":\"messages sent successfully\",\"summary\":{\"_id\":\"F92DF8F6-20DC-492B-B7C4-4315837C4118\",\"message_id\":\"20251015233545644749V2\",\"type\":\"API QUICK SMS\",\"total_sent\":1,\"contacts\":1,\"total_rejected\":0,\"numbers_sent\":[\"+233545644749\"],\"credit_used\":3,\"credit_left\":851,\"wallet_used\":0}},\"raw_response\":\"{\\\"status\\\":\\\"success\\\",\\\"code\\\":\\\"2000\\\",\\\"message\\\":\\\"messages sent successfully\\\",\\\"summary\\\":{\\\"_id\\\":\\\"F92DF8F6-20DC-492B-B7C4-4315837C4118\\\",\\\"message_id\\\":\\\"20251015233545644749V2\\\",\\\"type\\\":\\\"API QUICK SMS\\\",\\\"total_sent\\\":1,\\\"contacts\\\":1,\\\"total_rejected\\\":0,\\\"numbers_sent\\\":[\\\"+233545644749\\\"],\\\"credit_used\\\":3,\\\"credit_left\\\":851,\\\"wallet_used\\\":0}}\"}', NULL, NULL, 0, NULL, '2025-10-15 23:02:56'),
+(4, '0545644749', 'Thank you for voting!\n\nNominee: NANA ADJOA\nEvent: MISS BREMAN ODWIRA\nCategory: CONTESTANTS\nVotes: 1\nAmount: GH₵1.00\nReceipt: U405YOFR\n\nThank you for your participation!', 1, 'mnotify', 'sent', '{\"success\":true,\"http_code\":200,\"response\":{\"status\":\"success\",\"code\":\"2000\",\"message\":\"messages sent successfully\",\"summary\":{\"_id\":\"F917EE3D-9950-462A-AFB2-8B857425C680\",\"message_id\":\"20251015233545644749V2\",\"type\":\"API QUICK SMS\",\"total_sent\":1,\"contacts\":1,\"total_rejected\":0,\"numbers_sent\":[\"+233545644749\"],\"credit_used\":3,\"credit_left\":848,\"wallet_used\":0}},\"raw_response\":\"{\\\"status\\\":\\\"success\\\",\\\"code\\\":\\\"2000\\\",\\\"message\\\":\\\"messages sent successfully\\\",\\\"summary\\\":{\\\"_id\\\":\\\"F917EE3D-9950-462A-AFB2-8B857425C680\\\",\\\"message_id\\\":\\\"20251015233545644749V2\\\",\\\"type\\\":\\\"API QUICK SMS\\\",\\\"total_sent\\\":1,\\\"contacts\\\":1,\\\"total_rejected\\\":0,\\\"numbers_sent\\\":[\\\"+233545644749\\\"],\\\"credit_used\\\":3,\\\"credit_left\\\":848,\\\"wallet_used\\\":0}}\"}', NULL, NULL, 0, NULL, '2025-10-16 00:33:49'),
+(5, '0545644749', 'Thank you for voting!\n\nNominee: NANA ADJOA\nEvent: MISS BREMAN ODWIRA\nCategory: CONTESTANTS\nVotes: 1\nAmount: GH₵1.00\nReceipt: EWG6YNRQ\n\nThank you for your participation!', 1, 'mnotify', 'sent', '{\"success\":true,\"http_code\":200,\"response\":{\"status\":\"success\",\"code\":\"2000\",\"message\":\"messages sent successfully\",\"summary\":{\"_id\":\"00C2FD4C-F55F-4E27-8680-5284D37E8F80\",\"message_id\":\"20251015233545644749V2\",\"type\":\"API QUICK SMS\",\"total_sent\":1,\"contacts\":1,\"total_rejected\":0,\"numbers_sent\":[\"+233545644749\"],\"credit_used\":3,\"credit_left\":845,\"wallet_used\":0}},\"raw_response\":\"{\\\"status\\\":\\\"success\\\",\\\"code\\\":\\\"2000\\\",\\\"message\\\":\\\"messages sent successfully\\\",\\\"summary\\\":{\\\"_id\\\":\\\"00C2FD4C-F55F-4E27-8680-5284D37E8F80\\\",\\\"message_id\\\":\\\"20251015233545644749V2\\\",\\\"type\\\":\\\"API QUICK SMS\\\",\\\"total_sent\\\":1,\\\"contacts\\\":1,\\\"total_rejected\\\":0,\\\"numbers_sent\\\":[\\\"+233545644749\\\"],\\\"credit_used\\\":3,\\\"credit_left\\\":845,\\\"wallet_used\\\":0}}\"}', NULL, NULL, 0, NULL, '2025-10-16 00:38:37'),
+(6, '0545644749', 'Thank you for voting!\n\nNominee: NANA ADJOA\nEvent: MISS BREMAN ODWIRA\nCategory: CONTESTANTS\nVotes: 1\nAmount: GH₵1.00\nReceipt: O4KI8CVF\n\nThank you for your participation!', 1, 'mnotify', 'sent', '{\"success\":true,\"http_code\":200,\"response\":{\"status\":\"success\",\"code\":\"2000\",\"message\":\"messages sent successfully\",\"summary\":{\"_id\":\"7BC27736-0BD3-42F3-B9FC-E6DB3D6AD7E6\",\"message_id\":\"20251015233545644749V2\",\"type\":\"API QUICK SMS\",\"total_sent\":1,\"contacts\":1,\"total_rejected\":0,\"numbers_sent\":[\"+233545644749\"],\"credit_used\":3,\"credit_left\":842,\"wallet_used\":0}},\"raw_response\":\"{\\\"status\\\":\\\"success\\\",\\\"code\\\":\\\"2000\\\",\\\"message\\\":\\\"messages sent successfully\\\",\\\"summary\\\":{\\\"_id\\\":\\\"7BC27736-0BD3-42F3-B9FC-E6DB3D6AD7E6\\\",\\\"message_id\\\":\\\"20251015233545644749V2\\\",\\\"type\\\":\\\"API QUICK SMS\\\",\\\"total_sent\\\":1,\\\"contacts\\\":1,\\\"total_rejected\\\":0,\\\"numbers_sent\\\":[\\\"+233545644749\\\"],\\\"credit_used\\\":3,\\\"credit_left\\\":842,\\\"wallet_used\\\":0}}\"}', NULL, NULL, 0, NULL, '2025-10-16 00:47:46'),
+(7, '0545644749', 'Thank you for voting!\n\nNominee: NANA ADJOA\nEvent: MISS BREMAN ODWIRA\nCategory: CONTESTANTS\nVotes: 1\nAmount: GH₵1.00\nReceipt: C8K65NB0\n\nThank you for your participation!', 1, 'mnotify', 'sent', '{\"success\":true,\"http_code\":200,\"response\":{\"status\":\"success\",\"code\":\"2000\",\"message\":\"messages sent successfully\",\"summary\":{\"_id\":\"DFF5CD63-0F4D-4203-89B4-65A7F9C372CA\",\"message_id\":\"20251016233545644749V2\",\"type\":\"API QUICK SMS\",\"total_sent\":1,\"contacts\":1,\"total_rejected\":0,\"numbers_sent\":[\"+233545644749\"],\"credit_used\":3,\"credit_left\":839,\"wallet_used\":0}},\"raw_response\":\"{\\\"status\\\":\\\"success\\\",\\\"code\\\":\\\"2000\\\",\\\"message\\\":\\\"messages sent successfully\\\",\\\"summary\\\":{\\\"_id\\\":\\\"DFF5CD63-0F4D-4203-89B4-65A7F9C372CA\\\",\\\"message_id\\\":\\\"20251016233545644749V2\\\",\\\"type\\\":\\\"API QUICK SMS\\\",\\\"total_sent\\\":1,\\\"contacts\\\":1,\\\"total_rejected\\\":0,\\\"numbers_sent\\\":[\\\"+233545644749\\\"],\\\"credit_used\\\":3,\\\"credit_left\\\":839,\\\"wallet_used\\\":0}}\"}', NULL, NULL, 0, NULL, '2025-10-16 11:53:56'),
+(8, '0545644749', 'Thank you for voting!\n\nNominee: NANA ADJOA\nEvent: MISS BREMAN ODWIRA\nCategory: CONTESTANTS\nVotes: 1\nAmount: GH₵1.00\nReceipt: SDWFL0TE\n\nThank you for your participation!', 1, 'mnotify', 'sent', '{\"success\":true,\"http_code\":200,\"response\":{\"status\":\"success\",\"code\":\"2000\",\"message\":\"messages sent successfully\",\"summary\":{\"_id\":\"F9D2A63F-931D-4D07-BEFC-542EB9B2F853\",\"message_id\":\"20251016233545644749V2\",\"type\":\"API QUICK SMS\",\"total_sent\":1,\"contacts\":1,\"total_rejected\":0,\"numbers_sent\":[\"+233545644749\"],\"credit_used\":3,\"credit_left\":836,\"wallet_used\":0}},\"raw_response\":\"{\\\"status\\\":\\\"success\\\",\\\"code\\\":\\\"2000\\\",\\\"message\\\":\\\"messages sent successfully\\\",\\\"summary\\\":{\\\"_id\\\":\\\"F9D2A63F-931D-4D07-BEFC-542EB9B2F853\\\",\\\"message_id\\\":\\\"20251016233545644749V2\\\",\\\"type\\\":\\\"API QUICK SMS\\\",\\\"total_sent\\\":1,\\\"contacts\\\":1,\\\"total_rejected\\\":0,\\\"numbers_sent\\\":[\\\"+233545644749\\\"],\\\"credit_used\\\":3,\\\"credit_left\\\":836,\\\"wallet_used\\\":0}}\"}', NULL, NULL, 0, NULL, '2025-10-16 12:11:10');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sms_templates`
+--
+
+CREATE TABLE `sms_templates` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `type` enum('vote_confirmation','payment_receipt','event_reminder','custom') NOT NULL,
+  `template` text NOT NULL,
+  `variables` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`variables`)),
+  `is_active` tinyint(1) DEFAULT 1,
+  `tenant_id` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sms_templates`
+--
+
+INSERT INTO `sms_templates` (`id`, `name`, `type`, `template`, `variables`, `is_active`, `tenant_id`, `created_at`, `updated_at`) VALUES
+(1, 'Default Vote Confirmation', 'vote_confirmation', 'Thank you for voting!\n\nNominee: {nominee_name}\nEvent: {event_name}\nCategory: {category_name}\nVotes: {vote_count}\nAmount: {amount}\nReceipt: {receipt_number}\n\nThank you for your participation!', '[\"nominee_name\", \"event_name\", \"category_name\", \"vote_count\", \"amount\", \"receipt_number\"]', 1, NULL, '2025-10-14 13:17:26', '2025-10-14 13:17:26'),
+(2, 'Payment Receipt', 'payment_receipt', 'Payment Successful!\n\nAmount: {amount}\nTransaction ID: {transaction_id}\nDate: {date}\nMethod: {payment_method}\n\nThank you!', '[\"amount\", \"transaction_id\", \"date\", \"payment_method\"]', 1, NULL, '2025-10-14 13:17:26', '2025-10-14 13:17:26'),
+(3, 'Event Reminder', 'event_reminder', 'Reminder: {event_name} voting is now live!\n\nVote for your favorite nominees now.\nEvent ends: {end_date}\n\nVote now!', '[\"event_name\", \"end_date\"]', 1, NULL, '2025-10-14 13:17:26', '2025-10-14 13:17:26');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `subscription_plans`
 --
 
@@ -660,10 +796,7 @@ CREATE TABLE `subscription_plans` (
 --
 
 INSERT INTO `subscription_plans` (`id`, `name`, `slug`, `description`, `price`, `billing_cycle`, `max_events`, `max_contestants_per_event`, `max_votes_per_event`, `features`, `fee_rule_id`, `is_popular`, `is_active`, `sort_order`, `trial_days`, `created_at`, `updated_at`) VALUES
-(5, 'Free', 'free', 'Totally FREE!', 0.00, 'lifetime', NULL, NULL, NULL, NULL, 9, 1, 1, 0, 0, '2025-10-10 22:11:57', '2025-10-12 14:54:06'),
-(6, 'Silver Plan', 'silver-plan', '', 1000.00, 'yearly', NULL, NULL, NULL, NULL, 10, 0, 1, 1, 0, '2025-10-12 14:55:38', '2025-10-13 05:48:41'),
-(7, 'Gold Plan', 'gold-plan', 'Gold Plan Package', 2000.00, 'yearly', NULL, NULL, NULL, NULL, 11, 1, 1, 0, 0, '2025-10-12 14:58:05', '2025-10-12 14:58:05'),
-(8, 'Diamond Plan', 'diamond-plan', 'Diamond Plan', 5000.00, 'lifetime', NULL, NULL, NULL, NULL, 12, 0, 1, 0, 0, '2025-10-12 14:59:12', '2025-10-12 15:01:08');
+(5, 'Free', 'free', 'Totally FREE!', 0.00, 'lifetime', NULL, NULL, NULL, NULL, 10, 1, 1, 0, 0, '2025-10-10 22:11:57', '2025-10-14 22:00:08');
 
 -- --------------------------------------------------------
 
@@ -694,7 +827,7 @@ CREATE TABLE `tenants` (
 --
 
 INSERT INTO `tenants` (`id`, `name`, `email`, `phone`, `website`, `address`, `plan`, `current_plan_id`, `subscription_status`, `subscription_expires_at`, `trial_ends_at`, `active`, `verified`, `created_at`, `updated_at`) VALUES
-(22, 'Hope For All', 'ekowmee@gmail.com', NULL, NULL, NULL, 'free', 5, 'trial', NULL, NULL, 1, 1, '2025-10-10 20:31:58', '2025-10-12 14:54:07');
+(22, 'Hope For All', 'ekowmee@gmail.com', NULL, NULL, NULL, 'free', 5, 'trial', NULL, NULL, 1, 1, '2025-10-10 20:31:58', '2025-10-14 18:00:08');
 
 -- --------------------------------------------------------
 
@@ -714,15 +847,11 @@ CREATE TABLE `tenant_balances` (
   `last_payout_amount` decimal(10,2) DEFAULT 0.00,
   `payout_count` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `pending_approval` decimal(10,2) DEFAULT 0.00,
+  `approved_pending` decimal(10,2) DEFAULT 0.00,
+  `processing` decimal(10,2) DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `tenant_balances`
---
-
-INSERT INTO `tenant_balances` (`id`, `tenant_id`, `available`, `pending`, `on_hold`, `total_earned`, `total_paid`, `last_payout_at`, `last_payout_amount`, `payout_count`, `created_at`, `updated_at`) VALUES
-(32, 22, 4.55, 0.00, 0.00, 4.55, 0.00, NULL, 0.00, 0, '2025-10-13 07:53:42', '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -747,7 +876,8 @@ CREATE TABLE `tenant_plan_history` (
 
 INSERT INTO `tenant_plan_history` (`id`, `tenant_id`, `old_plan_id`, `new_plan_id`, `changed_by`, `change_reason`, `effective_date`, `created_at`) VALUES
 (4, 22, 5, 5, NULL, 'Automatic plan update', '2025-10-11 00:01:44', '2025-10-11 00:01:44'),
-(5, 22, 5, 5, NULL, 'Automatic plan update', '2025-10-12 14:54:07', '2025-10-12 14:54:07');
+(5, 22, 5, 5, NULL, 'Automatic plan update', '2025-10-12 14:54:07', '2025-10-12 14:54:07'),
+(6, 22, 5, 5, NULL, 'Automatic plan update', '2025-10-14 18:00:08', '2025-10-14 18:00:08');
 
 -- --------------------------------------------------------
 
@@ -835,14 +965,6 @@ CREATE TABLE `transactions` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `transactions`
---
-
-INSERT INTO `transactions` (`id`, `tenant_id`, `event_id`, `contestant_id`, `category_id`, `bundle_id`, `amount`, `msisdn`, `status`, `provider`, `provider_reference`, `coupon_code`, `referral_code`, `failure_reason`, `created_at`, `updated_at`) VALUES
-(99, 22, 41, 203, 163, 27, 7.00, '233545644749', '', 'momo', 'PAY_35A7F6DBE1', '', '', 'Payment request expired. Please initiate a new payment.', '2025-10-13 10:14:30', '2025-10-13 10:14:41'),
-(100, 22, 41, 207, 162, 27, 7.00, '233545644749', 'success', 'momo', 'MP550665FB', '', '', NULL, '2025-10-13 10:15:11', '2025-10-13 10:15:18');
-
 -- --------------------------------------------------------
 
 --
@@ -866,8 +988,52 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `tenant_id`, `email`, `password_hash`, `role`, `active`, `last_login`, `created_at`, `updated_at`) VALUES
-(3, NULL, 'ekowme@gmail.com', '$2y$10$IdVuCAw45Y7kkjsiqzBwIO99rvD6Fe0oSDQMAzL9DeJ7jzFUpEMFu', 'platform_admin', 1, '2025-10-13 09:19:27', '2025-10-03 11:36:30', '2025-10-13 09:19:27'),
-(17, 22, 'ekowmee@gmail.com', '$2y$10$VVxsBptQb2P1E51R.kV6wuxE82yQnZgoMkaHiW0H.OGpCLLoXJlJa', 'owner', 1, '2025-10-12 10:33:47', '2025-10-10 20:31:58', '2025-10-12 10:33:47');
+(3, NULL, 'ekowme@gmail.com', '$2y$10$IdVuCAw45Y7kkjsiqzBwIO99rvD6Fe0oSDQMAzL9DeJ7jzFUpEMFu', 'platform_admin', 1, '2025-10-16 08:22:59', '2025-10-03 11:36:30', '2025-10-16 08:22:59'),
+(17, 22, 'ekowmee@gmail.com', '$2y$10$VVxsBptQb2P1E51R.kV6wuxE82yQnZgoMkaHiW0H.OGpCLLoXJlJa', 'owner', 1, '2025-10-16 07:57:44', '2025-10-10 20:31:58', '2025-10-16 07:57:44');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_subscriptions`
+--
+
+CREATE TABLE `user_subscriptions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `tenant_id` int(11) DEFAULT NULL,
+  `plan_id` int(11) NOT NULL,
+  `payment_transaction_id` int(11) DEFAULT NULL,
+  `status` enum('active','cancelled','expired','suspended','pending') NOT NULL DEFAULT 'pending',
+  `starts_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `cancelled_at` timestamp NULL DEFAULT NULL,
+  `auto_renew` tinyint(1) NOT NULL DEFAULT 1,
+  `metadata` text DEFAULT NULL COMMENT 'JSON metadata',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_vote_bundles`
+--
+
+CREATE TABLE `user_vote_bundles` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `tenant_id` int(11) DEFAULT NULL,
+  `bundle_id` int(11) NOT NULL,
+  `payment_transaction_id` int(11) DEFAULT NULL,
+  `votes_purchased` int(11) NOT NULL,
+  `votes_used` int(11) NOT NULL DEFAULT 0,
+  `votes_remaining` int(11) NOT NULL,
+  `status` enum('active','expired','used_up') NOT NULL DEFAULT 'active',
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `metadata` text DEFAULT NULL COMMENT 'JSON metadata',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -902,13 +1068,6 @@ CREATE TABLE `votes` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `votes`
---
-
-INSERT INTO `votes` (`id`, `transaction_id`, `tenant_id`, `event_id`, `contestant_id`, `category_id`, `quantity`, `created_at`) VALUES
-(80, 100, 22, 41, 207, 162, 7, '2025-10-13 10:15:18');
-
 -- --------------------------------------------------------
 
 --
@@ -925,16 +1084,6 @@ CREATE TABLE `vote_bundles` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `vote_bundles`
---
-
-INSERT INTO `vote_bundles` (`id`, `event_id`, `name`, `votes`, `price`, `active`, `created_at`, `updated_at`) VALUES
-(27, 41, 'Single Vote', 1, 1.00, 1, '2025-10-13 09:05:50', '2025-10-13 09:05:50'),
-(28, 41, 'Vote Pack (5)', 5, 4.50, 1, '2025-10-13 09:05:51', '2025-10-13 09:05:51'),
-(29, 41, 'Vote Pack (10)', 10, 8.00, 1, '2025-10-13 09:05:51', '2025-10-13 09:05:51'),
-(30, 41, 'Vote Pack (25)', 25, 17.50, 1, '2025-10-13 09:05:51', '2025-10-13 09:05:51');
 
 -- --------------------------------------------------------
 
@@ -955,13 +1104,6 @@ CREATE TABLE `vote_ledger` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `vote_ledger`
---
-
-INSERT INTO `vote_ledger` (`id`, `vote_id`, `transaction_id`, `tenant_id`, `event_id`, `contestant_id`, `category_id`, `quantity`, `hash`, `created_at`) VALUES
-(72, 80, 100, 22, 41, 207, NULL, 7, '8755ebcfed5a1e849e0ad4df3739b3ff4199c8d9b45860aa45eede9887617973', '2025-10-13 10:15:18');
-
 -- --------------------------------------------------------
 
 --
@@ -975,13 +1117,6 @@ CREATE TABLE `vote_receipts` (
   `public_hash` varchar(64) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `vote_receipts`
---
-
-INSERT INTO `vote_receipts` (`id`, `transaction_id`, `short_code`, `public_hash`, `created_at`) VALUES
-(72, 100, 'TI70O6U5', '01e5e84423f32160cd8b5d518dafd61705d045c965c87f97928b1fea9600f6e0', '2025-10-13 10:15:18');
 
 -- --------------------------------------------------------
 
@@ -1120,6 +1255,40 @@ ALTER TABLE `otp_requests`
   ADD KEY `idx_msisdn_expires` (`msisdn`,`expires_at`);
 
 --
+-- Indexes for table `payment_gateways`
+--
+ALTER TABLE `payment_gateways`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_provider_tenant` (`provider`,`tenant_id`),
+  ADD KEY `idx_active_priority` (`is_active`,`priority`),
+  ADD KEY `idx_tenant` (`tenant_id`);
+
+--
+-- Indexes for table `payment_transactions`
+--
+ALTER TABLE `payment_transactions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_reference` (`reference`),
+  ADD KEY `idx_gateway_reference` (`gateway_reference`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_gateway` (`gateway_id`),
+  ADD KEY `idx_tenant` (`tenant_id`),
+  ADD KEY `idx_user` (`user_id`),
+  ADD KEY `idx_related` (`related_type`,`related_id`),
+  ADD KEY `idx_phone` (`phone_number`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
+-- Indexes for table `payment_webhook_logs`
+--
+ALTER TABLE `payment_webhook_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_provider` (`gateway_provider`),
+  ADD KEY `idx_processed` (`processed`),
+  ADD KEY `idx_transaction_reference` (`transaction_reference`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
 -- Indexes for table `payouts`
 --
 ALTER TABLE `payouts`
@@ -1198,6 +1367,37 @@ ALTER TABLE `risk_blocks`
   ADD KEY `idx_type_value_active` (`block_type`,`block_value`,`active`);
 
 --
+-- Indexes for table `sms_gateways`
+--
+ALTER TABLE `sms_gateways`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type_active` (`type`,`is_active`),
+  ADD KEY `idx_priority` (`priority`),
+  ADD KEY `idx_sms_gateways_active_priority` (`is_active`,`priority`);
+
+--
+-- Indexes for table `sms_logs`
+--
+ALTER TABLE `sms_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_phone` (`phone`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_gateway` (`gateway_id`),
+  ADD KEY `idx_vote` (`vote_id`),
+  ADD KEY `idx_transaction` (`transaction_id`),
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `idx_sms_logs_phone_status` (`phone`,`status`),
+  ADD KEY `idx_sms_logs_created_status` (`created_at`,`status`);
+
+--
+-- Indexes for table `sms_templates`
+--
+ALTER TABLE `sms_templates`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_type_active` (`type`,`is_active`),
+  ADD KEY `idx_tenant` (`tenant_id`);
+
+--
 -- Indexes for table `subscription_plans`
 --
 ALTER TABLE `subscription_plans`
@@ -1273,6 +1473,29 @@ ALTER TABLE `users`
   ADD KEY `tenant_id` (`tenant_id`);
 
 --
+-- Indexes for table `user_subscriptions`
+--
+ALTER TABLE `user_subscriptions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user` (`user_id`),
+  ADD KEY `idx_tenant` (`tenant_id`),
+  ADD KEY `idx_plan` (`plan_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_expires_at` (`expires_at`),
+  ADD KEY `idx_payment_transaction` (`payment_transaction_id`);
+
+--
+-- Indexes for table `user_vote_bundles`
+--
+ALTER TABLE `user_vote_bundles`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user` (`user_id`),
+  ADD KEY `idx_tenant` (`tenant_id`),
+  ADD KEY `idx_bundle` (`bundle_id`),
+  ADD KEY `idx_status` (`status`),
+  ADD KEY `idx_payment_transaction` (`payment_transaction_id`);
+
+--
 -- Indexes for table `ussd_sessions`
 --
 ALTER TABLE `ussd_sessions`
@@ -1339,7 +1562,7 @@ ALTER TABLE `webhook_events`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=267;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=322;
 
 --
 -- AUTO_INCREMENT for table `categories`
@@ -1393,12 +1616,30 @@ ALTER TABLE `fraud_events`
 -- AUTO_INCREMENT for table `leaderboard_cache`
 --
 ALTER TABLE `leaderboard_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=130;
 
 --
 -- AUTO_INCREMENT for table `otp_requests`
 --
 ALTER TABLE `otp_requests`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `payment_gateways`
+--
+ALTER TABLE `payment_gateways`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `payment_transactions`
+--
+ALTER TABLE `payment_transactions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+
+--
+-- AUTO_INCREMENT for table `payment_webhook_logs`
+--
+ALTER TABLE `payment_webhook_logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -1441,7 +1682,7 @@ ALTER TABLE `rate_limits`
 -- AUTO_INCREMENT for table `revenue_shares`
 --
 ALTER TABLE `revenue_shares`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `revenue_transactions`
@@ -1456,10 +1697,28 @@ ALTER TABLE `risk_blocks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `sms_gateways`
+--
+ALTER TABLE `sms_gateways`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `sms_logs`
+--
+ALTER TABLE `sms_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT for table `sms_templates`
+--
+ALTER TABLE `sms_templates`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `subscription_plans`
 --
 ALTER TABLE `subscription_plans`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `tenants`
@@ -1471,13 +1730,13 @@ ALTER TABLE `tenants`
 -- AUTO_INCREMENT for table `tenant_balances`
 --
 ALTER TABLE `tenant_balances`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `tenant_plan_history`
 --
 ALTER TABLE `tenant_plan_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `tenant_settings`
@@ -1495,13 +1754,25 @@ ALTER TABLE `tenant_subscriptions`
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=158;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
+-- AUTO_INCREMENT for table `user_subscriptions`
+--
+ALTER TABLE `user_subscriptions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_vote_bundles`
+--
+ALTER TABLE `user_vote_bundles`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `ussd_sessions`
@@ -1513,25 +1784,25 @@ ALTER TABLE `ussd_sessions`
 -- AUTO_INCREMENT for table `votes`
 --
 ALTER TABLE `votes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=106;
 
 --
 -- AUTO_INCREMENT for table `vote_bundles`
 --
 ALTER TABLE `vote_bundles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `vote_ledger`
 --
 ALTER TABLE `vote_ledger`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
 
 --
 -- AUTO_INCREMENT for table `vote_receipts`
 --
 ALTER TABLE `vote_receipts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
 -- AUTO_INCREMENT for table `webhook_endpoints`
@@ -1610,6 +1881,12 @@ ALTER TABLE `leaderboard_cache`
   ADD CONSTRAINT `leaderboard_cache_ibfk_2` FOREIGN KEY (`contestant_id`) REFERENCES `contestants` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `payment_transactions`
+--
+ALTER TABLE `payment_transactions`
+  ADD CONSTRAINT `fk_payment_transactions_gateway` FOREIGN KEY (`gateway_id`) REFERENCES `payment_gateways` (`id`);
+
+--
 -- Constraints for table `payouts`
 --
 ALTER TABLE `payouts`
@@ -1663,6 +1940,20 @@ ALTER TABLE `revenue_transactions`
 --
 ALTER TABLE `risk_blocks`
   ADD CONSTRAINT `risk_blocks_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `sms_logs`
+--
+ALTER TABLE `sms_logs`
+  ADD CONSTRAINT `sms_logs_ibfk_1` FOREIGN KEY (`gateway_id`) REFERENCES `sms_gateways` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `sms_logs_ibfk_2` FOREIGN KEY (`vote_id`) REFERENCES `votes` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `sms_logs_ibfk_3` FOREIGN KEY (`transaction_id`) REFERENCES `transactions` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `sms_templates`
+--
+ALTER TABLE `sms_templates`
+  ADD CONSTRAINT `sms_templates_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `subscription_plans`
@@ -1719,6 +2010,20 @@ ALTER TABLE `transactions`
 --
 ALTER TABLE `users`
   ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `user_subscriptions`
+--
+ALTER TABLE `user_subscriptions`
+  ADD CONSTRAINT `fk_user_subscriptions_payment` FOREIGN KEY (`payment_transaction_id`) REFERENCES `payment_transactions` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_user_subscriptions_plan` FOREIGN KEY (`plan_id`) REFERENCES `subscription_plans` (`id`);
+
+--
+-- Constraints for table `user_vote_bundles`
+--
+ALTER TABLE `user_vote_bundles`
+  ADD CONSTRAINT `fk_user_vote_bundles_bundle` FOREIGN KEY (`bundle_id`) REFERENCES `vote_bundles` (`id`),
+  ADD CONSTRAINT `fk_user_vote_bundles_payment` FOREIGN KEY (`payment_transaction_id`) REFERENCES `payment_transactions` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `votes`
