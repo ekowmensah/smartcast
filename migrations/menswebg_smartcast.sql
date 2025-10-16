@@ -396,7 +396,7 @@ CREATE TABLE `payment_gateways` (
 --
 
 INSERT INTO `payment_gateways` (`id`, `name`, `provider`, `config`, `supported_methods`, `is_active`, `is_default`, `priority`, `tenant_id`, `created_at`, `updated_at`) VALUES
-(1, 'Paystack', 'paystack', '{\"public_key\":\"pk_live_8ae357bd04d06ce84d9f29d6ed4fb4936a8f3866\",\"secret_key\":\"sk_live_fe4a5e50d0bd6f168dc3c024ebf8aac63e08b0be\",\"webhook_secret\":\"\",\"base_url\":\"https:\\/\\/api.paystack.co\",\"currency\":\"GHS\"}', '[\"mobile_money\", \"card\", \"bank_transfer\"]', 1, 1, 1, NULL, '2025-10-14 19:10:37', '2025-10-15 02:29:25'),
+(1, 'Paystack', 'paystack', '{\"public_key\":\"YOUR_PAYSTACK_PUBLIC_KEY\",\"secret_key\":\"YOUR_PAYSTACK_SECRET_KEY\",\"webhook_secret\":\"\",\"base_url\":\"https:\\/\\/api.paystack.co\",\"currency\":\"GHS\"}', '[\"mobile_money\", \"card\", \"bank_transfer\"]', 1, 1, 1, NULL, '2025-10-14 19:10:37', '2025-10-15 02:29:25'),
 (2, 'Hubtel', 'hubtel', '{\"client_id\": \"\", \"client_secret\": \"\", \"merchant_account\": \"\", \"base_url\": \"https://api.hubtel.com\", \"currency\": \"GHS\"}', '[\"mobile_money\", \"card\"]', 0, 0, 2, NULL, '2025-10-14 19:10:37', '2025-10-14 19:10:37');
 
 -- --------------------------------------------------------
