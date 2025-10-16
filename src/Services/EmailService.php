@@ -185,8 +185,9 @@ class EmailService
      */
     private function getNewTenantNotificationTemplate($tenantData)
     {
-        $approvalUrl = APP_URL . '/superadmin/tenants/pending';
-        $tenantDetailsUrl = APP_URL . '/superadmin/tenants';
+        $baseUrl = defined('APP_URL') ? APP_URL : 'http://localhost/smartcast';
+        $approvalUrl = $baseUrl . '/superadmin/tenants/pending';
+        $tenantDetailsUrl = $baseUrl . '/superadmin/tenants';
         
         return "
         <!DOCTYPE html>
