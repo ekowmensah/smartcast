@@ -73,7 +73,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <strong>Amount:</strong><br>
-                                <span class="text-success fs-5">$<?= number_format($transaction['amount'] ?? 0, 2) ?></span>
+                                <span class="text-success fs-5">GH₵<?= number_format($transaction['amount'] ?? 0, 2) ?></span>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <strong>Event:</strong><br>

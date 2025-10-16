@@ -70,7 +70,7 @@
                                 <small class="opacity-75">Including all fees and charges</small>
                             </div>
                             <div class="col-md-4 text-end">
-                                <h3 class="mb-0">$<?= number_format($transaction['amount'], 2) ?></h3>
+                                <h3 class="mb-0">GH₵<?= number_format($transaction['amount'], 2) ?></h3>
                             </div>
                         </div>
                     </div>

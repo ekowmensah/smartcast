@@ -149,7 +149,7 @@
                                 <?php endif; ?>
                                 <div class="mb-2">
                                     <strong>Amount Paid:</strong><br>
-                                    <span class="text-success fw-bold">$<?= number_format($transaction['amount'], 2) ?></span>
+                                    <span class="text-success fw-bold">GH₵<?= number_format($transaction['amount'], 2) ?></span>
                                 </div>
                             </div>
                         </div>
