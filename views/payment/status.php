@@ -127,25 +127,25 @@
                                 <i class="fas fa-redo me-2"></i>
                                 Try Again
                             </a>
-                            <a href="<?= APP_URL ?>/vote-shortcode" class="btn btn-outline-secondary btn-lg">
+                       <!--     <a href="<?= APP_URL ?>/vote-shortcode" class="btn btn-outline-secondary btn-lg">
                                 <i class="fas fa-arrow-left me-2"></i>
                                 Back to Search
-                            </a>
+                            </a> -->
                             
                         <?php elseif ($status === 'pending'): ?>
-                            <button onclick="simulatePayment()" class="btn btn-warning btn-lg me-3">
+                         <!--   <button onclick="simulatePayment()" class="btn btn-warning btn-lg me-3">
                                 <i class="fas fa-play me-2"></i>
                                 Simulate Payment (Test)
                             </button>
                             <a href="<?= APP_URL ?>/vote-shortcode" class="btn btn-outline-primary btn-lg">
                                 <i class="fas fa-arrow-left me-2"></i>
                                 Back to Voting
-                            </a>
+                            </a>-->
                         <?php else: ?>
-                            <a href="<?= APP_URL ?>/vote-shortcode" class="btn btn-outline-primary btn-lg">
+                      <!--      <a href="<?= APP_URL ?>/vote-shortcode" class="btn btn-outline-primary btn-lg">
                                 <i class="fas fa-arrow-left me-2"></i>
                                 Back to Voting
-                            </a>
+                            </a> -->
                         <?php endif; ?>
                     </div>
 
