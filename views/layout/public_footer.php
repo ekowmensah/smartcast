@@ -33,6 +33,8 @@
     <script src="<?= APP_URL ?>/public/js/public.js"></script>
     <!-- Image Helper -->
     <script src="<?= APP_URL ?>/public/assets/js/image-helper.js"></script>
+    <!-- PWA JavaScript -->
+    <script src="<?= APP_URL ?>/public/js/pwa.js"></script>
     <script>window.APP_URL = '<?= APP_URL ?>';</script>
     
     <!-- Enhanced Mobile Menu & Dropdown Support -->

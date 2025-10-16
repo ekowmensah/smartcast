@@ -6,6 +6,41 @@
     <meta name="app-url" content="<?= APP_URL ?>">
     <title><?= $title ?? 'SmartCast' ?> - <?= APP_NAME ?></title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/public/assets/images/favicon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= APP_URL ?>/public/assets/images/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= APP_URL ?>/public/assets/images/icon-512.png">
+    <link rel="apple-touch-icon" href="<?= APP_URL ?>/public/assets/images/icon-192.png">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="SmartCast">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="SmartCast">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="<?= APP_URL ?>/public/manifest.json">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Secure digital voting platform for events, competitions, and democratic processes in Ghana. Vote with mobile money integration.">
+    <meta name="keywords" content="voting, digital voting, Ghana, mobile money, elections, competitions, talent shows">
+    <meta name="author" content="SmartCast">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="<?= $title ?? 'SmartCast' ?> - Digital Voting Platform">
+    <meta property="og:description" content="Secure digital voting platform for events, competitions, and democratic processes in Ghana">
+    <meta property="og:image" content="<?= APP_URL ?>/public/assets/images/icon-512.png">
+    <meta property="og:url" content="<?= APP_URL ?>">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= $title ?? 'SmartCast' ?> - Digital Voting Platform">
+    <meta name="twitter:description" content="Secure digital voting platform for events, competitions, and democratic processes in Ghana">
+    <meta name="twitter:image" content="<?= APP_URL ?>/public/assets/images/icon-512.png">
+    
     <!-- CoreUI CSS -->
     <link href="<?= COREUI_CSS ?>" rel="stylesheet">
     <!-- Font Awesome -->
