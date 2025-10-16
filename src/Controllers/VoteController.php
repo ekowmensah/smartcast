@@ -399,7 +399,10 @@ class VoteController extends BaseController
                 'provider' => $paymentResult['provider'] ?? null,
                 'message' => $paymentResult['message'],
                 'status_check_url' => APP_URL . "/api/payment/status/{$transactionId}",
-                'expires_at' => $paymentResult['expires_at']
+                'expires_at' => $paymentResult['expires_at'],
+                'receipt' => $paymentResult['payment_reference'] ?? $transactionId,
+                'votes_cast' => $votes,
+                'contestant_name' => $contestant['name']
             ]);
             
         } catch (\Exception $e) {

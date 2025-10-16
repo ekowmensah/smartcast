@@ -1126,7 +1126,10 @@ function selectVoteMethod(method) {
             el.classList.remove('selected');
         });
         selectedBundle = null;
-        document.getElementById('bundle_id').value = '';
+        const bundleIdElement = document.getElementById('bundle_id');
+        if (bundleIdElement) {
+            bundleIdElement.value = '';
+        }
     }
     
     currentVoteMethod = method;
@@ -1156,9 +1159,6 @@ function updateCustomVotes() {
     
     const total = customVoteCount * votePrice;
     document.getElementById('custom-total').textContent = total.toFixed(2);
-    
-    updateVoteSummary();
-    updateSubmitButton();
 }
 
 function selectPackage(bundleId, votes, price) {
@@ -1169,11 +1169,16 @@ function selectPackage(bundleId, votes, price) {
     
     // Select current package
     const selectedPackage = document.querySelector(`[data-bundle-id="${bundleId}"]`);
-    selectedPackage.classList.add('selected');
+    if (selectedPackage) {
+        selectedPackage.classList.add('selected');
+    }
     
     // Store selection
     selectedBundle = { id: bundleId, votes: votes, price: price };
-    document.getElementById('bundle_id').value = bundleId;
+    const bundleIdElement = document.getElementById('bundle_id');
+    if (bundleIdElement) {
+        bundleIdElement.value = bundleId;
+    }
     
     updateVoteSummary();
     updateSubmitButton();
@@ -1269,10 +1274,16 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     // Prepare form data
     const formData = new FormData();
     formData.append('contestant_id', <?= $contestant['id'] ?>);
-    formData.append('category_id', document.getElementById('category_id').value);
+    
+    // Safely get form values with null checks
+    const categoryIdElement = document.getElementById('category_id');
+    const couponCodeElement = document.getElementById('coupon_code');
+    const referralCodeElement = document.getElementById('referral_code');
+    
+    formData.append('category_id', categoryIdElement ? categoryIdElement.value : '');
     formData.append('msisdn', msisdn);
-    formData.append('coupon_code', document.getElementById('coupon_code').value);
-    formData.append('referral_code', document.getElementById('referral_code').value);
+    formData.append('coupon_code', couponCodeElement ? couponCodeElement.value : '');
+    formData.append('referral_code', referralCodeElement ? referralCodeElement.value : '');
     
     if (currentVoteMethod === 'package') {
         formData.append('bundle_id', selectedBundle.id);
@@ -1300,14 +1311,18 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
                 showPaymentStatus(data);
             }
         } else if (data.success) {
-            // Direct success (fallback)
+            // Direct success (fallback) - use available data or defaults
+            const receipt = data.receipt || data.payment_reference || data.transaction_id || 'N/A';
+            const votesCast = data.votes_cast || data.votes || customVoteCount || 'N/A';
+            const contestantName = data.contestant_name || '<?= htmlspecialchars($contestant['name']) ?>';
+            
             showAlert(`
                 <div class="alert-icon"><i class="fas fa-check-circle"></i></div>
                 <div class="alert-content">
                     <h4>Vote Successful! 🎉</h4>
-                    <p>Your vote for <strong><?= htmlspecialchars($contestant['name']) ?></strong> has been recorded.</p>
-                    <p><strong>Receipt:</strong> ${data.receipt}</p>
-                    <p><strong>Votes Cast:</strong> ${data.votes_cast}</p>
+                    <p>Your vote for <strong>${contestantName}</strong> has been recorded.</p>
+                    <p><strong>Receipt:</strong> ${receipt}</p>
+                    <p><strong>Votes Cast:</strong> ${votesCast}</p>
                 </div>
             `, 'success');
             
@@ -1319,7 +1334,7 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
                     // Fallback to voting page if no transaction ID
                     window.location.href = '<?= APP_URL ?>/events/<?= $eventSlug ?>/vote';
                 }
-            }, 3000);
+            }, 2000);
         } else {
             console.log('Vote failed:', data); // Debug log
             let errorMessage = data.message || 'Please try again.';
@@ -1358,6 +1373,10 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
 function showPaymentPopup(paymentData) {
     const alertContainer = document.getElementById('alert-container');
     
+    const receipt = paymentData.receipt || paymentData.payment_reference || 'N/A';
+    const votesCast = paymentData.votes_cast || customVoteCount || 'N/A';
+    const contestantName = paymentData.contestant_name || '<?= htmlspecialchars($contestant['name']) ?>';
+    
     // Show payment popup message
     alertContainer.innerHTML = `
         <div class="alert success">
@@ -1365,8 +1384,12 @@ function showPaymentPopup(paymentData) {
             <div class="alert-content">
                 <h4>Payment Initiated 📱</h4>
                 <p>Complete your mobile money payment in the popup window.</p>
-                <p><strong>Reference:</strong> ${paymentData.payment_reference}</p>
-                <p><strong>Provider:</strong> ${paymentData.provider || 'Mobile Money'}</p>
+                <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <p><strong>Contestant:</strong> ${contestantName}</p>
+                    <p><strong>Votes:</strong> ${votesCast}</p>
+                    <p><strong>Reference:</strong> ${receipt}</p>
+                    <p><strong>Provider:</strong> ${paymentData.provider || 'Mobile Money'}</p>
+                </div>
                 <div style="margin-top: 1rem;">
                     <button onclick="openPaymentPopup('${paymentData.payment_url}')" 
                             style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
