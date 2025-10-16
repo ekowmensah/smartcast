@@ -239,13 +239,8 @@ class AuthController extends BaseController
             
             // Send super admin notification about new tenant registration
             try {
-                // Try EmailService first, fallback to EmailServiceSimple if PHPMailer not available
-                try {
-                    $emailService = new \SmartCast\Services\EmailService();
-                } catch (\Error $e) {
-                    // PHPMailer not available, use simple email service
-                    $emailService = new \SmartCast\Services\EmailServiceSimple();
-                }
+                // Use factory to get the best available email service
+                $emailService = \SmartCast\Services\EmailServiceFactory::create();
                 
                 $tenantNotificationData = [
                     'name' => $data['organization'],

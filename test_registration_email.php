@@ -23,17 +23,31 @@ try {
     echo "📧 Sending new tenant notification...\n";
     $result = $emailService->sendNewTenantNotificationToSuperAdmin($tenantData);
     
-    if ($result['success']) {
-        echo "✅ Registration email sent successfully!\n";
-        echo "📨 Message: " . $result['message'] . "\n";
+    if (is_array($result) && isset($result['success'])) {
+        if ($result['success']) {
+            echo "✅ Registration email sent successfully!\n";
+            if (isset($result['message'])) {
+                echo "📨 Message: " . $result['message'] . "\n";
+            }
+        } else {
+            echo "❌ Registration email failed!\n";
+            if (isset($result['error'])) {
+                echo "📨 Error: " . $result['error'] . "\n";
+            } elseif (isset($result['message'])) {
+                echo "📨 Error: " . $result['message'] . "\n";
+            }
+        }
     } else {
-        echo "❌ Registration email failed!\n";
-        echo "📨 Error: " . $result['message'] . "\n";
+        echo "❌ Unexpected response format!\n";
+        echo "📨 Response: " . print_r($result, true) . "\n";
     }
     
 } catch (Exception $e) {
     echo "❌ Error testing registration email: " . $e->getMessage() . "\n";
+    echo "📨 Stack trace: " . $e->getTraceAsString() . "\n";
 }
 
+echo "\nNote: If email failed, you may need to configure SMTP settings in .env file\n";
+echo "Check .env.example for required email configuration.\n";
 echo "\nDone!\n";
 ?>
