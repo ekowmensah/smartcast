@@ -43,7 +43,7 @@
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="<?= $og_title ?? ($title ?? 'SmartCast') . ' - Ghana\'s #1 Digital Voting Platform' ?>">
     <meta property="og:description" content="<?= $og_description ?? 'Vote securely with mobile money! MTN, Vodafone, AirtelTigo supported. Real-time results, SMS receipts, fraud prevention. Ghana\'s most trusted digital voting platform for events, competitions & elections.' ?>">
-    <meta property="og:image" content="<?= $og_image ?? APP_URL . '/public/assets/images/icon-512.png' ?>">
+    <meta property="og:image" content="<?= $og_image ?? APP_URL . '/logo1.png' ?>">
     <meta property="og:url" content="<?= $canonical_url ?? APP_URL . $_SERVER['REQUEST_URI'] ?>">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="SmartCast Ghana">
@@ -57,7 +57,7 @@
     <meta name="twitter:creator" content="@SmartCastGH">
     <meta name="twitter:title" content="<?= $twitter_title ?? ($title ?? 'SmartCast') . ' - Ghana Digital Voting Platform' ?>">
     <meta name="twitter:description" content="<?= $twitter_description ?? 'Secure mobile money voting in Ghana 🇬🇭 MTN • Vodafone • AirtelTigo supported. Real-time results, SMS receipts, fraud prevention. #DigitalVoting #Ghana' ?>">
-    <meta name="twitter:image" content="<?= $twitter_image ?? APP_URL . '/public/assets/images/icon-512.png' ?>">
+    <meta name="twitter:image" content="<?= $twitter_image ?? APP_URL . '/logo1.png' ?>">
     <meta name="twitter:image:alt" content="SmartCast - Ghana's Digital Voting Platform">
     
     <!-- Additional SEO Meta Tags -->
@@ -101,7 +101,8 @@
             "Multi-language Support",
             "Secure Payment Processing"
         ],
-        "screenshot": "<?= APP_URL ?>/public/assets/images/icon-512.png"
+        "screenshot": "<?= APP_URL ?>/logo1.png",
+        "logo": "<?= APP_URL ?>/logo1.png"
     }
     </script>
     
@@ -118,8 +119,8 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
             <!-- Brand -->
-            <a class="navbar-brand fw-bold" href="<?= PUBLIC_URL ?>">
-                <i class="fas fa-vote-yea me-2 text-primary"></i>
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="<?= PUBLIC_URL ?>">
+                <img src="<?= APP_URL ?>/logo1.png" alt="SmartCast Logo" class="me-2" style="height: 40px; width: auto;">
                 <?= APP_NAME ?>
             </a>
             

@@ -8,8 +8,10 @@ class SEOHelper {
         'keywords' => 'digital voting Ghana, online voting platform, mobile money voting, MTN mobile money, Vodafone Cash, AirtelTigo Money, talent show voting, competition voting, secure voting system, real-time voting results, SMS voting receipts, Ghana elections, event voting, contestant voting, democratic voting, fraud-free voting, Paystack voting, Hubtel voting, Ghana voting app, digital democracy Ghana',
         'og_title' => 'SmartCast - Ghana\'s #1 Digital Voting Platform',
         'og_description' => 'Vote securely with mobile money! MTN, Vodafone, AirtelTigo supported. Real-time results, SMS receipts, fraud prevention. Ghana\'s most trusted digital voting platform for events, competitions & elections.',
+        'og_image' => APP_URL . '/logo1.png',
         'twitter_title' => 'SmartCast - Ghana Digital Voting Platform',
-        'twitter_description' => 'Secure mobile money voting in Ghana 🇬🇭 MTN • Vodafone • AirtelTigo supported. Real-time results, SMS receipts, fraud prevention. #DigitalVoting #Ghana'
+        'twitter_description' => 'Secure mobile money voting in Ghana 🇬🇭 MTN • Vodafone • AirtelTigo supported. Real-time results, SMS receipts, fraud prevention. #DigitalVoting #Ghana',
+        'twitter_image' => APP_URL . '/logo1.png'
     ];
     
     private static $pageSEO = [
