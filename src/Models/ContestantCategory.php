@@ -422,4 +422,95 @@ class ContestantCategory extends BaseModel
         return $results;
     }
     
+    /**
+     * Update display order for a specific contestant in a specific category
+     */
+    public function updateDisplayOrderForCategory($contestantId, $categoryId, $displayOrder)
+    {
+        error_log("updateDisplayOrderForCategory: contestantId={$contestantId}, categoryId={$categoryId}, displayOrder={$displayOrder}");
+        
+        // First, check if the record exists
+        $checkSql = "SELECT * FROM contestant_categories WHERE contestant_id = :contestant_id AND category_id = :category_id";
+        $checkParams = [
+            'contestant_id' => $contestantId,
+            'category_id' => $categoryId
+        ];
+        
+        error_log("updateDisplayOrderForCategory: Checking if record exists...");
+        error_log("updateDisplayOrderForCategory: Check SQL = " . $checkSql);
+        error_log("updateDisplayOrderForCategory: Check params = " . json_encode($checkParams));
+        
+        try {
+            $checkStmt = $this->db->query($checkSql, $checkParams);
+            $existingRecord = $checkStmt->fetch();
+            
+            error_log("updateDisplayOrderForCategory: Existing record = " . json_encode($existingRecord));
+            
+            if (!$existingRecord) {
+                error_log("updateDisplayOrderForCategory: No record found! Let's check what records exist for this contestant and category separately...");
+                
+                // Check what records exist for this contestant
+                $contestantRecords = $this->db->query("SELECT * FROM contestant_categories WHERE contestant_id = :contestant_id", ['contestant_id' => $contestantId]);
+                error_log("updateDisplayOrderForCategory: Records for contestant {$contestantId}: " . json_encode($contestantRecords->fetchAll()));
+                
+                // Check what records exist for this category
+                $categoryRecords = $this->db->query("SELECT * FROM contestant_categories WHERE category_id = :category_id", ['category_id' => $categoryId]);
+                error_log("updateDisplayOrderForCategory: Records for category {$categoryId}: " . json_encode($categoryRecords->fetchAll()));
+                
+                return false;
+            }
+            
+        } catch (\Exception $e) {
+            error_log("updateDisplayOrderForCategory: Error checking existing record: " . $e->getMessage());
+            throw $e;
+        }
+        
+        $sql = "
+            UPDATE contestant_categories 
+            SET display_order = :display_order 
+            WHERE contestant_id = :contestant_id AND category_id = :category_id
+        ";
+        
+        $params = [
+            'display_order' => $displayOrder,
+            'contestant_id' => $contestantId,
+            'category_id' => $categoryId
+        ];
+        
+        error_log("updateDisplayOrderForCategory: SQL = " . $sql);
+        error_log("updateDisplayOrderForCategory: params = " . json_encode($params));
+        
+        try {
+            $stmt = $this->db->query($sql, $params);
+            $rowCount = $stmt->rowCount();
+            
+            error_log("updateDisplayOrderForCategory: rowCount = " . $rowCount);
+            
+            // Check if the update was successful OR if the value is already correct
+            if ($rowCount > 0) {
+                return true; // Update was successful
+            } else {
+                // Check if the current value is already what we want
+                $checkCurrentSql = "SELECT display_order FROM contestant_categories WHERE contestant_id = :contestant_id AND category_id = :category_id";
+                $checkCurrentStmt = $this->db->query($checkCurrentSql, [
+                    'contestant_id' => $contestantId,
+                    'category_id' => $categoryId
+                ]);
+                $currentRecord = $checkCurrentStmt->fetch();
+                
+                if ($currentRecord && $currentRecord['display_order'] == $displayOrder) {
+                    error_log("updateDisplayOrderForCategory: Value already correct, no update needed");
+                    return true; // Value is already correct
+                } else {
+                    error_log("updateDisplayOrderForCategory: Update failed and value is not correct");
+                    return false; // Actual failure
+                }
+            }
+        } catch (\Exception $e) {
+            error_log("updateDisplayOrderForCategory: Exception = " . $e->getMessage());
+            error_log("updateDisplayOrderForCategory: Stack trace = " . $e->getTraceAsString());
+            throw $e;
+        }
+    }
+    
 }

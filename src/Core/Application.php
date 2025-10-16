@@ -141,6 +141,8 @@ class Application
             
             // API endpoints for organizer
             $router->get('/api/events/{id}/categories', 'OrganizerController@getEventCategories');
+            $router->post('/api/categories/reorder', 'OrganizerController@reorderCategories');
+            $router->post('/api/contestants/reorder', 'OrganizerController@reorderContestants');
             
             // Voting
             $router->get('/voting/live', 'OrganizerController@liveResults');

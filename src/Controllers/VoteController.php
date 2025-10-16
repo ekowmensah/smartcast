@@ -70,30 +70,39 @@ class VoteController extends BaseController
         $contestants = $this->contestantModel->getContestantsByEvent($event['id']);
         $categories = $this->categoryModel->getCategoriesByEvent($event['id']);
         
-        // Group contestants by category for better organization
+        // Group contestants by category, preserving category display order
         $contestantsByCategory = [];
-        $seenContestants = []; // Track contestants we've already added
         
+        // First, create the category structure in the correct order
+        foreach ($categories as $category) {
+            $contestantsByCategory[] = [
+                'id' => $category['id'],
+                'name' => $category['name'],
+                'contestants' => []
+            ];
+        }
+        
+        // Then, add contestants to their respective categories
+        $seenContestants = []; // Track contestants we've already added
         foreach ($contestants as $contestant) {
-            $categoryId = $contestant['category_id'] ?? 'uncategorized';
-            $categoryName = $contestant['category_name'] ?? 'Uncategorized';
+            $categoryId = $contestant['category_id'] ?? null;
             $contestantId = $contestant['id'];
             
-            if (!isset($contestantsByCategory[$categoryId])) {
-                $contestantsByCategory[$categoryId] = [
-                    'id' => $categoryId,
-                    'name' => $categoryName,
-                    'contestants' => []
-                ];
-            }
-            
-            // Create a unique key for this contestant-category combination
-            $uniqueKey = $contestantId . '_' . $categoryId;
-            
-            // Only add if we haven't seen this exact combination before
-            if (!isset($seenContestants[$uniqueKey])) {
-                $contestantsByCategory[$categoryId]['contestants'][] = $contestant;
-                $seenContestants[$uniqueKey] = true;
+            if ($categoryId) {
+                // Find the category in our ordered array
+                foreach ($contestantsByCategory as &$category) {
+                    if ($category['id'] == $categoryId) {
+                        // Create a unique key for this contestant-category combination
+                        $uniqueKey = $contestantId . '_' . $categoryId;
+                        
+                        // Only add if we haven't seen this exact combination before
+                        if (!isset($seenContestants[$uniqueKey])) {
+                            $category['contestants'][] = $contestant;
+                            $seenContestants[$uniqueKey] = true;
+                        }
+                        break;
+                    }
+                }
             }
         }
         

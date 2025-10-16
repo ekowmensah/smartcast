@@ -6,6 +6,7 @@ $content = ob_start();
 <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center mb-4 gap-3">
     <div>
         <p class="text-muted mb-0">Manage contestants organized by events and categories</p>
+        <small class="text-info"><i class="fas fa-info-circle me-1"></i>Drag and drop to reorder categories and contestants - this affects the display order on voting pages</small>
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a href="<?= ORGANIZER_URL ?>/contestants/create" class="btn btn-primary">
@@ -20,6 +21,10 @@ $content = ob_start();
         <button class="btn btn-outline-secondary" onclick="collapseAll()" title="Collapse All">
             <i class="fas fa-compress-alt me-2"></i>
             <span class="d-none d-md-inline">Collapse All</span>
+        </button>
+        <button class="btn btn-outline-info" onclick="toggleDragMode()" id="dragToggle" title="Toggle Drag Mode">
+            <i class="fas fa-arrows-alt me-2"></i>
+            <span class="d-none d-md-inline">Enable Drag</span>
         </button>
     </div>
 </div>
@@ -119,30 +124,43 @@ foreach ($eventData as $data) {
                     <div class="accordion-body">
                         <?php if (!empty($categories)): ?>
                             <!-- Categories within Event -->
-                            <div class="row">
+                            <div class="categories-container" data-event-id="<?= $event['event_id'] ?>">
                                 <?php foreach ($categories as $category): ?>
-                                    <div class="col-12 mb-4">
+                                    <div class="col-12 mb-4 category-item" data-category-id="<?= $category['category_id'] ?>">
                                         <div class="card">
-                                            <div class="card-header bg-light">
+                                            <div class="card-header bg-light category-header-clickable" data-category-id="<?= $category['category_id'] ?>" style="cursor: pointer;">
                                                 <div class="d-flex justify-content-between align-items-center">
-                                                    <h6 class="mb-0">
-                                                        <i class="fas fa-tag me-2"></i>
-                                                        <?= htmlspecialchars($category['category_name']) ?>
-                                                    </h6>
-                                                    <span class="badge bg-primary">
-                                                        <?= $category['contestant_count'] ?> contestants
-                                                    </span>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="drag-handle me-2" style="display: none; cursor: grab;">
+                                                            <i class="fas fa-grip-vertical text-muted"></i>
+                                                        </div>
+                                                        <h6 class="mb-0">
+                                                            <i class="fas fa-tag me-2"></i>
+                                                            <?= htmlspecialchars($category['category_name']) ?>
+                                                        </h6>
+                                                    </div>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <span class="badge bg-primary">
+                                                            <?= $category['contestant_count'] ?> contestants
+                                                        </span>
+                                                        <i class="fas fa-chevron-down category-toggle" id="toggle-cat-<?= $category['category_id'] ?>"></i>
+                                                    </div>
                                                 </div>
                                                 <?php if (!empty($category['category_description'])): ?>
                                                     <small class="text-muted"><?= htmlspecialchars($category['category_description']) ?></small>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="card-body">
+                                            <div class="card-body category-body" id="category-body-<?= $category['category_id'] ?>">
                                                 <?php if (!empty($category['contestants'])): ?>
-                                                    <div class="list-group list-group-flush">
+                                                    <div class="contestants-container" data-category-id="<?= $category['category_id'] ?>">
                                                         <?php foreach ($category['contestants'] as $contestant): ?>
-                                                            <div class="list-group-item p-3">
+                                                            <div class="contestant-item mb-3" data-contestant-id="<?= $contestant['id'] ?>">
                                                                 <div class="d-flex align-items-center">
+                                                                    <!-- Drag Handle -->
+                                                                    <div class="drag-handle me-2" style="display: none; cursor: grab;">
+                                                                        <i class="fas fa-grip-vertical text-muted"></i>
+                                                                    </div>
+                                                                    
                                                                     <!-- Contestant Photo -->
                                                                     <div class="me-3">
                                                                         <?php if (!empty($contestant['image_url'])): ?>
@@ -273,6 +291,33 @@ function viewStats(id) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing accordions...');
     
+    // Initialize category collapse state (collapsed by default)
+    initializeCategoryCollapse();
+    
+    // Add event listeners for category collapse
+    document.querySelectorAll('.category-header-clickable').forEach(header => {
+        header.addEventListener('click', function(e) {
+            // Only handle click if not in drag mode (check the data attribute)
+            if (!this.dataset.dragModeActive) {
+                const categoryId = this.dataset.categoryId;
+                console.log('Category header clicked:', categoryId);
+                toggleCategoryCollapse(categoryId);
+            } else {
+                console.log('Category click ignored - drag mode active');
+            }
+        });
+    });
+    
+    // Add separate event listeners for category toggle icons (always work, even in drag mode)
+    document.querySelectorAll('.category-toggle').forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent header click
+            const categoryId = this.id.replace('toggle-cat-', '');
+            console.log('Category toggle clicked:', categoryId);
+            toggleCategoryCollapse(categoryId);
+        });
+    });
+    
     // Check if Bootstrap is available (try multiple possible locations)
     const hasBootstrap = typeof bootstrap !== 'undefined' || 
                         typeof window.bootstrap !== 'undefined' || 
@@ -367,6 +412,14 @@ function expandAll() {
         button.classList.remove('collapsed');
         button.setAttribute('aria-expanded', 'true');
     });
+    
+    // Also expand all categories
+    document.querySelectorAll('.category-body').forEach(body => {
+        body.style.display = 'block';
+    });
+    document.querySelectorAll('.category-toggle').forEach(toggle => {
+        toggle.classList.remove('collapsed');
+    });
 }
 
 // Collapse all accordions
@@ -378,6 +431,88 @@ function collapseAll() {
         button.classList.add('collapsed');
         button.setAttribute('aria-expanded', 'false');
     });
+    
+    // Also collapse all categories
+    document.querySelectorAll('.category-body').forEach(body => {
+        body.style.display = 'none';
+    });
+    document.querySelectorAll('.category-toggle').forEach(toggle => {
+        toggle.classList.add('collapsed');
+    });
+}
+
+// Toggle individual category collapse
+function toggleCategoryCollapse(categoryId) {
+    console.log('Toggling category:', categoryId);
+    
+    const categoryBody = document.getElementById(`category-body-${categoryId}`);
+    const toggleIcon = document.getElementById(`toggle-cat-${categoryId}`);
+    
+    console.log('Category body:', categoryBody);
+    console.log('Toggle icon:', toggleIcon);
+    
+    if (categoryBody && toggleIcon) {
+        const isCurrentlyHidden = categoryBody.style.display === 'none' || 
+                                 categoryBody.classList.contains('collapsed');
+        
+        console.log('Currently hidden:', isCurrentlyHidden);
+        
+        if (isCurrentlyHidden) {
+            // Expand
+            categoryBody.style.display = 'block';
+            categoryBody.classList.remove('collapsed');
+            toggleIcon.classList.remove('collapsed');
+            console.log('Expanded category');
+        } else {
+            // Collapse
+            categoryBody.style.display = 'none';
+            categoryBody.classList.add('collapsed');
+            toggleIcon.classList.add('collapsed');
+            console.log('Collapsed category');
+        }
+    } else {
+        console.error('Could not find category elements for ID:', categoryId);
+    }
+}
+
+// Initialize category collapse state
+function initializeCategoryCollapse() {
+    console.log('Initializing category collapse...');
+    
+    // Wait a bit for DOM to be fully ready
+    setTimeout(() => {
+        const events = document.querySelectorAll('.categories-container');
+        console.log('Found events containers:', events.length);
+        
+        events.forEach((eventContainer, eventIndex) => {
+            const categories = eventContainer.querySelectorAll('.category-body');
+            const toggles = eventContainer.querySelectorAll('.category-toggle');
+            
+            console.log(`Event ${eventIndex}: ${categories.length} categories, ${toggles.length} toggles`);
+            
+            categories.forEach((categoryBody, index) => {
+                const toggle = toggles[index];
+                
+                if (index === 0) {
+                    // Keep first category expanded
+                    categoryBody.style.display = 'block';
+                    categoryBody.classList.remove('collapsed');
+                    if (toggle) {
+                        toggle.classList.remove('collapsed');
+                    }
+                    console.log(`Expanded category ${index}`);
+                } else {
+                    // Collapse other categories
+                    categoryBody.style.display = 'none';
+                    categoryBody.classList.add('collapsed');
+                    if (toggle) {
+                        toggle.classList.add('collapsed');
+                    }
+                    console.log(`Collapsed category ${index}`);
+                }
+            });
+        });
+    }, 100);
 }
 
 // Copy voting code to clipboard
@@ -458,13 +593,396 @@ function searchContestants(query) {
         item.style.display = hasMatch ? 'block' : 'none';
     });
 }
+
+// Drag and Drop Functionality
+let isDragMode = false;
+let categorySortables = [];
+let contestantSortables = [];
+
+// Toggle drag mode
+function toggleDragMode() {
+    console.log('Toggling drag mode. Current state:', isDragMode);
+    
+    isDragMode = !isDragMode;
+    const dragToggle = document.getElementById('dragToggle');
+    const dragHandles = document.querySelectorAll('.drag-handle');
+    
+    if (isDragMode) {
+        // Enable drag mode
+        dragToggle.innerHTML = '<i class="fas fa-times me-2"></i><span class="d-none d-md-inline">Disable Drag</span>';
+        dragToggle.className = 'btn btn-warning';
+        
+        // Show drag handles
+        dragHandles.forEach(handle => {
+            handle.style.display = 'block';
+        });
+        
+        // Disable category collapse clicks when in drag mode, but keep drag handles working
+        document.querySelectorAll('.category-header-clickable').forEach(header => {
+            header.style.cursor = 'default';
+            // Instead of disabling all pointer events, just prevent the click handler
+            header.dataset.dragModeActive = 'true';
+        });
+        
+        // Initialize sortables
+        try {
+            initializeSortables();
+            console.log('Sortables initialized successfully');
+        } catch (error) {
+            console.error('Error initializing sortables:', error);
+        }
+        
+        // Show notification
+        showNotification('Drag mode enabled. Drag categories and contestants to reorder them. Category toggle icons still work to expand/collapse.', 'info');
+    } else {
+        // Disable drag mode
+        dragToggle.innerHTML = '<i class="fas fa-arrows-alt me-2"></i><span class="d-none d-md-inline">Enable Drag</span>';
+        dragToggle.className = 'btn btn-outline-info';
+        
+        // Hide drag handles
+        dragHandles.forEach(handle => {
+            handle.style.display = 'none';
+        });
+        
+        // Re-enable category collapse clicks
+        document.querySelectorAll('.category-header-clickable').forEach(header => {
+            header.style.cursor = 'pointer';
+            // Remove drag mode flag to re-enable click handler
+            delete header.dataset.dragModeActive;
+        });
+        
+        // Destroy sortables
+        try {
+            destroySortables();
+            console.log('Sortables destroyed successfully');
+        } catch (error) {
+            console.error('Error destroying sortables:', error);
+        }
+        
+        showNotification('Drag mode disabled.', 'success');
+    }
+}
+
+// Initialize sortable instances
+function initializeSortables() {
+    console.log('Initializing sortables...');
+    
+    // Check if SortableJS is available
+    if (typeof Sortable === 'undefined') {
+        console.error('SortableJS library not loaded');
+        showNotification('Drag functionality not available - SortableJS library not loaded', 'error');
+        return;
+    }
+    
+    // Clear existing sortables first
+    destroySortables();
+    
+    // Initialize category sortables
+    document.querySelectorAll('.categories-container').forEach((container, index) => {
+        try {
+            console.log(`Initializing category sortable ${index}`);
+            const sortable = new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onStart: function(evt) {
+                    console.log('Category drag started');
+                },
+                onEnd: function(evt) {
+                    console.log('Category drag ended');
+                    const eventId = container.dataset.eventId;
+                    const categoryIds = Array.from(container.children).map(item => 
+                        item.dataset.categoryId
+                    );
+                    
+                    console.log('Saving category order:', eventId, categoryIds);
+                    // Save category order
+                    saveCategoryOrder(eventId, categoryIds);
+                }
+            });
+            categorySortables.push(sortable);
+            console.log(`Category sortable ${index} initialized successfully`);
+        } catch (error) {
+            console.error(`Error initializing category sortable ${index}:`, error);
+        }
+    });
+    
+    // Initialize contestant sortables
+    document.querySelectorAll('.contestants-container').forEach((container, index) => {
+        try {
+            console.log(`Initializing contestant sortable ${index}`);
+            const sortable = new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onStart: function(evt) {
+                    console.log('Contestant drag started');
+                },
+                onEnd: function(evt) {
+                    console.log('Contestant drag ended');
+                    const categoryId = container.dataset.categoryId;
+                    const contestantIds = Array.from(container.children).map(item => 
+                        item.dataset.contestantId
+                    );
+                    
+                    console.log('Saving contestant order:', categoryId, contestantIds);
+                    // Save contestant order
+                    saveContestantOrder(categoryId, contestantIds);
+                }
+            });
+            contestantSortables.push(sortable);
+            console.log(`Contestant sortable ${index} initialized successfully`);
+        } catch (error) {
+            console.error(`Error initializing contestant sortable ${index}:`, error);
+        }
+    });
+    
+    console.log(`Initialized ${categorySortables.length} category sortables and ${contestantSortables.length} contestant sortables`);
+}
+
+// Destroy sortable instances
+function destroySortables() {
+    categorySortables.forEach(sortable => sortable.destroy());
+    contestantSortables.forEach(sortable => sortable.destroy());
+    categorySortables = [];
+    contestantSortables = [];
+}
+
+// Save category order to backend
+function saveCategoryOrder(eventId, categoryIds) {
+    fetch(`<?= ORGANIZER_URL ?>/api/categories/reorder`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            event_id: eventId,
+            category_ids: categoryIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Category order updated successfully! Changes are now visible on voting pages.', 'success');
+        } else {
+            showNotification('Failed to update category order: ' + (data.message || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving category order:', error);
+        showNotification('Error updating category order. Please try again.', 'error');
+    });
+}
+
+// Save contestant order to backend
+function saveContestantOrder(categoryId, contestantIds) {
+    console.log('Saving contestant order:', { categoryId, contestantIds });
+    
+    fetch(`<?= ORGANIZER_URL ?>/api/contestants/reorder`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            category_id: categoryId,
+            contestant_ids: contestantIds
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Get the response text first to debug JSON parsing issues
+        return response.text().then(text => {
+            console.log('Raw response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch (jsonError) {
+                console.error('JSON parsing error:', jsonError);
+                console.error('Response text that failed to parse:', text);
+                throw new Error(`Invalid JSON response: ${text.substring(0, 200)}...`);
+            }
+        });
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        
+        if (data.success) {
+            showNotification('Contestant order updated successfully! Changes are now visible on voting pages.', 'success');
+        } else {
+            showNotification('Failed to update contestant order: ' + (data.message || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving contestant order:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            categoryId: categoryId,
+            contestantIds: contestantIds
+        });
+        showNotification('Error updating contestant order: ' + error.message + '. Please try again.', 'error');
+    });
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const alertClass = type === 'success' ? 'alert-success' : 
+                     type === 'error' ? 'alert-danger' : 
+                     type === 'warning' ? 'alert-warning' : 'alert-info';
+    
+    const notification = document.createElement('div');
+    notification.className = `alert ${alertClass} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 500px;';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'exclamation-triangle' : 'info'} me-2"></i>
+            <span>${message}</span>
+            <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
 </script>
+
+<!-- SortableJS Library -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <style>
 /* Custom styles for contestants page */
 .accordion-button:not(.collapsed) {
     background-color: #f8f9fa;
     border-color: #dee2e6;
+}
+
+/* Drag handle styles */
+.drag-handle {
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+    cursor: default;
+    pointer-events: none;
+}
+
+.drag-handle:hover {
+    opacity: 1;
+}
+
+/* When drag handles are visible (drag mode active) */
+.drag-handle[style*="display: block"] {
+    pointer-events: auto !important;
+    cursor: grab !important;
+}
+
+.drag-handle[style*="display: block"]:active {
+    cursor: grabbing !important;
+}
+
+/* When drag mode is active, ensure drag handles override header cursor */
+.category-header-clickable[data-drag-mode-active="true"] .drag-handle[style*="display: block"] {
+    cursor: grab !important;
+    pointer-events: auto !important;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: #f8f9fa;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+}
+
+.sortable-chosen {
+    background: #e3f2fd;
+    border: 2px solid #2196f3;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(5deg);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.category-item {
+    transition: all 0.3s ease;
+}
+
+.contestant-item {
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: #fff;
+}
+
+.contestant-item:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+/* Category Collapsible Styles */
+.category-header-clickable {
+    transition: background-color 0.3s ease;
+}
+
+.category-header-clickable:hover {
+    background-color: #e9ecef !important;
+}
+
+.category-toggle {
+    transition: transform 0.3s ease;
+    color: #6c757d;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.category-toggle:hover {
+    background-color: rgba(0,0,0,0.1);
+    color: #495057;
+}
+
+.category-toggle.collapsed {
+    transform: rotate(-90deg);
+}
+
+.category-body {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.category-body[style*="display: none"] {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Improve drag handle visibility when categories are collapsed */
+.category-item .drag-handle {
+    z-index: 10;
+    position: relative;
 }
 
 .accordion-button:focus {

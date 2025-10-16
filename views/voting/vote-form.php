@@ -905,6 +905,11 @@ body {
                     <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                          alt="<?= htmlspecialchars($contestant['name']) ?>"
                          class="nominee-avatar">
+                <?php elseif (!empty($event['featured_image'])): ?>
+                    <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
+                         alt="<?= htmlspecialchars($contestant['name']) ?>"
+                         class="nominee-avatar"
+                         style="opacity: 0.8; border: 3px solid #667eea;">
                 <?php else: ?>
                     <div class="nominee-avatar-placeholder">
                         <i class="fas fa-user"></i>

@@ -45,7 +45,7 @@ class Contestant extends BaseModel
             LEFT JOIN votes v ON c.id = v.contestant_id AND v.category_id = cc.category_id
             WHERE c.event_id = :event_id AND c.active = 1
             GROUP BY c.id, cc.id
-            ORDER BY c.display_order ASC, c.name ASC
+            ORDER BY cc.display_order ASC, c.name ASC
         ";
         
         return $this->db->select($sql, ['event_id' => $eventId]);
@@ -61,7 +61,7 @@ class Contestant extends BaseModel
             LEFT JOIN votes v ON c.id = v.contestant_id AND v.category_id = cc.category_id
             WHERE cc.category_id = :category_id AND c.active = 1 AND cc.active = 1
             GROUP BY c.id
-            ORDER BY total_votes DESC, c.name ASC
+            ORDER BY cc.display_order ASC, c.name ASC
         ";
         
         return $this->db->select($sql, ['category_id' => $categoryId]);

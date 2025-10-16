@@ -230,15 +230,198 @@
     </div>
 </div>
 
+<!-- Edit Bundle Modal -->
+<div class="modal fade" id="editBundleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Bundle</h5>
+                <button type="button" class="btn-close" data-coreui-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editBundleForm" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Event</label>
+                        <input type="text" class="form-control" id="edit-event-name" readonly>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Bundle Name *</label>
+                                <input type="text" class="form-control" name="name" id="edit-name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Number of Votes *</label>
+                                <input type="number" class="form-control" name="votes" id="edit-votes" min="1" max="10000" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Price *</label>
+                        <div class="input-group">
+                            <span class="input-group-text">GH₵</span>
+                            <input type="number" class="form-control" name="price" id="edit-price" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="form-text">Total price for the entire bundle</div>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="active" id="edit-active">
+                        <label class="form-check-label">
+                            Active (available for purchase)
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary" form="editBundleForm">
+                    <i class="fas fa-save me-2"></i>Update Bundle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+// Bundle data for edit functionality
+const bundleData = <?= json_encode($eventBundles) ?>;
+const eventData = <?= json_encode(array_column($events, null, 'id')) ?>;
+
 function editBundle(id) {
-    // TODO: Implement edit functionality
-    alert('Edit functionality coming soon!');
+    // Find bundle data
+    let bundle = null;
+    let eventName = '';
+    
+    for (const eventId in bundleData) {
+        const eventBundles = bundleData[eventId].bundles;
+        bundle = eventBundles.find(b => b.id == id);
+        if (bundle) {
+            eventName = bundleData[eventId].event.name;
+            break;
+        }
+    }
+    
+    if (!bundle) {
+        alert('Bundle not found');
+        return;
+    }
+    
+    // Populate edit form
+    document.getElementById('edit-event-name').value = eventName;
+    document.getElementById('edit-name').value = bundle.name;
+    document.getElementById('edit-votes').value = bundle.votes;
+    document.getElementById('edit-price').value = parseFloat(bundle.price).toFixed(2);
+    document.getElementById('edit-active').checked = bundle.active == 1;
+    
+    // Set form action
+    document.getElementById('editBundleForm').action = `<?= ORGANIZER_URL ?>/financial/bundles/${id}/update`;
+    
+    // Show modal
+    const modal = new coreui.Modal(document.getElementById('editBundleModal'));
+    modal.show();
 }
 
 function viewStats(id) {
-    // TODO: Implement stats view
-    alert('Statistics view coming soon!');
+    // Find bundle data
+    let bundle = null;
+    let eventName = '';
+    
+    for (const eventId in bundleData) {
+        const eventBundles = bundleData[eventId].bundles;
+        bundle = eventBundles.find(b => b.id == id);
+        if (bundle) {
+            eventName = bundleData[eventId].event.name;
+            break;
+        }
+    }
+    
+    if (!bundle) {
+        alert('Bundle not found');
+        return;
+    }
+    
+    // Create stats modal content
+    const statsContent = `
+        <div class="modal fade" id="statsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Bundle Statistics</h5>
+                        <button type="button" class="btn-close" data-coreui-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>${bundle.name}</h6>
+                        <p class="text-muted">${eventName}</p>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h4 class="text-primary">${bundle.votes}</h4>
+                                        <small>Votes per Bundle</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h4 class="text-success">GH₵${parseFloat(bundle.price).toFixed(2)}</h4>
+                                        <small>Bundle Price</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h4 class="text-info">0</h4>
+                                        <small>Times Sold</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <h4 class="text-warning">GH₵0.00</h4>
+                                        <small>Total Revenue</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Price per vote: GH₵${(parseFloat(bundle.price) / parseInt(bundle.votes)).toFixed(2)}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-coreui-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing stats modal if any
+    const existingModal = document.getElementById('statsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add new modal to body
+    document.body.insertAdjacentHTML('beforeend', statsContent);
+    
+    // Show modal
+    const modal = new coreui.Modal(document.getElementById('statsModal'));
+    modal.show();
 }
 
 function toggleBundle(id, activate) {

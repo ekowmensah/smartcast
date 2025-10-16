@@ -451,7 +451,7 @@ class OrganizerController extends BaseController
                 LEFT JOIN contestants c ON cc.contestant_id = c.id AND c.active = 1
                 WHERE cat.event_id = :event_id
                 GROUP BY cat.id, cat.name, cat.description
-                ORDER BY cat.name ASC
+                ORDER BY cat.display_order ASC, cat.name ASC
             ";
             
             try {
@@ -486,7 +486,7 @@ class OrganizerController extends BaseController
                     ) vote_stats ON c.id = vote_stats.contestant_id
                     WHERE cc.category_id = :category_id
                     AND c.active = 1
-                    ORDER BY total_votes DESC, c.name ASC
+                    ORDER BY cc.display_order ASC, c.name ASC
                 ";
                 
                 try {
@@ -511,7 +511,7 @@ class OrganizerController extends BaseController
                             INNER JOIN contestant_categories cc ON c.id = cc.contestant_id
                             WHERE cc.category_id = :category_id
                             AND c.active = 1
-                            ORDER BY c.name ASC
+                            ORDER BY cc.display_order ASC, c.name ASC
                         ";
                         $category['contestants'] = $this->eventModel->getDatabase()->select($simpleSql, ['category_id' => $category['category_id']]);
                         
@@ -4090,6 +4090,167 @@ class OrganizerController extends BaseController
         } catch (\Exception $e) {
             error_log('Shortcode migration error: ' . $e->getMessage());
             $this->redirect(ORGANIZER_URL . '/shortcode-stats', 'Migration failed: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    public function reorderCategories()
+    {
+        // Start output buffering to catch any unexpected output
+        ob_start();
+        
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            ob_clean(); // Clear any buffered output
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            return;
+        }
+        
+        $tenantId = $this->session->getTenantId();
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($input['event_id']) || !isset($input['category_ids'])) {
+            ob_clean(); // Clear any buffered output
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing required parameters']);
+            return;
+        }
+        
+        $eventId = intval($input['event_id']);
+        $categoryIds = $input['category_ids'];
+        
+        // Verify event ownership
+        $eventModel = new \SmartCast\Models\Event();
+        $event = $eventModel->find($eventId);
+        
+        if (!$event || $event['tenant_id'] != $tenantId) {
+            ob_clean(); // Clear any buffered output
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
+            return;
+        }
+        
+        try {
+            // Update category display order
+            $categoryModel = new \SmartCast\Models\Category();
+            
+            foreach ($categoryIds as $index => $categoryId) {
+                $result = $categoryModel->update($categoryId, ['display_order' => $index + 1]);
+                if (!$result) {
+                    throw new \Exception("Failed to update display order for category {$categoryId}");
+                }
+            }
+            
+            ob_clean(); // Clear any buffered output
+            echo json_encode(['success' => true, 'message' => 'Category order updated successfully']);
+        } catch (\Exception $e) {
+            error_log('Error reordering categories: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            ob_clean(); // Clear any buffered output
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update category order: ' . $e->getMessage()]);
+        }
+    }
+    
+    public function reorderContestants()
+    {
+        // Start output buffering to catch any unexpected output
+        ob_start();
+        
+        header('Content-Type: application/json');
+        
+        try {
+            error_log('=== reorderContestants START ===');
+            
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                error_log('reorderContestants: Method not allowed');
+                ob_clean();
+                http_response_code(405);
+                echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+                return;
+            }
+            
+            $tenantId = $this->session->getTenantId();
+            error_log('reorderContestants: tenantId = ' . $tenantId);
+            
+            $rawInput = file_get_contents('php://input');
+            error_log('reorderContestants: raw input = ' . $rawInput);
+            
+            $input = json_decode($rawInput, true);
+            error_log('reorderContestants: parsed input = ' . json_encode($input));
+            
+            if (!isset($input['category_id']) || !isset($input['contestant_ids'])) {
+                error_log('reorderContestants: Missing required parameters');
+                ob_clean();
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Missing required parameters']);
+                return;
+            }
+            
+            $categoryId = intval($input['category_id']);
+            $contestantIds = $input['contestant_ids'];
+            
+            error_log('reorderContestants: categoryId = ' . $categoryId);
+            error_log('reorderContestants: contestantIds = ' . json_encode($contestantIds));
+            
+            // Verify category ownership through event
+            $categoryModel = new \SmartCast\Models\Category();
+            $eventModel = new \SmartCast\Models\Event();
+            
+            error_log('reorderContestants: Finding category...');
+            $category = $categoryModel->find($categoryId);
+            if (!$category) {
+                error_log('reorderContestants: Category not found - ' . $categoryId);
+                ob_clean();
+                http_response_code(404);
+                echo json_encode(['success' => false, 'message' => 'Category not found']);
+                return;
+            }
+            
+            error_log('reorderContestants: Category found = ' . json_encode($category));
+            
+            error_log('reorderContestants: Finding event...');
+            $event = $eventModel->find($category['event_id']);
+            if (!$event || $event['tenant_id'] != $tenantId) {
+                error_log('reorderContestants: Unauthorized access - event: ' . json_encode($event) . ', tenantId: ' . $tenantId);
+                ob_clean();
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
+                return;
+            }
+            
+            error_log('reorderContestants: Event found = ' . json_encode($event));
+            
+            // Update contestant display order in contestant_categories table
+            $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+            error_log('reorderContestants: ContestantCategory model created');
+            
+            foreach ($contestantIds as $index => $contestantId) {
+                error_log("reorderContestants: Updating contestant {$contestantId} in category {$categoryId} to position " . ($index + 1));
+                
+                $result = $contestantCategoryModel->updateDisplayOrderForCategory($contestantId, $categoryId, $index + 1);
+                error_log("reorderContestants: Update result for contestant {$contestantId}: " . ($result ? 'SUCCESS' : 'FAILED'));
+                
+                if (!$result) {
+                    throw new \Exception("Failed to update display order for contestant {$contestantId}");
+                }
+            }
+            
+            error_log('reorderContestants: All updates successful');
+            ob_clean();
+            echo json_encode(['success' => true, 'message' => 'Contestant order updated successfully']);
+            error_log('=== reorderContestants END SUCCESS ===');
+            
+        } catch (\Exception $e) {
+            error_log('=== reorderContestants ERROR ===');
+            error_log('Error reordering contestants: ' . $e->getMessage());
+            error_log('Stack trace: ' . $e->getTraceAsString());
+            error_log('File: ' . $e->getFile() . ' Line: ' . $e->getLine());
+            
+            ob_clean();
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update contestant order: ' . $e->getMessage()]);
         }
     }
 }

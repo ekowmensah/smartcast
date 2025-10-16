@@ -256,6 +256,11 @@
                                         <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                              alt="<?= htmlspecialchars($contestant['name']) ?>"
                                              class="contestant-image-modern">
+                                    <?php elseif (!empty($event['featured_image'])): ?>
+                                        <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
+                                             alt="<?= htmlspecialchars($contestant['name']) ?>"
+                                             class="contestant-image-modern"
+                                             style="opacity: 0.8; border: 2px solid #667eea;">
                                     <?php else: ?>
                                         <div class="contestant-placeholder-modern">
                                             <i class="fas fa-user"></i>
@@ -329,6 +334,11 @@
                                     <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
                                          alt="<?= htmlspecialchars($contestant['name']) ?>"
                                          class="contestant-image-modern">
+                                <?php elseif (!empty($event['featured_image'])): ?>
+                                    <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
+                                         alt="<?= htmlspecialchars($contestant['name']) ?>"
+                                         class="contestant-image-modern"
+                                         style="opacity: 0.8; border: 2px solid #667eea;">
                                 <?php else: ?>
                                     <div class="contestant-placeholder-modern">
                                         <i class="fas fa-user"></i>
@@ -415,6 +425,10 @@
                         <?php if ($leader['image_url']): ?>
                             <img src="<?= htmlspecialchars(image_url($leader['image_url'])) ?>" 
                                  alt="<?= htmlspecialchars($leader['name']) ?>">
+                        <?php elseif (!empty($event['featured_image'])): ?>
+                            <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 
+                                 alt="<?= htmlspecialchars($leader['name']) ?>"
+                                 style="opacity: 0.8; border: 2px solid #667eea;">
                         <?php else: ?>
                             <div class="avatar-placeholder">
                                 <i class="fas fa-user"></i>
