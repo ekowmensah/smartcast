@@ -117,7 +117,7 @@
                                 <i class="fas fa-chart-bar me-2"></i>
                                 View Results
                             </a>
-                            <a href="<?= APP_URL ?>/vote-shortcode" class="btn btn-outline-primary btn-lg">
+                            <a href="<?= APP_URL ?>/events" class="btn btn-outline-primary btn-lg">
                                 <i class="fas fa-plus me-2"></i>
                                 Vote Again
                             </a>

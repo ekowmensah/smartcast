@@ -43,11 +43,11 @@
                             <i class="fas fa-calendar me-1"></i>Events
                         </a>
                     </li>
-                    <li class="nav-item">
+                <!--    <li class="nav-item">
                         <a class="nav-link" href="<?= PUBLIC_URL ?>/vote-shortcode">
                             <i class="fas fa-hashtag me-1"></i>Vote by Code
                         </a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                         <a class="nav-link" href="<?= APP_URL ?>/verify-receipt">
                             <i class="fas fa-shield-check me-1"></i>Verify Receipt
