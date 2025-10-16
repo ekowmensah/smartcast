@@ -1613,7 +1613,7 @@ function showPaymentSuccess(data) {
     
     // Extract data with proper fallbacks
     const receiptNumber = data.receipt_number || data.payment_reference || data.transaction_id || 'N/A';
-    const amount = data.amount || 'N/A';
+    const amount = data.amount || data.total_amount || data.price || (selectedBundle ? selectedBundle.price : null) || (customVoteCount ? (customVoteCount * votePrice).toFixed(2) : null) || 'N/A';
     const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString() : new Date().toLocaleString();
     const contestantName = data.contestant_name || '<?= htmlspecialchars($contestant['name']) ?>';
     

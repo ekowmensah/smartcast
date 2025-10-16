@@ -506,13 +506,24 @@ class VoteController extends BaseController
                         error_log("Failed to update transaction status: " . $updateError->getMessage());
                     }
                     
+                    // Get receipt short_code if available
+                    $receiptShortCode = null;
+                    try {
+                        $receipt = $this->receiptModel->getReceiptByTransaction($transactionId);
+                        if ($receipt) {
+                            $receiptShortCode = $receipt['short_code'];
+                        }
+                    } catch (\Exception $receiptError) {
+                        error_log("Error getting receipt for transaction {$transactionId}: " . $receiptError->getMessage());
+                    }
+                    
                     // Return success for payment but note processing issue
                     return $this->json([
                         'success' => true,
                         'transaction_id' => $transactionId,
                         'payment_status' => 'success',
                         'message' => 'Payment successful, vote processing failed: ' . $e->getMessage(),
-                        'receipt_number' => $paymentStatus['receipt_number'] ?? null,
+                        'receipt_number' => $receiptShortCode ?? $paymentStatus['receipt_number'] ?? null,
                         'amount' => $paymentStatus['amount'],
                         'timestamp' => $paymentStatus['timestamp']
                     ]);
@@ -529,12 +540,23 @@ class VoteController extends BaseController
                 }
             }
             
+            // Get receipt short_code if available
+            $receiptShortCode = null;
+            try {
+                $receipt = $this->receiptModel->getReceiptByTransaction($transactionId);
+                if ($receipt) {
+                    $receiptShortCode = $receipt['short_code'];
+                }
+            } catch (\Exception $e) {
+                error_log("Error getting receipt for transaction {$transactionId}: " . $e->getMessage());
+            }
+            
             return $this->json([
                 'success' => true,
                 'transaction_id' => $transactionId,
                 'payment_status' => $paymentStatus['status'],
                 'message' => $paymentStatus['message'],
-                'receipt_number' => $paymentStatus['receipt_number'] ?? null,
+                'receipt_number' => $receiptShortCode ?? $paymentStatus['receipt_number'] ?? null,
                 'amount' => $transaction['amount'], // Use actual transaction amount
                 'timestamp' => $paymentStatus['timestamp']
             ]);
