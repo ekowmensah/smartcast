@@ -1461,32 +1461,84 @@ class OrganizerController extends BaseController
      */
     private function getEventStatistics($eventId)
     {
-        $sql = "
-            SELECT 
-                e.id,
-                e.name,
-                e.description,
-                e.start_date,
-                e.end_date,
-                e.vote_price,
-                e.status,
-                e.results_visible,
-                COUNT(DISTINCT c.id) as total_contestants,
-                COUNT(DISTINCT cat.id) as total_categories,
-                COALESCE(SUM(v.quantity), 0) as total_votes,
-                COUNT(DISTINCT t.id) as total_transactions,
-                COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as total_revenue,
-                COALESCE(AVG(CASE WHEN t.status = 'success' THEN t.amount ELSE NULL END), 0) as avg_transaction_amount
-            FROM events e
-            LEFT JOIN contestants c ON e.id = c.event_id AND c.active = 1
-            LEFT JOIN categories cat ON e.id = cat.event_id
-            LEFT JOIN votes v ON e.id = v.event_id
-            LEFT JOIN transactions t ON e.id = t.event_id
-            WHERE e.id = :event_id
-            GROUP BY e.id, e.name, e.description, e.start_date, e.end_date, e.vote_price, e.status, e.results_visible
-        ";
-        
-        return $this->eventModel->getDatabase()->selectOne($sql, ['event_id' => $eventId]);
+        try {
+            // Get basic event info first
+            $event = $this->eventModel->find($eventId);
+            if (!$event) {
+                return [];
+            }
+            
+            // Get total contestants
+            $contestantSql = "
+                SELECT COUNT(DISTINCT c.id) as total_contestants
+                FROM contestants c
+                WHERE c.event_id = :event_id AND c.active = 1
+            ";
+            $contestantResult = $this->eventModel->getDatabase()->selectOne($contestantSql, ['event_id' => $eventId]);
+            
+            // Get total categories
+            $categorySql = "
+                SELECT COUNT(DISTINCT cat.id) as total_categories
+                FROM categories cat
+                WHERE cat.event_id = :event_id
+            ";
+            $categoryResult = $this->eventModel->getDatabase()->selectOne($categorySql, ['event_id' => $eventId]);
+            
+            // Get vote statistics
+            $voteSql = "
+                SELECT 
+                    COALESCE(SUM(v.quantity), 0) as total_votes,
+                    COUNT(DISTINCT v.id) as total_vote_records
+                FROM votes v
+                WHERE v.event_id = :event_id
+            ";
+            $voteResult = $this->eventModel->getDatabase()->selectOne($voteSql, ['event_id' => $eventId]);
+            
+            // Get transaction statistics
+            $transactionSql = "
+                SELECT 
+                    COUNT(DISTINCT t.id) as total_transactions,
+                    COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as total_revenue,
+                    COALESCE(AVG(CASE WHEN t.status = 'success' THEN t.amount ELSE NULL END), 0) as avg_transaction_amount,
+                    COUNT(DISTINCT CASE WHEN t.status = 'success' THEN t.phone_number ELSE NULL END) as unique_voters
+                FROM transactions t
+                WHERE t.event_id = :event_id
+            ";
+            $transactionResult = $this->eventModel->getDatabase()->selectOne($transactionSql, ['event_id' => $eventId]);
+            
+            // Combine all results
+            $stats = array_merge($event, [
+                'total_contestants' => (int)($contestantResult['total_contestants'] ?? 0),
+                'total_categories' => (int)($categoryResult['total_categories'] ?? 0),
+                'total_votes' => (int)($voteResult['total_votes'] ?? 0),
+                'total_vote_records' => (int)($voteResult['total_vote_records'] ?? 0),
+                'total_transactions' => (int)($transactionResult['total_transactions'] ?? 0),
+                'total_revenue' => (float)($transactionResult['total_revenue'] ?? 0),
+                'avg_transaction_amount' => (float)($transactionResult['avg_transaction_amount'] ?? 0),
+                'unique_voters' => (int)($transactionResult['unique_voters'] ?? 0),
+                'vote_price' => (float)($event['vote_price'] ?? 0)
+            ]);
+            
+            return $stats;
+            
+        } catch (\Exception $e) {
+            // Log error and return empty stats
+            error_log("Error getting event statistics for event $eventId: " . $e->getMessage());
+            
+            // Try to get basic event info for vote_price at least
+            $basicEvent = $this->eventModel->find($eventId);
+            
+            return [
+                'total_contestants' => 0,
+                'total_categories' => 0,
+                'total_votes' => 0,
+                'total_transactions' => 0,
+                'total_revenue' => 0,
+                'avg_transaction_amount' => 0,
+                'unique_voters' => 0,
+                'vote_price' => (float)($basicEvent['vote_price'] ?? 0)
+            ];
+        }
     }
     
     /**
@@ -2283,27 +2335,55 @@ class OrganizerController extends BaseController
     {
         $tenantId = $this->session->getTenantId();
         
-        // Get categories with statistics (simplified since contestants may not have category_id)
+        // Get categories with real statistics including event dates and status
         $sql = "
-            SELECT cat.*,
-                   e.name as event_name,
-                   0 as contestant_count,
-                   0 as total_votes,
-                   0 as revenue
+            SELECT 
+                cat.*,
+                e.name as event_name,
+                e.status as event_status,
+                e.start_date as event_start_date,
+                e.end_date as event_end_date,
+                e.vote_price,
+                COUNT(DISTINCT cc.contestant_id) as contestant_count,
+                COALESCE(SUM(v.quantity), 0) as total_votes,
+                COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as revenue
             FROM categories cat
             INNER JOIN events e ON cat.event_id = e.id
+            LEFT JOIN contestant_categories cc ON cat.id = cc.category_id
+            LEFT JOIN contestants c ON cc.contestant_id = c.id AND c.active = 1
+            LEFT JOIN votes v ON c.id = v.contestant_id AND v.category_id = cat.id
+            LEFT JOIN transactions t ON v.transaction_id = t.id
             WHERE e.tenant_id = :tenant_id
+            GROUP BY cat.id, cat.name, cat.description, cat.event_id, cat.created_at, cat.updated_at,
+                     e.name, e.status, e.start_date, e.end_date, e.vote_price
             ORDER BY cat.created_at DESC
         ";
         
         try {
             $categories = $this->contestantModel->getDatabase()->select($sql, ['tenant_id' => $tenantId]);
+            
+            // Calculate additional metrics for each category
+            foreach ($categories as &$category) {
+                $category['contestant_count'] = (int)$category['contestant_count'];
+                $category['total_votes'] = (int)$category['total_votes'];
+                $category['revenue'] = (float)$category['revenue'];
+                
+                // Calculate average votes per contestant
+                $category['avg_votes'] = $category['contestant_count'] > 0 ? 
+                    $category['total_votes'] / $category['contestant_count'] : 0;
+            }
+            
         } catch (\Exception $e) {
+            error_log("Error fetching categories: " . $e->getMessage());
             $categories = [];
         }
         
+        // Get events for the dropdown
+        $events = $this->eventModel->getEventsByTenant($tenantId);
+        
         $content = $this->renderView('organizer/categories/index', [
             'categories' => $categories,
+            'events' => $events,
             'title' => 'Categories'
         ]);
         
@@ -2313,6 +2393,300 @@ class OrganizerController extends BaseController
                 ['title' => 'Categories']
             ]
         ]);
+    }
+    
+    /**
+     * Store a new category
+     */
+    public function storeCategory()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(ORGANIZER_URL . '/categories', 'Invalid request method', 'error');
+            return;
+        }
+        
+        $tenantId = $this->session->getTenantId();
+        $data = $this->sanitizeInput($_POST);
+        
+        try {
+            // Validate required fields
+            if (empty($data['name']) || empty($data['event_id'])) {
+                throw new \Exception('Category name and event are required');
+            }
+            
+            // Verify event ownership
+            $event = $this->eventModel->find($data['event_id']);
+            if (!$event || $event['tenant_id'] != $tenantId) {
+                throw new \Exception('Event not found or access denied');
+            }
+            
+            // Create category
+            $categoryModel = new \SmartCast\Models\Category();
+            $categoryId = $categoryModel->create([
+                'event_id' => $data['event_id'],
+                'name' => $data['name'],
+                'description' => $data['description'] ?? '',
+                'active' => isset($data['active']) ? 1 : 0,
+                'display_order' => 0
+            ]);
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Category created successfully', 'id' => $categoryId]);
+                return;
+            }
+            
+            $this->redirect(ORGANIZER_URL . '/categories', 'Category created successfully', 'success');
+            
+        } catch (\Exception $e) {
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                return;
+            }
+            
+            $this->redirect(ORGANIZER_URL . '/categories', 'Failed to create category: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    /**
+     * Show a specific category
+     */
+    public function showCategory($id)
+    {
+        $tenantId = $this->session->getTenantId();
+        
+        try {
+            // Get category with event info
+            $sql = "
+                SELECT cat.*, e.name as event_name, e.status as event_status,
+                       e.start_date, e.end_date, e.tenant_id
+                FROM categories cat
+                INNER JOIN events e ON cat.event_id = e.id
+                WHERE cat.id = :category_id AND e.tenant_id = :tenant_id
+            ";
+            
+            $category = $this->categoryModel->getDatabase()->selectOne($sql, [
+                'category_id' => $id,
+                'tenant_id' => $tenantId
+            ]);
+            
+            if (!$category) {
+                $this->redirect(ORGANIZER_URL . '/categories', 'Category not found', 'error');
+                return;
+            }
+            
+            // Get contestants in this category
+            $contestantsSql = "
+                SELECT c.*, cc.short_code as voting_shortcode,
+                       COALESCE(vote_stats.total_votes, 0) as total_votes,
+                       COALESCE(vote_stats.revenue, 0) as revenue
+                FROM contestants c
+                INNER JOIN contestant_categories cc ON c.id = cc.contestant_id
+                LEFT JOIN (
+                    SELECT v.contestant_id,
+                           SUM(v.quantity) as total_votes,
+                           SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END) as revenue
+                    FROM votes v
+                    LEFT JOIN transactions t ON v.transaction_id = t.id
+                    WHERE v.category_id = :category_id
+                    GROUP BY v.contestant_id
+                ) vote_stats ON c.id = vote_stats.contestant_id
+                WHERE cc.category_id = :category_id AND c.active = 1
+                ORDER BY vote_stats.total_votes DESC, c.name ASC
+            ";
+            
+            $contestants = $this->categoryModel->getDatabase()->select($contestantsSql, ['category_id' => $id]);
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'category' => $category,
+                    'contestants' => $contestants
+                ]);
+                return;
+            }
+            
+            $content = $this->renderView('organizer/categories/show', [
+                'category' => $category,
+                'contestants' => $contestants,
+                'title' => $category['name']
+            ]);
+            
+            echo $this->renderLayout('organizer_layout', $content, [
+                'title' => $category['name'],
+                'breadcrumbs' => [
+                    ['title' => 'Categories', 'url' => ORGANIZER_URL . '/categories'],
+                    ['title' => $category['name']]
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->redirect(ORGANIZER_URL . '/categories', 'Error loading category: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    /**
+     * Update a category
+     */
+    public function updateCategory($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(ORGANIZER_URL . '/categories', 'Invalid request method', 'error');
+            return;
+        }
+        
+        $tenantId = $this->session->getTenantId();
+        $data = $this->sanitizeInput($_POST);
+        
+        try {
+            // Verify category ownership
+            $sql = "
+                SELECT cat.*, e.tenant_id, e.status as event_status
+                FROM categories cat
+                INNER JOIN events e ON cat.event_id = e.id
+                WHERE cat.id = :category_id AND e.tenant_id = :tenant_id
+            ";
+            
+            $category = $this->categoryModel->getDatabase()->selectOne($sql, [
+                'category_id' => $id,
+                'tenant_id' => $tenantId
+            ]);
+            
+            if (!$category) {
+                throw new \Exception('Category not found or access denied');
+            }
+            
+            // Validate required fields
+            if (empty($data['name'])) {
+                throw new \Exception('Category name is required');
+            }
+            
+            // Update category
+            $categoryModel = new \SmartCast\Models\Category();
+            $categoryModel->update($id, [
+                'name' => $data['name'],
+                'description' => $data['description'] ?? '',
+                'active' => isset($data['active']) ? 1 : 0
+            ]);
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Category updated successfully']);
+                return;
+            }
+            
+            $this->redirect(ORGANIZER_URL . '/categories', 'Category updated successfully', 'success');
+            
+        } catch (\Exception $e) {
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                return;
+            }
+            
+            $this->redirect(ORGANIZER_URL . '/categories', 'Failed to update category: ' . $e->getMessage(), 'error');
+        }
+    }
+    
+    /**
+     * Delete a category and all its contestants
+     */
+    public function deleteCategory($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE' && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect(ORGANIZER_URL . '/categories', 'Invalid request method', 'error');
+            return;
+        }
+        
+        $tenantId = $this->session->getTenantId();
+        
+        try {
+            // Get category with event info to check if deletion is allowed
+            $sql = "
+                SELECT cat.*, e.tenant_id, e.status as event_status, e.start_date, e.end_date
+                FROM categories cat
+                INNER JOIN events e ON cat.event_id = e.id
+                WHERE cat.id = :category_id AND e.tenant_id = :tenant_id
+            ";
+            
+            $category = $this->categoryModel->getDatabase()->selectOne($sql, [
+                'category_id' => $id,
+                'tenant_id' => $tenantId
+            ]);
+            
+            if (!$category) {
+                throw new \Exception('Category not found or access denied');
+            }
+            
+            // Check if event is live/ongoing - prevent deletion
+            $now = time();
+            $startTime = strtotime($category['start_date']);
+            $endTime = strtotime($category['end_date']);
+            $isLive = ($category['event_status'] === 'active' && $now >= $startTime && $now <= $endTime);
+            
+            if ($isLive) {
+                throw new \Exception('Cannot delete category while event is live/ongoing');
+            }
+            
+            // Start transaction
+            $this->categoryModel->getDatabase()->beginTransaction();
+            
+            // Get all contestants in this category
+            $contestantsSql = "
+                SELECT c.id
+                FROM contestants c
+                INNER JOIN contestant_categories cc ON c.id = cc.contestant_id
+                WHERE cc.category_id = :category_id
+            ";
+            
+            $contestants = $this->categoryModel->getDatabase()->select($contestantsSql, ['category_id' => $id]);
+            
+            // Delete all votes for contestants in this category
+            foreach ($contestants as $contestant) {
+                $this->categoryModel->getDatabase()->delete('votes', 'contestant_id = :contestant_id', ['contestant_id' => $contestant['id']]);
+            }
+            
+            // Delete contestant-category assignments
+            $this->categoryModel->getDatabase()->delete('contestant_categories', 'category_id = :category_id', ['category_id' => $id]);
+            
+            // Delete all contestants in this category
+            foreach ($contestants as $contestant) {
+                $this->categoryModel->getDatabase()->delete('contestants', 'id = :contestant_id', ['contestant_id' => $contestant['id']]);
+            }
+            
+            // Finally delete the category
+            $categoryModel = new \SmartCast\Models\Category();
+            $categoryModel->delete($id);
+            
+            // Commit transaction
+            $this->categoryModel->getDatabase()->commit();
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true, 
+                    'message' => 'Category and all its contestants deleted successfully',
+                    'deleted_contestants' => count($contestants)
+                ]);
+                return;
+            }
+            
+            $this->redirect(ORGANIZER_URL . '/categories', 'Category and ' . count($contestants) . ' contestants deleted successfully', 'success');
+            
+        } catch (\Exception $e) {
+            // Rollback transaction on error
+            $this->categoryModel->getDatabase()->rollback();
+            
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+                return;
+            }
+            
+            $this->redirect(ORGANIZER_URL . '/categories', 'Failed to delete category: ' . $e->getMessage(), 'error');
+        }
     }
     
     public function votingAnalytics()

@@ -138,6 +138,9 @@ class Application
             // Categories
             $router->get('/categories', 'OrganizerController@categories');
             $router->post('/categories', 'OrganizerController@storeCategory');
+            $router->get('/categories/{id}', 'OrganizerController@showCategory');
+            $router->post('/categories/{id}', 'OrganizerController@updateCategory');
+            $router->delete('/categories/{id}', 'OrganizerController@deleteCategory');
             
             // API endpoints for organizer
             $router->get('/api/events/{id}/categories', 'OrganizerController@getEventCategories');

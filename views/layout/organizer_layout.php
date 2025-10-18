@@ -165,7 +165,7 @@
             </li>
             
             <!-- Marketing -->
-            <li class="nav-group">
+      <!--      <li class="nav-group">
                 <a class="nav-link nav-group-toggle" href="#">
                     <i class="nav-icon fas fa-bullhorn"></i>
                     Marketing
@@ -190,7 +190,7 @@
                         </a>
                     </li>
                 </ul>
-            </li>
+            </li> -->
             
             <!-- Settings -->
             <li class="nav-group">
@@ -407,5 +407,19 @@
         }
     });
     </script>
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/68f3fecb99b574195303217e/1j7shmj6n';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
 </body>
 </html>

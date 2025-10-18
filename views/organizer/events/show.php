@@ -6,6 +6,54 @@
 </div>
 <?php endif; ?>
 
+<?php
+// Helper function to determine event status
+function getEventStatus($event) {
+    $now = time();
+    $startTime = strtotime($event['start_date']);
+    $endTime = strtotime($event['end_date']);
+    
+    if ($event['status'] === 'draft') {
+        return [
+            'status' => 'draft',
+            'class' => 'warning',
+            'icon' => 'fas fa-exclamation-triangle',
+            'description' => 'This event is in draft mode and is not visible to the public'
+        ];
+    } elseif ($event['status'] === 'completed') {
+        return [
+            'status' => 'completed',
+            'class' => 'info',
+            'icon' => 'fas fa-flag-checkered',
+            'description' => 'This event has been completed'
+        ];
+    } elseif ($now < $startTime) {
+        return [
+            'status' => 'upcoming',
+            'class' => 'primary',
+            'icon' => 'fas fa-clock',
+            'description' => 'This event is scheduled to start on ' . date('M j, Y \a\t g:i A', $startTime)
+        ];
+    } elseif ($now > $endTime) {
+        return [
+            'status' => 'ended',
+            'class' => 'secondary',
+            'icon' => 'fas fa-flag-checkered',
+            'description' => 'This event ended on ' . date('M j, Y \a\t g:i A', $endTime)
+        ];
+    } else {
+        return [
+            'status' => 'live',
+            'class' => 'success',
+            'icon' => 'fas fa-check-circle',
+            'description' => 'This event is live and accepting votes'
+        ];
+    }
+}
+
+$eventStatus = getEventStatus($event);
+?>
+
 <!-- Comprehensive Event Details Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -14,8 +62,8 @@
             <?= htmlspecialchars($event['name']) ?>
         </h2>
         <div class="d-flex align-items-center gap-3">
-            <span class="badge bg-<?= $event['status'] === 'active' ? 'success' : ($event['status'] === 'draft' ? 'warning' : 'secondary') ?> fs-6">
-                <?= ucfirst($event['status']) ?>
+            <span class="badge bg-<?= $eventStatus['class'] ?> fs-6">
+                <?= ucfirst($eventStatus['status']) ?>
             </span>
             <span class="text-muted">
                 <i class="fas fa-calendar me-1"></i>
@@ -23,12 +71,12 @@
             </span>
             <span class="text-muted">
                 <i class="fas fa-money-bill me-1"></i>
-                GH₵<?= number_format($eventStats['vote_price'], 2) ?> per vote
+                GH₵<?= number_format($eventStats['vote_price'] ?? $event['vote_price'] ?? 0, 2) ?> per vote
             </span>
         </div>
     </div>
     <div class="btn-group" role="group">
-        <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/edit" class="btn btn-outline-primary">
+        <a href="<?= ORGANIZER_URL ?>/events/wizard?edit=<?= $event['id'] ?>/edit" class="btn btn-outline-primary">
             <i class="fas fa-edit me-1"></i>Edit
         </a>
         <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/export-pdf" class="btn btn-outline-success">
@@ -73,31 +121,28 @@
 </div>
 
 <!-- Event Status Alert -->
-<?php if ($event['status'] === 'draft'): ?>
-    <div class="alert alert-warning">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        This event is in <strong>draft</strong> mode and is not visible to the public.
-        <a href="#" onclick="publishEvent()" class="btn btn-sm btn-warning ms-2">
+<div class="alert alert-<?= $eventStatus['class'] ?>">
+    <i class="<?= $eventStatus['icon'] ?> me-2"></i>
+    <?= $eventStatus['description'] ?>.
+    
+    <?php if ($eventStatus['status'] === 'draft'): ?>
+        <a href="#" onclick="publishEvent()" class="btn btn-sm btn-<?= $eventStatus['class'] ?> ms-2">
             <i class="fas fa-play me-1"></i>Publish Event
         </a>
-    </div>
-<?php elseif ($event['status'] === 'active'): ?>
-    <div class="alert alert-success">
-        <i class="fas fa-check-circle me-2"></i>
-        This event is <strong>live</strong> and accepting votes.
-        <a href="<?= ORGANIZER_URL ?>/voting/live?event=<?= $event['id'] ?>" class="btn btn-sm btn-success ms-2">
+    <?php elseif ($eventStatus['status'] === 'upcoming'): ?>
+        <a href="<?= ORGANIZER_URL ?>/events/<?= $event['id'] ?>/edit" class="btn btn-sm btn-<?= $eventStatus['class'] ?> ms-2">
+            <i class="fas fa-edit me-1"></i>Edit Event
+        </a>
+    <?php elseif ($eventStatus['status'] === 'live'): ?>
+        <a href="<?= ORGANIZER_URL ?>/voting/live?event=<?= $event['id'] ?>" class="btn btn-sm btn-<?= $eventStatus['class'] ?> ms-2">
             <i class="fas fa-chart-line me-1"></i>View Live Results
         </a>
-    </div>
-<?php elseif ($event['status'] === 'completed'): ?>
-    <div class="alert alert-info">
-        <i class="fas fa-flag-checkered me-2"></i>
-        This event has been <strong>completed</strong>.
-        <a href="#" onclick="viewResults()" class="btn btn-sm btn-info ms-2">
+    <?php elseif (in_array($eventStatus['status'], ['ended', 'completed'])): ?>
+        <a href="<?= ORGANIZER_URL ?>/voting/live?event=<?= $event['id'] ?>" class="btn btn-sm btn-<?= $eventStatus['class'] ?> ms-2">
             <i class="fas fa-trophy me-1"></i>View Final Results
         </a>
-    </div>
-<?php endif; ?>
+    <?php endif; ?>
+</div>
 
 <!-- Event Overview -->
 <div class="row mb-4">
@@ -197,7 +242,7 @@
                 <h6 class="mb-0">Event Statistics</h6>
             </div>
             <div class="card-body">
-
+                <?php 
                 // Calculate all statistics from contestants data if eventStats is not reliable
                 $calculatedStats = [
                     'total_contestants' => 0,
@@ -619,7 +664,7 @@
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Vote Price</small>
-                        <br><strong>GH₵<?= number_format($eventStats['vote_price'] ?? 0, 2) ?></strong>
+                        <br><strong>GH₵<?= number_format($eventStats['vote_price'] ?? $event['vote_price'] ?? 0, 2) ?></strong>
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Transactions</small>

@@ -103,9 +103,13 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary" onclick="requestPayout()">
+                    <!-- <button class="btn btn-primary" onclick="requestPayout()">
                         <i class="fas fa-money-bill-wave me-2"></i>Request Payout
-                    </button>
+                    </button> -->
+
+                    <a href="<?= ORGANIZER_URL ?>/financial/revenue" class="btn btn-primary">
+                        <i class="fas fa-money-bill-wave me-2"></i>REQUEST PAYOUT
+                    </a>
                     <a href="<?= ORGANIZER_URL ?>/financial/transactions" class="btn btn-outline-secondary">
                         <i class="fas fa-list me-2"></i>View Transactions
                     </a>

@@ -202,7 +202,7 @@
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label for="vote_price" class="form-label">Vote Price ($)</label>
+                                                <label for="vote_price" class="form-label">Vote Price (GH₵)</label>
                                                 <input type="number" class="form-control" id="vote_price" name="vote_price" 
                                                        value="<?= htmlspecialchars($eventData['vote_price'] ?? '0.50') ?>" step="0.01" min="0">
                                             </div>

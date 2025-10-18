@@ -236,7 +236,7 @@
                             </div>
                             <div class="col-4">
                                 <div class="fw-semibold text-info small">
-                                    $<?= number_format($event['revenue'] ?? 0, 0) ?>
+                                    GH₵<?= number_format($event['revenue'] ?? 0, 0) ?>
                                 </div>
                                 <div class="small text-muted">Revenue</div>
                             </div>
