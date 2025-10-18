@@ -1,3 +1,11 @@
+<!-- Debug: Check eventStats data -->
+<?php if (isset($_GET['debug'])): ?>
+<div class="alert alert-info">
+    <strong>Debug - Event Stats:</strong>
+    <pre><?= print_r($eventStats, true) ?></pre>
+</div>
+<?php endif; ?>
+
 <!-- Comprehensive Event Details Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -189,24 +197,55 @@
                 <h6 class="mb-0">Event Statistics</h6>
             </div>
             <div class="card-body">
+
+                // Calculate all statistics from contestants data if eventStats is not reliable
+                $calculatedStats = [
+                    'total_contestants' => 0,
+                    'total_votes' => 0,
+                    'total_revenue' => 0,
+                    'total_categories' => 0
+                ];
+                
+                if (!empty($categoriesWithContestants)) {
+                    $calculatedStats['total_categories'] = count($categoriesWithContestants);
+                    
+                    foreach ($categoriesWithContestants as $category) {
+                        foreach ($category['contestants'] as $contestant) {
+                            $calculatedStats['total_contestants']++;
+                            $calculatedStats['total_votes'] += $contestant['total_votes'] ?? 0;
+                            $calculatedStats['total_revenue'] += $contestant['revenue'] ?? 0;
+                        }
+                    }
+                }
+                
+                // Use calculated stats if eventStats is empty or zero
+                $displayStats = [
+                    'total_contestants' => ($eventStats['total_contestants'] ?? 0) > 0 ? $eventStats['total_contestants'] : $calculatedStats['total_contestants'],
+                    'total_votes' => ($eventStats['total_votes'] ?? 0) > 0 ? $eventStats['total_votes'] : $calculatedStats['total_votes'],
+                    'total_revenue' => ($eventStats['total_revenue'] ?? 0) > 0 ? $eventStats['total_revenue'] : $calculatedStats['total_revenue'],
+                    'total_categories' => ($eventStats['total_categories'] ?? 0) > 0 ? $eventStats['total_categories'] : $calculatedStats['total_categories'],
+                    'unique_voters' => $eventStats['unique_voters'] ?? 0
+                ];
+                ?>
+                
                 <div class="row text-center mb-3">
                     <div class="col-6">
-                        <div class="fs-4 fw-semibold text-primary">12</div>
+                        <div class="fs-4 fw-semibold text-primary"><?= number_format($displayStats['total_contestants']) ?></div>
                         <div class="small text-muted">Contestants</div>
                     </div>
                     <div class="col-6">
-                        <div class="fs-4 fw-semibold text-success">2,456</div>
+                        <div class="fs-4 fw-semibold text-success"><?= number_format($displayStats['total_votes']) ?></div>
                         <div class="small text-muted">Total Votes</div>
                     </div>
                 </div>
                 
                 <div class="row text-center mb-3">
                     <div class="col-6">
-                        <div class="fs-4 fw-semibold text-info">GH₵1,228</div>
+                        <div class="fs-4 fw-semibold text-info">GH₵<?= number_format($displayStats['total_revenue'], 0) ?></div>
                         <div class="small text-muted">Revenue</div>
                     </div>
                     <div class="col-6">
-                        <div class="fs-4 fw-semibold text-warning">89</div>
+                        <div class="fs-4 fw-semibold text-warning"><?= number_format($displayStats['unique_voters']) ?></div>
                         <div class="small text-muted">Unique Voters</div>
                     </div>
                 </div>
@@ -315,7 +354,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0"><?= number_format($eventStats['total_contestants'] ?? 0) ?></h4>
+                        <h4 class="mb-0"><?= number_format($displayStats['total_contestants']) ?></h4>
                         <p class="mb-0">Contestants</p>
                     </div>
                     <div class="align-self-center">
@@ -330,7 +369,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0"><?= number_format($eventStats['total_votes'] ?? 0) ?></h4>
+                        <h4 class="mb-0"><?= number_format($displayStats['total_votes']) ?></h4>
                         <p class="mb-0">Total Votes</p>
                     </div>
                     <div class="align-self-center">
@@ -345,7 +384,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0">GH₵<?= number_format($eventStats['total_revenue'] ?? 0, 0) ?></h4>
+                        <h4 class="mb-0">GH₵<?= number_format($displayStats['total_revenue'], 0) ?></h4>
                         <p class="mb-0">Revenue</p>
                     </div>
                     <div class="align-self-center">
@@ -360,7 +399,7 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <h4 class="mb-0"><?= $eventStats['total_categories'] ?? 0 ?></h4>
+                        <h4 class="mb-0"><?= number_format($displayStats['total_categories']) ?></h4>
                         <p class="mb-0">Categories</p>
                     </div>
                     <div class="align-self-center">
@@ -469,7 +508,7 @@
                                                                     <?php endif; ?>
                                                                 </td>
                                                                 <td>
-                                                                    <strong class="text-success">$<?= number_format($contestant['revenue'], 2) ?></strong>
+                                                                    <strong class="text-success">GH₵<?= number_format($contestant['revenue'], 2) ?></strong>
                                                                 </td>
                                                                 <td>
                                                                     <div class="btn-group btn-group-sm">
@@ -580,7 +619,7 @@
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Vote Price</small>
-                        <br><strong>$<?= number_format($eventStats['vote_price'] ?? 0, 2) ?></strong>
+                        <br><strong>GH₵<?= number_format($eventStats['vote_price'] ?? 0, 2) ?></strong>
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Transactions</small>
@@ -588,7 +627,7 @@
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Avg. Transaction</small>
-                        <br><strong>$<?= number_format($eventStats['avg_transaction_amount'] ?? 0, 2) ?></strong>
+                        <br><strong>GH₵<?= number_format($eventStats['avg_transaction_amount'] ?? 0, 2) ?></strong>
                     </div>
                     <div class="col-12">
                         <small class="text-muted">Results Visibility</small>

@@ -1,4 +1,23 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="app-url" content="<?= APP_URL ?>">
+    <title><?= $title ?? 'Vote' ?> - <?= APP_NAME ?></title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="<?= APP_URL ?>/public/assets/images/favicon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= APP_URL ?>/public/assets/images/icon-192.png">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
 
 <style>
 /* Professional Voting Form - Ultra Modern Design */
@@ -866,8 +885,6 @@ body {
     }
     
     .interface-title {
-        font-size: 1.125rem;
-    }
 }
 </style>
 
@@ -1085,7 +1102,7 @@ body {
         </div>
     </form>
     </div> <!-- End main-content -->
-</div> <!-- End professional-vote-container -->
+    </div> <!-- End professional-vote-container -->
 
 
 <script>
@@ -1758,12 +1775,9 @@ function showAlert(content, type) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     
     // Auto-dismiss after 5 seconds for non-success alerts
-    if (type !== 'success') {
-        setTimeout(() => {
-            alertContainer.innerHTML = '';
-        }, 5000);
     }
 }
 </script>
 
-
+</body>
+</html>

@@ -485,24 +485,27 @@ include __DIR__ . '/../layout/public_header.php';
 <style>
 /* Override header padding for seamless hero section */
 main.page-content {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
+    margin-top: 0px !important;
+    padding-top: 0px !important;
 }
 
 /* Hero section positioning */
 .hero-section {
-    margin-top: 0px;
+    margin-top: 80px; /* Increased spacing for better separation */
+    padding-top: 3.5rem; /* Additional padding for breathing room */
 }
 
 @media (max-width: 768px) {
     .hero-section {
-        margin-top: 0px;
+        margin-top: 80px;
+        padding-top: 1.5rem;
     }
 }
 
 @media (max-width: 480px) {
     .hero-section {
-        margin-top: 0px;
+        margin-top: 70px;
+        padding-top: 1rem;
     }
 }
 
@@ -804,6 +807,48 @@ main.page-content {
         padding-top: 3rem !important;
         padding-bottom: 3rem !important;
     }
+    
+    .hero-actions {
+        text-align: center;
+    }
+    
+    .hero-actions .btn {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-actions .btn:last-child {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+    
+    .display-2 {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem 0.5rem;
+    }
+    
+    .feature-content,
+    .event-content {
+        padding: 2rem 1.5rem;
+    }
 }
 
 /* Shadow Utilities */
@@ -899,29 +944,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function updateLiveStats() {
-        // Optional: Fetch real-time statistics
-        fetch('<?= APP_URL ?>/api/live-stats', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw new Error('Network response was not ok');
-        })
-        .then(data => {
-            if (data && data.success) {
-                updateStatDisplay(data.stats);
-            }
-        })
-        .catch(error => {
-            // Silently handle errors - not critical for UX
-            console.debug('Live stats update unavailable:', error.message);
-        });
+        // Simulate live updates with subtle animations
+        // In production, this could fetch real stats from an API
+        const liveEventsElement = document.querySelector('.live-events-count');
+        const engagementElement = document.querySelector('.engagement-rate');
+        
+        if (liveEventsElement) {
+            // Add subtle pulse effect to show "live" activity
+            liveEventsElement.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                liveEventsElement.style.transform = 'scale(1)';
+            }, 200);
+        }
+        
+        if (engagementElement) {
+            // Add subtle pulse effect
+            engagementElement.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                engagementElement.style.transform = 'scale(1)';
+            }, 200);
+        }
+        
+        updateProgressBars();
     }
     
     function updateStatDisplay(stats) {
@@ -951,7 +995,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
     }
     
-    function updateProgressBars(stats) {
+    function updateProgressBars() {
         const progressBars = document.querySelectorAll('.progress-bar-animated');
         progressBars.forEach(bar => {
             // Add subtle animation to show activity
@@ -1040,6 +1084,29 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Initialize Bootstrap components
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap accordion if available
+    if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+        // Bootstrap is already loaded from header
+        console.debug('Bootstrap components initialized');
+    }
+});
+</script>
+
+<!-- Ensure Bootstrap JS is loaded for accordion functionality -->
+<script>
+// Fallback Bootstrap initialization for accordion
+if (typeof bootstrap === 'undefined') {
+    // Load Bootstrap JS if not already loaded
+    const bootstrapScript = document.createElement('script');
+    bootstrapScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js';
+    bootstrapScript.onload = function() {
+        console.debug('Bootstrap JS loaded successfully');
+    };
+    document.head.appendChild(bootstrapScript);
+}
 </script>
 
 <!-- SEO Content Section -->

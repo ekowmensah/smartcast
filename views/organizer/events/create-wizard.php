@@ -483,9 +483,9 @@
                                     <?php endif; ?>
                                 </button>
                                 <!-- Debug: Simple submit button that's always visible -->
-                                <button type="submit" class="btn btn-warning" onclick="return confirm('Submit form with current data?')" name="action" value="debug">
+                            <!--    <button type="submit" class="btn btn-warning" onclick="return confirm('Submit form with current data?')" name="action" value="debug">
                                     <i class="fas fa-bug me-2"></i>Debug Submit
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </div>
