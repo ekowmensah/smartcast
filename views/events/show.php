@@ -59,7 +59,7 @@
             </div>
             
             <!-- Stats Grid -->
-            <div class="stats-section">
+        <!--    <div class="stats-section">
                 <div class="stats-container">
                     <div class="stat-item-new">
                         <div class="stat-icon-new">
@@ -105,7 +105,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
             
             <!-- Action Section -->
             <div class="action-section">
@@ -175,12 +175,12 @@
         </div>
         
         <!-- Scroll Indicator -->
-        <div class="scroll-indicator-new">
+    <!--    <div class="scroll-indicator-new">
             <div class="scroll-mouse">
                 <div class="scroll-wheel"></div>
             </div>
             <div class="scroll-text-new">Scroll to explore</div>
-        </div>
+        </div> -->
     </div>
 </div>
 <!-- Main Content Section -->
