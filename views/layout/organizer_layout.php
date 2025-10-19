@@ -18,7 +18,7 @@
 <body class="c-app c-default-layout c-layout-fixed-sidebar">
     
     <!-- Sidebar -->
-    <div class="sidebar sidebar-dark sidebar-fixed" id="sidebar">
+    <div class="sidebar sidebar-dark sidebar-fixed sidebar-show" id="sidebar">
         <div class="sidebar-brand d-none d-md-flex">
             <i class="fas fa-vote-yea sidebar-brand-full me-2"></i>
             <strong class="sidebar-brand-full"><?= APP_NAME ?></strong>
@@ -398,7 +398,7 @@
     <script src="<?= APP_URL ?>/public/assets/js/image-helper.js"></script>
     <script>window.APP_URL = '<?= APP_URL ?>';</script>
     
-    <!-- Fix CoreUI dropdowns -->
+    <!-- Fix CoreUI dropdowns and sidebar -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize all dropdowns with Bootstrap
@@ -407,16 +407,32 @@
             return new bootstrap.Dropdown(dropdownToggleEl);
         });
         
+        // Ensure sidebar is properly shown on load
+        const sidebar = document.querySelector('#sidebar');
+        if (sidebar && window.innerWidth >= 992) {
+            sidebar.classList.add('sidebar-show');
+        }
+        
         // Fix sidebar toggle
         const sidebarToggler = document.querySelector('.header-toggler');
         if (sidebarToggler) {
             sidebarToggler.addEventListener('click', function() {
-                const sidebar = document.querySelector('#sidebar');
                 if (sidebar) {
                     sidebar.classList.toggle('sidebar-show');
                 }
             });
         }
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (sidebar) {
+                if (window.innerWidth >= 992) {
+                    sidebar.classList.add('sidebar-show');
+                } else {
+                    sidebar.classList.remove('sidebar-show');
+                }
+            }
+        });
     });
     
     function returnToSuperAdmin() {

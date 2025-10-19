@@ -73,22 +73,6 @@
     color: #6c757d;
 }
 
-/* Fix content hiding behind sidebar */
-.wrapper {
-    margin-left: 256px; /* Default sidebar width */
-}
-
-@media (max-width: 991.98px) {
-    .wrapper {
-        margin-left: 0; /* Remove margin on mobile */
-    }
-}
-
-/* Sidebar minimized state */
-.sidebar-minimized ~ .wrapper {
-    margin-left: 56px; /* Minimized sidebar width */
-}
-
 /* Ensure proper spacing */
 .body {
     padding-top: 1rem;
@@ -100,18 +84,21 @@
     padding-right: 1rem;
 }
 
-/* Fix header positioning */
+/* Fix header z-index and alignment */
 .header {
-    margin-left: 256px;
     z-index: 1020;
 }
 
-@media (max-width: 991.98px) {
-    .header {
-        margin-left: 0;
-    }
+/* Ensure no gaps between sidebar and header */
+.sidebar-fixed ~ .wrapper {
+    margin-left: 0;
 }
 
-.sidebar-minimized ~ .wrapper .header {
-    margin-left: 56px;
+/* Fix any potential gaps */
+.c-layout-fixed-sidebar .wrapper {
+    margin-left: 0 !important;
+}
+
+.c-layout-fixed-sidebar .header {
+    margin-left: 0 !important;
 }
