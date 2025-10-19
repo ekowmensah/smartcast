@@ -400,6 +400,158 @@ class SuperAdminController extends BaseController
         }
     }
     
+    public function loginAsTenant($tenantId = null)
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+        }
+        
+        if (!$tenantId || !is_numeric($tenantId)) {
+            return $this->json(['success' => false, 'message' => 'Invalid tenant ID'], 400);
+        }
+        
+        try {
+            // Verify tenant exists and is active
+            $tenant = $this->tenantModel->find($tenantId);
+            
+            if (!$tenant) {
+                return $this->json(['success' => false, 'message' => 'Tenant not found'], 404);
+            }
+            
+            if (!$tenant['active'] || !$tenant['verified']) {
+                return $this->json(['success' => false, 'message' => 'Tenant is not active or verified'], 400);
+            }
+            
+            // Find the tenant owner/admin user
+            $tenantUsers = $this->userModel->getUsersByTenant($tenantId);
+            $tenantOwner = null;
+            
+            foreach ($tenantUsers as $user) {
+                if ($user['role'] === 'owner') {
+                    $tenantOwner = $user;
+                    break;
+                } elseif ($user['role'] === 'manager' && !$tenantOwner) {
+                    $tenantOwner = $user; // Fallback to manager if no owner found
+                }
+            }
+            
+            if (!$tenantOwner) {
+                return $this->json(['success' => false, 'message' => 'No tenant owner/admin found'], 404);
+            }
+            
+            // Store current superadmin session info for potential restoration
+            $originalUserId = $this->session->get('user_id');
+            $originalUserRole = $this->session->get('user_role');
+            
+            // Log the impersonation action
+            $this->auditModel->create([
+                'user_id' => $originalUserId,
+                'action' => 'tenant_impersonation',
+                'details' => json_encode([
+                    'tenant_id' => $tenantId,
+                    'tenant_name' => $tenant['name'],
+                    'impersonated_user_id' => $tenantOwner['id'],
+                    'impersonated_user_email' => $tenantOwner['email'],
+                    'impersonated_user_role' => $tenantOwner['role']
+                ]),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+            
+            // Switch session to tenant user
+            $this->session->set('user_id', $tenantOwner['id']);
+            $this->session->set('tenant_id', $tenantId);
+            $this->session->set('user_role', $tenantOwner['role']);
+            $this->session->set('user_email', $tenantOwner['email']);
+            
+            // Store original superadmin info for potential restoration
+            $this->session->set('original_superadmin_id', $originalUserId);
+            $this->session->set('original_superadmin_role', $originalUserRole);
+            $this->session->set('is_impersonating', true);
+            
+            $this->session->regenerate();
+            
+            // Determine redirect URL based on tenant user role
+            $redirectUrl = ORGANIZER_URL;
+            if ($tenantOwner['role'] === 'staff') {
+                $redirectUrl = ADMIN_URL;
+            }
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Successfully switched to tenant account',
+                'redirect_url' => $redirectUrl,
+                'tenant_name' => $tenant['name'],
+                'user_role' => $tenantOwner['role']
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Login as tenant error: ' . $e->getMessage());
+            return $this->json(['success' => false, 'message' => 'Failed to switch to tenant: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    public function returnToSuperAdmin()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+        }
+        
+        try {
+            // Check if currently impersonating
+            if (!$this->session->get('is_impersonating')) {
+                return $this->json(['success' => false, 'message' => 'Not currently impersonating a tenant'], 400);
+            }
+            
+            $originalUserId = $this->session->get('original_superadmin_id');
+            $originalUserRole = $this->session->get('original_superadmin_role');
+            
+            if (!$originalUserId || !$originalUserRole) {
+                return $this->json(['success' => false, 'message' => 'Original superadmin session not found'], 400);
+            }
+            
+            // Get original superadmin user details
+            $originalUser = $this->userModel->find($originalUserId);
+            if (!$originalUser) {
+                return $this->json(['success' => false, 'message' => 'Original superadmin user not found'], 404);
+            }
+            
+            // Log the return action
+            $this->auditModel->create([
+                'user_id' => $this->session->get('user_id'), // Current impersonated user
+                'action' => 'superadmin_return',
+                'details' => json_encode([
+                    'returned_to_user_id' => $originalUserId,
+                    'returned_to_user_email' => $originalUser['email'],
+                    'from_tenant_id' => $this->session->get('tenant_id')
+                ]),
+                'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            ]);
+            
+            // Restore original superadmin session
+            $this->session->set('user_id', $originalUserId);
+            $this->session->set('tenant_id', null);
+            $this->session->set('user_role', $originalUserRole);
+            $this->session->set('user_email', $originalUser['email']);
+            
+            // Clear impersonation flags
+            $this->session->remove('original_superadmin_id');
+            $this->session->remove('original_superadmin_role');
+            $this->session->remove('is_impersonating');
+            
+            $this->session->regenerate();
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Successfully returned to SuperAdmin account',
+                'redirect_url' => SUPERADMIN_URL
+            ]);
+            
+        } catch (\Exception $e) {
+            error_log('Return to superadmin error: ' . $e->getMessage());
+            return $this->json(['success' => false, 'message' => 'Failed to return to SuperAdmin: ' . $e->getMessage()], 500);
+        }
+    }
+    
     public function users()
     {
         $users = $this->userModel->findAll([], 'created_at DESC');

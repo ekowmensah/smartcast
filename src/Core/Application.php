@@ -226,6 +226,8 @@ class Application
             $router->post('/tenants/plans/{id}/delete', 'SuperAdminController@deletePlan');
             $router->post('/tenants/{id}/change-plan', 'SuperAdminController@changeTenantPlan');
             $router->post('/tenants/{id}/reactivate', 'SuperAdminController@reactivateTenant');
+            $router->post('/tenants/{id}/login-as', 'SuperAdminController@loginAsTenant');
+            $router->post('/return-to-superadmin', 'SuperAdminController@returnToSuperAdmin');
             // Tenant Approval System
             $router->post('/tenants/approve', 'SuperAdminController@approveTenant');
             $router->post('/tenants/reject', 'SuperAdminController@rejectTenant');

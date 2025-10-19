@@ -399,8 +399,20 @@
                         <div class="dropdown-menu dropdown-menu-end pt-0 pr-5 w-100">
                             <div class="dropdown-header bg-light py-2">
                                 <div class="fw-semibold"><?= htmlspecialchars($_SESSION['user_email'] ?? 'Super Admin') ?></div>
-                                <div class="text-medium-emphasis small">Platform Administrator</div>
+                                <div class="text-medium-emphasis small">
+                                    <?php if (isset($_SESSION['is_impersonating']) && $_SESSION['is_impersonating']): ?>
+                                        Impersonating Tenant
+                                    <?php else: ?>
+                                        Platform Administrator
+                                    <?php endif; ?>
+                                </div>
                             </div>
+                            <?php if (isset($_SESSION['is_impersonating']) && $_SESSION['is_impersonating']): ?>
+                                <button class="dropdown-item text-warning fw-bold" onclick="returnToSuperAdmin()">
+                                    <i class="fas fa-arrow-left me-2"></i>Return to SuperAdmin
+                                </button>
+                                <div class="dropdown-divider"></div>
+                            <?php endif; ?>
                             <a class="dropdown-item" href="<?= SUPERADMIN_URL ?>/profile">
                                 <i class="fas fa-user me-2"></i>Profile
                             </a>
@@ -474,6 +486,31 @@
     <script src="<?= COREUI_JS ?>"></script>
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/superadmin.js"></script>
+    
+    <script>
+    function returnToSuperAdmin() {
+        if (confirm('Return to SuperAdmin account? This will end the tenant impersonation session.')) {
+            fetch(`<?= SUPERADMIN_URL ?>/return-to-superadmin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url || '<?= SUPERADMIN_URL ?>';
+                } else {
+                    alert('Error returning to SuperAdmin: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error returning to SuperAdmin');
+            });
+        }
+    }
+    </script>
 
     <!--Start of Tawk.to Script-->
     <script type="text/javascript">
