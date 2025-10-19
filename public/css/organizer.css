@@ -73,9 +73,32 @@
     color: #6c757d;
 }
 
-/* Ensure proper spacing */
+/* Fix layout issues - ensure content doesn't hide behind sidebar */
+.c-app .wrapper {
+    margin-left: 256px; /* Fixed sidebar width */
+}
+
+@media (max-width: 992px) {
+    .c-app .wrapper {
+        margin-left: 0; /* Remove margin on mobile */
+    }
+}
+
+/* Sidebar minimized state */
+.sidebar-minimized .wrapper {
+    margin-left: 56px; /* Minimized sidebar width */
+}
+
+@media (max-width: 992px) {
+    .sidebar-minimized .wrapper {
+        margin-left: 0; /* Remove margin on mobile even when minimized */
+    }
+}
+
 .body {
     padding-top: 1rem;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
 }
 
 .container-lg {
@@ -84,21 +107,19 @@
     padding-right: 1rem;
 }
 
-/* Fix header z-index and alignment */
+/* Fix header z-index */
 .header {
     z-index: 1020;
 }
 
-/* Ensure no gaps between sidebar and header */
-.sidebar-fixed ~ .wrapper {
-    margin-left: 0;
-}
-
-/* Fix any potential gaps */
-.c-layout-fixed-sidebar .wrapper {
-    margin-left: 0 !important;
-}
-
-.c-layout-fixed-sidebar .header {
-    margin-left: 0 !important;
+/* Mobile sidebar behavior */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.sidebar-show {
+        transform: translateX(0);
+    }
 }
