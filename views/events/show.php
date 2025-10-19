@@ -54,7 +54,32 @@
             <div class="title-section">
                 <h1 class="hero-title-new"><?= htmlspecialchars($event['name']) ?></h1>
                 <?php if ($event['description']): ?>
-                    <p class="hero-description-new"><?= nl2br(htmlspecialchars($event['description'])) ?></p>
+                    <?php
+                    $description = htmlspecialchars($event['description']);
+                    $words = explode(' ', $description);
+                    $wordCount = count($words);
+                    $shortDescription = implode(' ', array_slice($words, 0, 160));
+                    $needsReadMore = $wordCount > 160;
+                    ?>
+                    
+                    <div class="hero-description-container">
+                        <p class="hero-description-new" id="eventDescription">
+                            <?= nl2br($shortDescription) ?>
+                            <?php if ($needsReadMore): ?>
+                                <span id="descriptionDots">...</span>
+                                <span id="fullDescription" style="display: none;">
+                                    <?= nl2br(implode(' ', array_slice($words, 160))) ?>
+                                </span>
+                            <?php endif; ?>
+                        </p>
+                        
+                        <?php if ($needsReadMore): ?>
+                            <button id="readMoreBtn" class="read-more-btn" onclick="toggleDescription()">
+                                <i class="fas fa-chevron-down me-1"></i>
+                                <span class="btn-text">Read More</span>
+                            </button>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             </div>
             
@@ -720,9 +745,57 @@
     font-size: clamp(1rem, 3vw, 1.3rem);
     line-height: 1.6;
     opacity: 0.95;
-    text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.6);
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
+    text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.5);
+}
+
+.hero-description-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.read-more-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    margin-top: 1rem;
+    display: inline-flex;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.read-more-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.read-more-btn.expanded {
+    background: rgba(220, 53, 69, 0.8);
+    border-color: rgba(220, 53, 69, 0.5);
+}
+
+.read-more-btn.expanded:hover {
+    background: rgba(220, 53, 69, 0.9);
+    border-color: rgba(220, 53, 69, 0.7);
+}
+
+.read-more-btn i {
+    transition: transform 0.3s ease;
+}
+
+.read-more-btn:hover i {
+    transform: translateY(-1px);
 }
 
 /* Stats Section */
@@ -1866,6 +1939,31 @@ function clearSearch() {
     
     clearSearchHighlights();
     searchInput.focus();
+}
+
+// Toggle description read more/less functionality
+function toggleDescription() {
+    const dots = document.getElementById('descriptionDots');
+    const fullDescription = document.getElementById('fullDescription');
+    const readMoreBtn = document.getElementById('readMoreBtn');
+    const btnText = readMoreBtn.querySelector('.btn-text');
+    const btnIcon = readMoreBtn.querySelector('i');
+    
+    if (fullDescription.style.display === 'none') {
+        // Show full description
+        dots.style.display = 'none';
+        fullDescription.style.display = 'inline';
+        btnText.textContent = 'Read Less';
+        btnIcon.className = 'fas fa-chevron-up me-1';
+        readMoreBtn.classList.add('expanded');
+    } else {
+        // Show truncated description
+        dots.style.display = 'inline';
+        fullDescription.style.display = 'none';
+        btnText.textContent = 'Read More';
+        btnIcon.className = 'fas fa-chevron-down me-1';
+        readMoreBtn.classList.remove('expanded');
+    }
 }
 
 // Initialize everything when DOM is loaded
