@@ -52,7 +52,7 @@
             
             <!-- Main Title -->
             <div class="title-section">
-                <h1 class="hero-title-new"><?= htmlspecialchars($event['name']) ?></h1>
+                <h3 class="hero-title-new"><?= htmlspecialchars($event['name']) ?></h3>
                 <?php if ($event['description']): ?>
                     <?php
                     $description = htmlspecialchars($event['description']);
