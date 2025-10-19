@@ -56,10 +56,10 @@
                 <?php if ($event['description']): ?>
                     <?php
                     $description = htmlspecialchars($event['description']);
-                    $words = explode(' ', $description);
-                    $wordCount = count($words);
-                    $shortDescription = implode(' ', array_slice($words, 0, 160));
-                    $needsReadMore = $wordCount > 160;
+                    $charCount = strlen($description);
+                    $shortDescription = substr($description, 0, 160);
+                    $remainingDescription = substr($description, 160);
+                    $needsReadMore = $charCount > 160;
                     ?>
                     
                     <div class="hero-description-container">
@@ -68,7 +68,7 @@
                             <?php if ($needsReadMore): ?>
                                 <span id="descriptionDots">...</span>
                                 <span id="fullDescription" style="display: none;">
-                                    <?= nl2br(implode(' ', array_slice($words, 160))) ?>
+                                    <?= nl2br($remainingDescription) ?>
                                 </span>
                             <?php endif; ?>
                         </p>
