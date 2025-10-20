@@ -138,5 +138,11 @@
 
     <!-- CoreUI JavaScript -->
     <script src="<?= COREUI_JS ?>"></script>
+
+    <!--Google Adsense-->
+
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7353409583217467"
+     crossorigin="anonymous"></script>
+
 </body>
 </html>
