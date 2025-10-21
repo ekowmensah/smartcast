@@ -1773,9 +1773,6 @@ function showAlert(content, type) {
     
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    // Auto-dismiss after 5 seconds for non-success alerts
-    }
 }
 </script>
 

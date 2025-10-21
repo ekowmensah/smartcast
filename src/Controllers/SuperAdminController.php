@@ -2,6 +2,7 @@
 
 namespace SmartCast\Controllers;
 
+use SmartCast\Core\Database;
 use SmartCast\Models\Tenant;
 use SmartCast\Models\User;
 use SmartCast\Models\Event;
@@ -24,6 +25,7 @@ use SmartCast\Services\NotificationService;
  */
 class SuperAdminController extends BaseController
 {
+    private $db;
     private $tenantModel;
     private $userModel;
     private $eventModel;
@@ -47,6 +49,7 @@ class SuperAdminController extends BaseController
         $this->requireAuth();
         $this->requireRole('platform_admin');
         
+        $this->db = Database::getInstance();
         $this->tenantModel = new Tenant();
         $this->userModel = new User();
         $this->eventModel = new Event();
@@ -2537,8 +2540,31 @@ class SuperAdminController extends BaseController
     {
         $settings = $this->getGlobalSettings();
         
+        // Load payment gateway configurations
+        $paystack = $this->db->selectOne("SELECT * FROM payment_gateways WHERE provider = 'paystack'");
+        $paystack_config = $paystack ? array_merge(
+            json_decode($paystack['config'], true) ?: [],
+            [
+                'is_active' => $paystack['is_active'],
+                'is_default' => $paystack['is_default'],
+                'priority' => $paystack['priority']
+            ]
+        ) : [];
+        
+        $hubtel = $this->db->selectOne("SELECT * FROM payment_gateways WHERE provider = 'hubtel'");
+        $hubtel_config = $hubtel ? array_merge(
+            json_decode($hubtel['config'], true) ?: [],
+            [
+                'is_active' => $hubtel['is_active'],
+                'is_default' => $hubtel['is_default'],
+                'priority' => $hubtel['priority']
+            ]
+        ) : [];
+        
         $content = $this->renderView('superadmin/system/settings', [
             'settings' => $settings,
+            'paystack_config' => $paystack_config,
+            'hubtel_config' => $hubtel_config,
             'title' => 'Global Settings'
         ]);
         
@@ -3761,6 +3787,324 @@ class SuperAdminController extends BaseController
             
         } catch (\Exception $e) {
             return $this->json(['success' => false, 'message' => 'Delete failed: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Save Paystack configuration
+     */
+    public function savePaystackConfig()
+    {
+        // Clean any previous output and set JSON header
+        if (ob_get_level()) ob_clean();
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+        
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data) {
+                echo json_encode(['success' => false, 'message' => 'Invalid JSON data', 'input' => $input]);
+                exit;
+            }
+            
+            // Build config JSON
+            $config = [
+                'public_key' => $data['public_key'] ?? '',
+                'secret_key' => $data['secret_key'] ?? '',
+                'webhook_secret' => $data['webhook_secret'] ?? '',
+                'base_url' => 'https://api.paystack.co',
+                'currency' => 'GHS'
+            ];
+            
+            // Check if row exists
+            $existing = $this->db->selectOne("SELECT id FROM payment_gateways WHERE provider = 'paystack'");
+            
+            if ($existing) {
+                // Update existing row
+                $sql = "UPDATE payment_gateways 
+                        SET config = :config,
+                            is_active = :is_active,
+                            is_default = :is_default,
+                            priority = :priority,
+                            updated_at = NOW()
+                        WHERE provider = 'paystack'";
+                
+                $this->db->query($sql, [
+                    'config' => json_encode($config),
+                    'is_active' => $data['is_active'] ?? 0,
+                    'is_default' => $data['is_default'] ?? 0,
+                    'priority' => $data['priority'] ?? 1
+                ]);
+            } else {
+                // Insert new row
+                $sql = "INSERT INTO payment_gateways 
+                        (name, provider, config, supported_methods, is_active, is_default, priority, created_at, updated_at)
+                        VALUES 
+                        ('Paystack', 'paystack', :config, :methods, :is_active, :is_default, :priority, NOW(), NOW())";
+                
+                $this->db->query($sql, [
+                    'config' => json_encode($config),
+                    'methods' => json_encode(['mobile_money', 'card', 'bank_transfer']),
+                    'is_active' => $data['is_active'] ?? 0,
+                    'is_default' => $data['is_default'] ?? 0,
+                    'priority' => $data['priority'] ?? 1
+                ]);
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Paystack configuration saved successfully'
+            ]);
+            exit;
+            
+        } catch (\Exception $e) {
+            error_log("Paystack config save error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to save configuration: ' . $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+    
+    /**
+     * Save Hubtel configuration
+     */
+    public function saveHubtelConfig()
+    {
+        // Clean any previous output and set JSON header
+        if (ob_get_level()) ob_clean();
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+        
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data) {
+                echo json_encode(['success' => false, 'message' => 'Invalid JSON data', 'input' => $input]);
+                exit;
+            }
+            
+            // Build config JSON
+            $config = [
+                'client_id' => $data['client_id'] ?? '',
+                'client_secret' => $data['client_secret'] ?? '',
+                'merchant_account' => $data['merchant_account'] ?? '',
+                'base_url' => 'https://rmp.hubtel.com',
+                'status_check_url' => 'https://api-txnstatus.hubtel.com',
+                'currency' => 'GHS',
+                'ip_whitelist' => $data['ip_whitelist'] ?? []
+            ];
+            
+            // Check if row exists
+            $existing = $this->db->selectOne("SELECT id FROM payment_gateways WHERE provider = 'hubtel'");
+            
+            if ($existing) {
+                // Update existing row
+                $sql = "UPDATE payment_gateways 
+                        SET config = :config,
+                            is_active = :is_active,
+                            is_default = :is_default,
+                            priority = :priority,
+                            updated_at = NOW()
+                        WHERE provider = 'hubtel'";
+                
+                $this->db->query($sql, [
+                    'config' => json_encode($config),
+                    'is_active' => $data['is_active'] ?? 0,
+                    'is_default' => $data['is_default'] ?? 0,
+                    'priority' => $data['priority'] ?? 2
+                ]);
+            } else {
+                // Insert new row
+                $sql = "INSERT INTO payment_gateways 
+                        (name, provider, config, supported_methods, is_active, is_default, priority, created_at, updated_at)
+                        VALUES 
+                        ('Hubtel', 'hubtel', :config, :methods, :is_active, :is_default, :priority, NOW(), NOW())";
+                
+                $this->db->query($sql, [
+                    'config' => json_encode($config),
+                    'methods' => json_encode(['mobile_money', 'card']),
+                    'is_active' => $data['is_active'] ?? 0,
+                    'is_default' => $data['is_default'] ?? 0,
+                    'priority' => $data['priority'] ?? 2
+                ]);
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Hubtel configuration saved successfully'
+            ]);
+            exit;
+            
+        } catch (\Exception $e) {
+            error_log("Hubtel config save error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to save configuration: ' . $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+    
+    /**
+     * Test Paystack connection
+     */
+    public function testPaystackConnection()
+    {
+        error_reporting(0);
+        ini_set('display_errors', 0);
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+        
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            $secretKey = $data['secret_key'] ?? '';
+            
+            if (empty($secretKey)) {
+                echo json_encode(['success' => false, 'message' => 'Secret key is required']);
+                exit;
+            }
+            
+            // Test API call to Paystack
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => 'https://api.paystack.co/transaction/verify/invalid_ref',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $secretKey,
+                    'Content-Type: application/json'
+                ],
+                CURLOPT_TIMEOUT => 10
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            // If we get 404, it means the API key is valid (just the transaction doesn't exist)
+            // If we get 401, the API key is invalid
+            if ($httpCode === 404) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Paystack API credentials are valid!'
+                ]);
+            } elseif ($httpCode === 401) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid Paystack API credentials'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Unable to verify credentials. HTTP ' . $httpCode
+                ]);
+            }
+            exit;
+            
+        } catch (\Exception $e) {
+            error_log("Paystack test error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Connection test failed: ' . $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+    
+    /**
+     * Test Hubtel connection
+     */
+    public function testHubtelConnection()
+    {
+        error_reporting(0);
+        ini_set('display_errors', 0);
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+        
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            $clientId = $data['client_id'] ?? '';
+            $clientSecret = $data['client_secret'] ?? '';
+            
+            if (empty($clientId) || empty($clientSecret)) {
+                echo json_encode(['success' => false, 'message' => 'Client ID and Secret are required']);
+                exit;
+            }
+            
+            // Test API call to Hubtel (check if credentials work)
+            $authString = base64_encode("{$clientId}:{$clientSecret}");
+            
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL => 'https://api-txnstatus.hubtel.com/transactions/test/status?clientReference=test',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Basic ' . $authString,
+                    'Content-Type: application/json'
+                ],
+                CURLOPT_TIMEOUT => 10
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            // If we get 200 or 404, credentials are valid
+            // If we get 401 or 403, credentials are invalid or IP not whitelisted
+            if ($httpCode === 200 || $httpCode === 404) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Hubtel API credentials are valid!'
+                ]);
+            } elseif ($httpCode === 401) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid Hubtel API credentials'
+                ]);
+            } elseif ($httpCode === 403) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'IP address not whitelisted. Contact Hubtel support.'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Unable to verify credentials. HTTP ' . $httpCode
+                ]);
+            }
+            exit;
+            
+        } catch (\Exception $e) {
+            error_log("Hubtel test error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Connection test failed: ' . $e->getMessage()
+            ]);
+            exit;
         }
     }
 }

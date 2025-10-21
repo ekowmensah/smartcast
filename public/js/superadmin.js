@@ -224,6 +224,9 @@ function initializeRealTimeAlerts() {
 }
 
 function checkCriticalAlerts() {
+    // Temporarily disabled - endpoint not yet implemented
+    // Uncomment when /superadmin/alerts/critical endpoint is ready
+    /*
     fetch('/superadmin/alerts/critical', {
         method: 'GET',
         headers: {
@@ -239,6 +242,7 @@ function checkCriticalAlerts() {
     .catch(error => {
         console.log('Critical alerts check failed:', error);
     });
+    */
 }
 
 function showCriticalAlerts(alerts) {

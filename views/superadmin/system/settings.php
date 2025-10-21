@@ -248,9 +248,10 @@
             
             <!-- Payment Settings -->
             <div class="tab-pane fade" id="payment" role="tabpanel">
-                <div class="card">
+                <!-- General Payment Settings -->
+                <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0">Payment Configuration</h5>
+                        <h5 class="mb-0">General Payment Configuration</h5>
                     </div>
                     <div class="card-body">
                         <form id="paymentSettingsForm">
@@ -274,15 +275,6 @@
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="paymentGateway" class="form-label">Payment Gateway</label>
-                                <select class="form-select" id="paymentGateway" name="payment_gateway">
-                                    <option value="stripe" <?= ($settings['payment_gateway'] ?? '') === 'stripe' ? 'selected' : '' ?>>Stripe</option>
-                                    <option value="paypal" <?= ($settings['payment_gateway'] ?? '') === 'paypal' ? 'selected' : '' ?>>PayPal</option>
-                                    <option value="square" <?= ($settings['payment_gateway'] ?? '') === 'square' ? 'selected' : '' ?>>Square</option>
-                                </select>
-                            </div>
-                            
                             <div class="form-check mb-3">
                                 <input class="form-check-input" type="checkbox" id="autoPayouts" name="auto_payouts" <?= ($settings['auto_payouts'] ?? false) ? 'checked' : '' ?>>
                                 <label class="form-check-label" for="autoPayouts">
@@ -290,6 +282,199 @@
                                 </label>
                             </div>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Paystack Configuration -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card me-2"></i>Paystack Configuration
+                        </h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="paystackEnabled" <?= ($paystack_config['is_active'] ?? false) ? 'checked' : '' ?>>
+                            <label class="form-check-label text-white" for="paystackEnabled">Enabled</label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="paystackSettingsForm">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Get your Paystack API keys from <a href="https://dashboard.paystack.com/#/settings/developers" target="_blank">Paystack Dashboard</a>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="paystackPublicKey" class="form-label">Public Key</label>
+                                <input type="text" class="form-control font-monospace" id="paystackPublicKey" 
+                                       placeholder="pk_live_..." value="<?= $paystack_config['public_key'] ?? '' ?>">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="paystackSecretKey" class="form-label">Secret Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control font-monospace" id="paystackSecretKey" 
+                                           placeholder="sk_live_..." value="<?= $paystack_config['secret_key'] ?? '' ?>">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('paystackSecretKey')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="paystackWebhookSecret" class="form-label">Webhook Secret (Optional)</label>
+                                <input type="text" class="form-control font-monospace" id="paystackWebhookSecret" 
+                                       placeholder="whsec_..." value="<?= $paystack_config['webhook_secret'] ?? '' ?>">
+                                <small class="text-muted">Used to verify webhook signatures</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="paystackPriority" class="form-label">Priority</label>
+                                        <input type="number" class="form-control" id="paystackPriority" 
+                                               value="<?= $paystack_config['priority'] ?? 1 ?>" min="1" max="10">
+                                        <small class="text-muted">Lower number = higher priority</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="paystackDefault" 
+                                                   <?= ($paystack_config['is_default'] ?? false) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="paystackDefault">Set as Default Gateway</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="button" class="btn btn-success" onclick="savePaystackConfig()">
+                                <i class="fas fa-save me-2"></i>Save Paystack Configuration
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="testPaystackConnection()">
+                                <i class="fas fa-plug me-2"></i>Test Connection
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Hubtel Configuration -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-mobile-alt me-2"></i>Hubtel Configuration
+                        </h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="hubtelEnabled" <?= ($hubtel_config['is_active'] ?? false) ? 'checked' : '' ?>>
+                            <label class="form-check-label text-white" for="hubtelEnabled">Enabled</label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="hubtelSettingsForm">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Get your Hubtel credentials from <a href="https://dashboard.hubtel.com" target="_blank">Hubtel Dashboard</a>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="hubtelClientId" class="form-label">Client ID</label>
+                                <input type="text" class="form-control font-monospace" id="hubtelClientId" 
+                                       placeholder="Your Hubtel Client ID" value="<?= $hubtel_config['client_id'] ?? '' ?>">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="hubtelClientSecret" class="form-label">Client Secret</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control font-monospace" id="hubtelClientSecret" 
+                                           placeholder="Your Hubtel Client Secret" value="<?= $hubtel_config['client_secret'] ?? '' ?>">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('hubtelClientSecret')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="hubtelMerchantAccount" class="form-label">Merchant Account (POS Sales ID)</label>
+                                <input type="text" class="form-control font-monospace" id="hubtelMerchantAccount" 
+                                       placeholder="Your POS Sales ID" value="<?= $hubtel_config['merchant_account'] ?? '' ?>">
+                                <small class="text-muted">Find this in your Hubtel Merchant Account section</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="hubtelIpWhitelist" class="form-label">IP Whitelist</label>
+                                <textarea class="form-control font-monospace" id="hubtelIpWhitelist" rows="3" 
+                                          placeholder="Enter IP addresses (one per line)"><?= implode("\n", $hubtel_config['ip_whitelist'] ?? []) ?></textarea>
+                                <small class="text-muted">Your server IPs that Hubtel should allow. Max 4 IPs.</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="hubtelPriority" class="form-label">Priority</label>
+                                        <input type="number" class="form-control" id="hubtelPriority" 
+                                               value="<?= $hubtel_config['priority'] ?? 2 ?>" min="1" max="10">
+                                        <small class="text-muted">Lower number = higher priority</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="hubtelDefault" 
+                                                   <?= ($hubtel_config['is_default'] ?? false) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="hubtelDefault">Set as Default Gateway</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Important:</strong> After saving, submit your IP addresses to Hubtel support for whitelisting. 
+                                This usually takes 24-48 hours.
+                            </div>
+                            
+                            <button type="button" class="btn btn-primary" onclick="saveHubtelConfig()">
+                                <i class="fas fa-save me-2"></i>Save Hubtel Configuration
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="testHubtelConnection()">
+                                <i class="fas fa-plug me-2"></i>Test Connection
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Webhook URLs -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-link me-2"></i>Webhook URLs
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Configure these webhook URLs in your payment gateway dashboards:</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Paystack Webhook URL</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control font-monospace" readonly 
+                                       value="<?= APP_URL ?>/api/payment/webhook.php?provider=paystack">
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard(this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Hubtel Webhook URL</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control font-monospace" readonly 
+                                       value="<?= APP_URL ?>/api/payment/webhook.php?provider=hubtel">
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard(this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -404,5 +589,176 @@ function testEmailSettings() {
     
     console.log('Testing email settings:', Object.fromEntries(formData));
     alert('Test email sent! Check your inbox.');
+}
+
+// Payment Gateway Functions
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+function copyToClipboard(button) {
+    const input = button.previousElementSibling;
+    input.select();
+    document.execCommand('copy');
+    
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    button.classList.add('btn-success');
+    button.classList.remove('btn-outline-secondary');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+async function savePaystackConfig() {
+    const config = {
+        public_key: document.getElementById('paystackPublicKey').value,
+        secret_key: document.getElementById('paystackSecretKey').value,
+        webhook_secret: document.getElementById('paystackWebhookSecret').value,
+        priority: document.getElementById('paystackPriority').value,
+        is_active: document.getElementById('paystackEnabled').checked ? 1 : 0,
+        is_default: document.getElementById('paystackDefault').checked ? 1 : 0
+    };
+    
+    try {
+        const response = await fetch('<?= SUPERADMIN_URL ?>/api/payment-gateways/paystack', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Paystack configuration saved successfully!');
+        } else {
+            alert('❌ Error: ' + (result.message || 'Failed to save configuration'));
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('❌ Failed to save Paystack configuration. Check console for details.');
+    }
+}
+
+async function saveHubtelConfig() {
+    const ipWhitelist = document.getElementById('hubtelIpWhitelist').value
+        .split('\n')
+        .map(ip => ip.trim())
+        .filter(ip => ip.length > 0);
+    
+    const config = {
+        client_id: document.getElementById('hubtelClientId').value,
+        client_secret: document.getElementById('hubtelClientSecret').value,
+        merchant_account: document.getElementById('hubtelMerchantAccount').value,
+        ip_whitelist: ipWhitelist,
+        priority: document.getElementById('hubtelPriority').value,
+        is_active: document.getElementById('hubtelEnabled').checked ? 1 : 0,
+        is_default: document.getElementById('hubtelDefault').checked ? 1 : 0
+    };
+    
+    try {
+        const response = await fetch('<?= SUPERADMIN_URL ?>/api/payment-gateways/hubtel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Hubtel configuration saved successfully!');
+        } else {
+            alert('❌ Error: ' + (result.message || 'Failed to save configuration'));
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('❌ Failed to save Hubtel configuration. Check console for details.');
+    }
+}
+
+async function testPaystackConnection() {
+    const secretKey = document.getElementById('paystackSecretKey').value;
+    
+    if (!secretKey) {
+        alert('⚠️ Please enter your Paystack Secret Key first');
+        return;
+    }
+    
+    alert('🔄 Testing Paystack connection...');
+    
+    try {
+        const response = await fetch('<?= SUPERADMIN_URL ?>/api/payment-gateways/test/paystack', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ secret_key: secretKey })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Paystack connection successful!\n\n' + (result.message || 'API credentials are valid.'));
+        } else {
+            alert('❌ Paystack connection failed!\n\n' + (result.message || 'Invalid API credentials.'));
+        }
+    } catch (error) {
+        console.error('Test error:', error);
+        alert('❌ Failed to test Paystack connection. Check console for details.');
+    }
+}
+
+async function testHubtelConnection() {
+    const clientId = document.getElementById('hubtelClientId').value;
+    const clientSecret = document.getElementById('hubtelClientSecret').value;
+    
+    if (!clientId || !clientSecret) {
+        alert('⚠️ Please enter your Hubtel Client ID and Secret first');
+        return;
+    }
+    
+    alert('🔄 Testing Hubtel connection...');
+    
+    try {
+        const response = await fetch('<?= SUPERADMIN_URL ?>/api/payment-gateways/test/hubtel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                client_id: clientId,
+                client_secret: clientSecret 
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Hubtel connection successful!\n\n' + (result.message || 'API credentials are valid.'));
+        } else {
+            alert('❌ Hubtel connection failed!\n\n' + (result.message || 'Invalid API credentials or IP not whitelisted.'));
+        }
+    } catch (error) {
+        console.error('Test error:', error);
+        alert('❌ Failed to test Hubtel connection. Check console for details.');
+    }
 }
 </script>

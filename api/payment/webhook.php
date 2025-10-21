@@ -11,6 +11,13 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
     $provider = $_GET['provider'] ?? 'paystack';
     
+    // Determine provider from URL path if not in query string
+    if (strpos($_SERVER['REQUEST_URI'], '/webhook/hubtel') !== false) {
+        $provider = 'hubtel';
+    } elseif (strpos($_SERVER['REQUEST_URI'], '/webhook/paystack') !== false) {
+        $provider = 'paystack';
+    }
+    
     if ($method === 'GET') {
         // Handle GET redirect from Paystack (callback)
         if (isset($_GET['trxref']) || isset($_GET['reference'])) {

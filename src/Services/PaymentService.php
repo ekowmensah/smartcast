@@ -4,6 +4,7 @@ namespace SmartCast\Services;
 
 use SmartCast\Core\Database;
 use SmartCast\Services\Gateways\PaystackGateway;
+use SmartCast\Services\Gateways\HubtelGateway;
 use SmartCast\Models\Transaction;
 
 /**
@@ -61,7 +62,10 @@ class PaymentService
                 'metadata' => json_encode($paymentData['metadata']),
                 'tenant_id' => $paymentData['tenant_id'] ?? null,
                 'related_type' => $paymentData['related_type'] ?? 'vote',
-                'related_id' => $paymentData['related_id'] ?? null
+                'related_id' => $paymentData['related_id'] ?? null,
+                'gateway_provider' => $gateway['provider'],
+                'otp_verified' => $paymentData['otp_verified'] ?? 0,
+                'otp_verification_id' => $paymentData['otp_verification_id'] ?? null
             ]);
             
             // Initialize payment with gateway
@@ -72,6 +76,8 @@ class PaymentService
                 'reference' => $reference,
                 'currency' => $paymentData['currency'] ?? 'GHS',
                 'email' => $paymentData['email'],
+                'customer_name' => $paymentData['customer_name'] ?? null,
+                'description' => $paymentData['description'],
                 'callback_url' => $paymentData['callback_url'] ?? null,
                 'metadata' => $paymentData['metadata']
             ];
@@ -347,6 +353,8 @@ class PaymentService
         switch ($gateway['provider']) {
             case 'paystack':
                 return new PaystackGateway($config);
+            case 'hubtel':
+                return new HubtelGateway($config);
             default:
                 throw new \Exception("Unsupported gateway provider: {$gateway['provider']}");
         }
@@ -360,12 +368,19 @@ class PaymentService
         $sql = "INSERT INTO payment_transactions (
             reference, gateway_id, amount, currency, payment_method, 
             phone_number, email, customer_name, description, metadata, 
-            tenant_id, related_type, related_id, created_at
+            tenant_id, related_type, related_id, gateway_provider,
+            otp_verified, otp_verification_id, created_at
         ) VALUES (
             :reference, :gateway_id, :amount, :currency, :payment_method,
             :phone_number, :email, :customer_name, :description, :metadata,
-            :tenant_id, :related_type, :related_id, NOW()
+            :tenant_id, :related_type, :related_id, :gateway_provider,
+            :otp_verified, :otp_verification_id, NOW()
         )";
+        
+        // Set defaults for new fields
+        $data['gateway_provider'] = $data['gateway_provider'] ?? null;
+        $data['otp_verified'] = $data['otp_verified'] ?? 0;
+        $data['otp_verification_id'] = $data['otp_verification_id'] ?? null;
         
         $this->db->query($sql, $data);
         return $this->db->lastInsertId();

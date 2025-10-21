@@ -63,6 +63,10 @@ class Application
         $this->router->get('/vote', 'VoteController@showDirectVoting'); // Direct voting with parameters
         $this->router->post('/vote/process', 'VoteController@processVote'); // Process direct vote using same logic as standard voting
         
+        // OTP routes for payment verification
+        $this->router->post('/api/otp/send-payment-otp', 'OtpController@sendPaymentOtp'); // Send OTP for payment
+        $this->router->post('/api/otp/verify-payment-otp', 'OtpController@verifyPaymentOtp'); // Verify OTP for payment
+        
         // Payment routes
         $this->router->get('/payment/status/{transactionId}', 'VoteController@showPaymentStatus'); // Payment status page
         $this->router->get('/api/payment/status/{transactionId}', 'VoteController@checkPaymentStatus'); // Check payment status
@@ -303,6 +307,12 @@ class Application
             $router->get('/system/maintenance', 'SuperAdminController@systemMaintenance');
             $router->get('/system/backups', 'SuperAdminController@systemBackups');
             $router->get('/system/logs', 'SuperAdminController@systemLogs');
+            
+            // Payment Gateway API
+            $router->post('/api/payment-gateways/paystack', 'SuperAdminController@savePaystackConfig');
+            $router->post('/api/payment-gateways/hubtel', 'SuperAdminController@saveHubtelConfig');
+            $router->post('/api/payment-gateways/test/paystack', 'SuperAdminController@testPaystackConnection');
+            $router->post('/api/payment-gateways/test/hubtel', 'SuperAdminController@testHubtelConnection');
             
             // API Management
             $router->get('/api/overview', 'SuperAdminController@apiOverview');
