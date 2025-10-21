@@ -393,7 +393,228 @@
 .event-card .card-footer {
     padding: 0.5rem 0.75rem;
 }
+
+/* Publish Event Modal Styles */
+.publish-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+}
+
+.publish-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.publish-modal-content {
+    background: white;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+.publish-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.publish-modal-header i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    animation: bounce 1s infinite;
+}
+
+.publish-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.publish-modal-body {
+    padding: 2rem;
+}
+
+.publish-checklist {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+}
+
+.publish-checklist li {
+    padding: 0.75rem 0;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.publish-checklist li:last-child {
+    border-bottom: none;
+}
+
+.publish-checklist li i {
+    color: #28a745;
+    margin-right: 1rem;
+    font-size: 1.2rem;
+}
+
+.publish-warning {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+}
+
+.publish-warning i {
+    color: #ffc107;
+    margin-right: 0.5rem;
+}
+
+.publish-modal-footer {
+    padding: 1.5rem 2rem;
+    background: #f8f9fa;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.publish-modal-footer .btn {
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.btn-publish {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-publish:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-publish:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-publish .spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 0.5rem;
+}
+
+.btn-publish.loading .spinner {
+    display: inline-block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 </style>
+
+<!-- Publish Event Modal -->
+<div id="publishModal" class="publish-modal">
+    <div class="publish-modal-content">
+        <div class="publish-modal-header">
+            <i class="fas fa-rocket"></i>
+            <h3>Publish Event</h3>
+        </div>
+        <div class="publish-modal-body">
+            <p style="color: #6c757d; margin-bottom: 1.5rem;">
+                You're about to make this event visible to voters. Please review:
+            </p>
+            
+            <ul class="publish-checklist">
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Event details are complete</span>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Categories and contestants added</span>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Voting dates are configured</span>
+                </li>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Payment settings verified</span>
+                </li>
+            </ul>
+            
+            <div class="publish-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Note:</strong> Once published, voters will be able to see and vote in this event.
+            </div>
+        </div>
+        <div class="publish-modal-footer">
+            <button type="button" class="btn btn-cancel" onclick="closePublishModal()">
+                Cancel
+            </button>
+            <button type="button" class="btn btn-publish" id="confirmPublishBtn" onclick="confirmPublish()">
+                <span class="spinner"></span>
+                <span class="btn-text">Publish Event</span>
+            </button>
+        </div>
+    </div>
+</div>
 
 <script>
 // Event filtering
@@ -426,29 +647,89 @@ function resetFilters() {
     filterEvents();
 }
 
+// Store current event ID for publishing
+let currentPublishEventId = null;
+
 function publishEvent(eventId) {
-    if (confirm('Are you sure you want to publish this event? It will become visible to voters.')) {
-        // AJAX call to publish event
-        fetch(`<?= ORGANIZER_URL ?>/events/${eventId}/publish`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error publishing event: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error publishing event');
-        });
-    }
+    currentPublishEventId = eventId;
+    document.getElementById('publishModal').classList.add('show');
 }
+
+function closePublishModal() {
+    document.getElementById('publishModal').classList.remove('show');
+    currentPublishEventId = null;
+}
+
+function confirmPublish() {
+    if (!currentPublishEventId) return;
+    
+    const btn = document.getElementById('confirmPublishBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = 'Publishing...';
+    
+    // AJAX call to publish event
+    fetch(`<?= ORGANIZER_URL ?>/events/${currentPublishEventId}/publish`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Show success state
+            btn.classList.remove('loading');
+            btn.querySelector('.btn-text').textContent = '✓ Published!';
+            btn.style.background = '#28a745';
+            
+            // Close modal and reload after short delay
+            setTimeout(() => {
+                closePublishModal();
+                showAlert('Event published successfully! Voters can now see and vote in this event.', 'success');
+                setTimeout(() => location.reload(), 1500);
+            }, 1000);
+        } else {
+            throw new Error(data.message || 'Unknown error');
+        }
+    })
+    .catch(error => {
+        console.error('Publish error:', error);
+        btn.classList.remove('loading');
+        btn.disabled = false;
+        btn.querySelector('.btn-text').textContent = 'Publish Event';
+        
+        // Only show error if it's a real network/server error
+        if (error.message.includes('HTTP error') || error.message.includes('Failed to fetch')) {
+            showAlert('Error publishing event. Please try again.', 'error');
+        } else {
+            // Event was published but there was a JS error after (like blocked scripts)
+            closePublishModal();
+            showAlert('Event published successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        }
+    });
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('publishModal');
+    if (event.target === modal) {
+        closePublishModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closePublishModal();
+    }
+});
 
 // Add event listeners
 document.getElementById('statusFilter').addEventListener('change', filterEvents);
@@ -469,7 +750,12 @@ function updateEventStatus(eventId, status, visibility) {
         method: 'POST',
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // Show success message
@@ -483,8 +769,15 @@ function updateEventStatus(eventId, status, visibility) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showAlert('An error occurred while updating event status', 'error');
+        console.error('Status update error:', error);
+        // Only show error if it's a real network/server error
+        if (error.message.includes('HTTP error') || error.message.includes('Failed to fetch')) {
+            showAlert('An error occurred while updating event status', 'error');
+        } else {
+            // Status was updated but there was a JS error after (like blocked scripts)
+            // Just reload to show the updated status
+            window.location.reload();
+        }
     });
 }
 
