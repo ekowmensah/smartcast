@@ -71,6 +71,18 @@ class HubtelGateway
             
             // Check response code
             $responseCode = $response['ResponseCode'] ?? '';
+            $httpStatus = $response['_http_status'] ?? 200;
+            
+            // Log the request
+            $this->logGatewayActivity(
+                'initialize',
+                $data['reference'],
+                $paymentData,
+                $response,
+                $responseCode,
+                $httpStatus,
+                ($responseCode !== '0001' && $responseCode !== '0000') ? ($response['Message'] ?? 'Unknown error') : null
+            );
             
             if ($responseCode === '0001' || $responseCode === '0000') {
                 // Pending or immediate success
@@ -95,6 +107,18 @@ class HubtelGateway
             }
         } catch (\Exception $e) {
             error_log("Hubtel initialization error: " . $e->getMessage());
+            
+            // Log the error
+            $this->logGatewayActivity(
+                'initialize',
+                $data['reference'] ?? 'unknown',
+                $paymentData ?? [],
+                [],
+                'ERROR',
+                0,
+                $e->getMessage()
+            );
+            
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -125,6 +149,18 @@ class HubtelGateway
             $response = $this->makeApiCall('GET', $endpoint, null, $queryParams, true);
             
             $responseCode = $response['responseCode'] ?? '';
+            $httpStatus = $response['_http_status'] ?? 200;
+            
+            // Log the verification request
+            $this->logGatewayActivity(
+                'verify',
+                $clientReference,
+                ['clientReference' => $clientReference],
+                $response,
+                $responseCode,
+                $httpStatus,
+                ($responseCode !== '0000') ? ($response['message'] ?? 'Verification failed') : null
+            );
             
             if ($responseCode === '0000') {
                 $data = $response['data'] ?? [];
@@ -152,6 +188,18 @@ class HubtelGateway
             }
         } catch (\Exception $e) {
             error_log("Hubtel verification error: " . $e->getMessage());
+            
+            // Log the error
+            $this->logGatewayActivity(
+                'verify',
+                $clientReference,
+                ['clientReference' => $clientReference],
+                [],
+                'ERROR',
+                0,
+                $e->getMessage()
+            );
+            
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
@@ -172,6 +220,18 @@ class HubtelGateway
         // Validate IP whitelisting for webhooks
         if (!$this->isIpWhitelisted()) {
             error_log("Hubtel webhook: IP not whitelisted - " . $this->getClientIp());
+            
+            // Log rejected webhook
+            $this->logGatewayActivity(
+                'webhook',
+                'unknown',
+                $payload,
+                [],
+                'REJECTED',
+                403,
+                'IP not whitelisted'
+            );
+            
             return [
                 'success' => false,
                 'message' => 'IP not whitelisted',
@@ -187,6 +247,17 @@ class HubtelGateway
             if (empty($clientReference)) {
                 throw new \Exception('Missing ClientReference in webhook data');
             }
+            
+            // Log webhook received
+            $this->logGatewayActivity(
+                'webhook',
+                $clientReference,
+                $payload,
+                ['processed' => true],
+                $responseCode,
+                200,
+                null
+            );
             
             // Determine status based on response code
             if ($responseCode === '0000') {
@@ -269,6 +340,35 @@ class HubtelGateway
     }
     
     /**
+     * Log gateway request/response
+     */
+    private function logGatewayActivity($requestType, $reference, $requestData, $responseData, $responseCode, $httpStatus, $errorMessage = null)
+    {
+        try {
+            $sql = "INSERT INTO payment_gateway_logs 
+                    (gateway_provider, transaction_reference, request_type, request_data, response_data, 
+                     response_code, http_status, error_message, ip_address, created_at)
+                    VALUES 
+                    (:provider, :reference, :request_type, :request_data, :response_data, 
+                     :response_code, :http_status, :error_message, :ip_address, NOW())";
+            
+            $this->db->query($sql, [
+                'provider' => 'hubtel',
+                'reference' => $reference,
+                'request_type' => $requestType,
+                'request_data' => json_encode($requestData),
+                'response_data' => json_encode($responseData),
+                'response_code' => $responseCode,
+                'http_status' => $httpStatus,
+                'error_message' => $errorMessage,
+                'ip_address' => $this->getClientIp()
+            ]);
+        } catch (\Exception $e) {
+            error_log("Failed to log gateway activity: " . $e->getMessage());
+        }
+    }
+    
+    /**
      * Make API call to Hubtel
      */
     private function makeApiCall($method, $endpoint, $data = null, $queryParams = [], $useStatusCheckUrl = false)
@@ -317,6 +417,11 @@ class HubtelGateway
         }
         
         $decodedResponse = json_decode($response, true);
+        
+        // Add HTTP status to response for logging
+        if (is_array($decodedResponse)) {
+            $decodedResponse['_http_status'] = $httpCode;
+        }
         
         if ($httpCode >= 400) {
             $message = $decodedResponse['Message'] ?? $decodedResponse['message'] ?? "HTTP {$httpCode} error";
