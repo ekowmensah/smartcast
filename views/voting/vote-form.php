@@ -959,9 +959,9 @@ body {
             </div>
             
             <?php if (!empty($contestant['bio'])): ?>
-                <p style="color: #6b7280; line-height: 1.6; margin-top: 1rem;">
+             <!--   <p style="color: #6b7280; line-height: 1.6; margin-top: 1rem;">
                     <?= htmlspecialchars($contestant['bio']) ?>
-                </p>
+                </p> -->
             <?php endif; ?>
         </div>
 
