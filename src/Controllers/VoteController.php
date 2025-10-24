@@ -470,7 +470,7 @@ class VoteController extends BaseController
             
             // Check payment status with MoMo service
             try {
-                $paymentStatus = $this->paymentService->checkPaymentStatus($transaction['provider_reference']);
+                $paymentStatus = $this->paymentService->checkPaymentStatus($transactionId);
             } catch (\Exception $e) {
                 error_log("MoMo service error: " . $e->getMessage());
                 return $this->json([
@@ -987,7 +987,37 @@ class VoteController extends BaseController
             
             error_log("Callback data received: " . json_encode($callbackData));
             
-            // Verify callback (in production, verify signature)
+            // Check if this is a Hubtel callback (has ResponseCode field)
+            if (isset($callbackData['ResponseCode'])) {
+                error_log("Hubtel callback detected for transaction: " . $transactionId);
+                
+                // Hubtel callback - ResponseCode "0000" or "0001" means success
+                if ($callbackData['ResponseCode'] === '0000' || $callbackData['ResponseCode'] === '0001') {
+                    $paymentStatus = 'success';
+                    $paymentDetails = [
+                        'status' => 'success',
+                        'receipt_number' => $callbackData['Data']['TransactionId'] ?? $callbackData['Data']['ClientReference'] ?? 'HUBTEL_' . time(),
+                        'amount' => $callbackData['Data']['Amount'] ?? $transaction['amount']
+                    ];
+                    
+                    $this->processSuccessfulPayment($transaction, $paymentDetails);
+                    error_log("Hubtel payment processed successfully for transaction: " . $transactionId);
+                    
+                    return $this->json(['success' => true, 'message' => 'Payment processed successfully']);
+                } else {
+                    // Hubtel payment failed
+                    error_log("Hubtel payment failed for transaction: " . $transactionId . " - ResponseCode: " . $callbackData['ResponseCode']);
+                    
+                    $this->transactionModel->update($transactionId, [
+                        'status' => 'failed',
+                        'failure_reason' => $callbackData['Message'] ?? 'Payment failed'
+                    ]);
+                    
+                    return $this->json(['success' => true, 'message' => 'Payment failure recorded']);
+                }
+            }
+            
+            // For non-Hubtel callbacks, verify signature
             $verification = $this->paymentService->verifyCallback($callbackData);
             
             if (!$verification['valid']) {
