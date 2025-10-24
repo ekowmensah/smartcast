@@ -667,10 +667,29 @@ class UssdSession extends BaseModel
         $pricePerVote = $event['vote_price'] ?? 0.50; // Default GHS 0.50 per vote
         $totalPrice = $voteCount * $pricePerVote;
         
-        // Create custom bundle data
+        // Get a reference bundle ID (use any existing bundle to satisfy foreign key constraint)
+        // This is the same approach used by web voting
+        $bundleModel = new VoteBundle();
+        $bundles = $bundleModel->getBundlesByEvent($event['id']);
+        
+        $referenceBundleId = null;
+        if (!empty($bundles)) {
+            // Use the first available bundle as reference
+            $referenceBundleId = $bundles[0]['id'];
+        } else {
+            // Create a default reference bundle if none exist
+            $referenceBundleId = $bundleModel->create([
+                'event_id' => $event['id'],
+                'name' => 'Single Vote',
+                'votes' => 1,
+                'price' => $pricePerVote,
+                'active' => 1
+            ]);
+        }
+        
+        // Create custom bundle data with reference bundle ID
         $customBundle = [
-            'id' => null,
-            'name' => 'Custom Votes',
+            'id' => $referenceBundleId, // Use reference bundle ID to satisfy foreign key
             'votes' => $voteCount,
             'price' => $totalPrice,
             'is_custom' => true
@@ -712,6 +731,7 @@ class UssdSession extends BaseModel
                 'event_id' => $sessionData['selected_event']['id'],
                 'contestant_id' => $sessionData['selected_contestant']['id'],
                 'category_id' => $sessionData['selected_category']['id'] ?? null,
+                'bundle_id' => $selectedBundle['id'], // Always present now (reference bundle for custom votes)
                 'amount' => $selectedBundle['price'],
                 'msisdn' => $session['msisdn'],
                 'status' => 'pending',
@@ -719,13 +739,9 @@ class UssdSession extends BaseModel
                 'provider_reference' => $sessionId // Use session ID as reference
             ];
             
-            // Only add bundle_id if it's not null (custom votes have null bundle_id)
-            if (!empty($selectedBundle['id'])) {
-                $transactionData['bundle_id'] = $selectedBundle['id'];
-            } else {
-                // For custom votes, store vote count in a way that can be retrieved later
-                // Log that this is a custom vote transaction
-                error_log("USSD: Creating custom vote transaction - Votes: {$selectedBundle['votes']}, Price: {$selectedBundle['price']}");
+            // Log if this is a custom vote (price doesn't match bundle price)
+            if (!empty($selectedBundle['is_custom'])) {
+                error_log("USSD: Creating custom vote transaction - Votes: {$selectedBundle['votes']}, Price: {$selectedBundle['price']}, Reference Bundle: {$selectedBundle['id']}");
             }
             
             $transactionId = $transactionModel->createTransaction($transactionData);

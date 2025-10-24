@@ -400,18 +400,32 @@ class UssdController extends BaseController
                 'payment_details' => json_encode($orderInfo)
             ]);
             
-            // Get vote count - prioritize session data (for custom votes), then bundle
-            if ($voteCountFromSession) {
-                $voteCount = $voteCountFromSession;
-                error_log("USSD: Using vote count from session: {$voteCount}");
-            } else if ($transaction['bundle_id']) {
-                $bundleModel = new \SmartCast\Models\VoteBundle();
-                $bundle = $bundleModel->find($transaction['bundle_id']);
-                $voteCount = $bundle ? $bundle['votes'] : 1;
-                error_log("USSD: Using vote count from bundle: {$voteCount}");
+            // Get vote count - same logic as web voting
+            $bundleModel = new \SmartCast\Models\VoteBundle();
+            $bundle = $bundleModel->find($transaction['bundle_id']);
+            
+            if (!$bundle) {
+                throw new \Exception('Bundle not found');
+            }
+            
+            // Check if transaction amount matches bundle price
+            if (abs($transaction['amount'] - $bundle['price']) < 0.01) {
+                // Amount matches bundle price - this is a regular bundle purchase
+                $voteCount = $bundle['votes'];
+                error_log("USSD: Bundle purchase - using bundle votes: {$voteCount}");
             } else {
-                $voteCount = 1;
-                error_log("USSD: No vote count found, defaulting to 1");
+                // Amount doesn't match bundle price - this is a custom vote using bundle as reference
+                // Prioritize session vote count, then calculate from amount
+                if ($voteCountFromSession) {
+                    $voteCount = $voteCountFromSession;
+                    error_log("USSD: Custom vote - using session vote count: {$voteCount}");
+                } else {
+                    $eventModel = new \SmartCast\Models\Event();
+                    $event = $eventModel->find($transaction['event_id']);
+                    $votePrice = $event['vote_price'] ?? 0.50;
+                    $voteCount = (int) ($transaction['amount'] / $votePrice);
+                    error_log("USSD: Custom vote - calculated from amount: {$voteCount} (amount: {$transaction['amount']}, price: {$votePrice})");
+                }
             }
             
             // Cast the votes
