@@ -991,19 +991,31 @@ class VoteController extends BaseController
             if (isset($callbackData['ResponseCode'])) {
                 error_log("Hubtel callback detected for transaction: " . $transactionId);
                 
-                // Hubtel callback - ResponseCode "0000" or "0001" means success
-                if ($callbackData['ResponseCode'] === '0000' || $callbackData['ResponseCode'] === '0001') {
+                // Check if transaction has already been processed successfully
+                if ($transaction['status'] === 'success') {
+                    error_log("Hubtel callback ignored - transaction already processed: " . $transactionId);
+                    return $this->json(['success' => true, 'message' => 'Payment already processed']);
+                }
+                
+                // Hubtel callback - ResponseCode "0000" means success, "0001" means pending
+                if ($callbackData['ResponseCode'] === '0000') {
                     $paymentStatus = 'success';
                     $paymentDetails = [
                         'status' => 'success',
                         'receipt_number' => $callbackData['Data']['TransactionId'] ?? $callbackData['Data']['ClientReference'] ?? 'HUBTEL_' . time(),
-                        'amount' => $callbackData['Data']['Amount'] ?? $transaction['amount']
+                        'amount' => $callbackData['Data']['Amount'] ?? $transaction['amount'],
+                        'payment_date' => $callbackData['Data']['PaymentDate'] ?? null
                     ];
                     
+                    error_log("Hubtel payment approved at: " . ($callbackData['Data']['PaymentDate'] ?? 'unknown'));
                     $this->processSuccessfulPayment($transaction, $paymentDetails);
                     error_log("Hubtel payment processed successfully for transaction: " . $transactionId);
                     
                     return $this->json(['success' => true, 'message' => 'Payment processed successfully']);
+                } elseif ($callbackData['ResponseCode'] === '0001') {
+                    // Pending - user hasn't approved yet
+                    error_log("Hubtel payment pending for transaction: " . $transactionId);
+                    return $this->json(['success' => true, 'message' => 'Payment pending approval']);
                 } else {
                     // Hubtel payment failed
                     error_log("Hubtel payment failed for transaction: " . $transactionId . " - ResponseCode: " . $callbackData['ResponseCode']);
