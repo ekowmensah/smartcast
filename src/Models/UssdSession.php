@@ -344,15 +344,14 @@ class UssdSession extends BaseModel
         $bundleModel = new VoteBundle();
         $bundles = $bundleModel->getBundlesByEvent($event['id']);
         
-        // Store in session
-        $this->updateSession($sessionId, self::STATE_SELECT_BUNDLE, [
+        // Store in session and show vote type selection
+        $this->updateSession($sessionId, self::STATE_SELECT_VOTE_TYPE, [
             'selected_event' => $event,
             'selected_category' => $category,
-            'selected_contestant' => $contestant,
-            'bundles' => $bundles
+            'selected_contestant' => $contestant
         ]);
         
-        return $this->buildBundleMenu($bundles, $contestant['name']);
+        return $this->buildVoteTypeMenu($contestant['name']);
     }
     
     private function showEventsList($sessionId, $tenantId, $page = 1)
@@ -588,7 +587,7 @@ class UssdSession extends BaseModel
             case '2':
                 // Custom Votes - Ask for vote count
                 $this->updateSession($sessionId, self::STATE_ENTER_CUSTOM_VOTES);
-                return $this->createResponse("Enter number of votes (1-1000):");
+                return $this->createResponse("Enter number of votes (1-10,000):");
                 
             default:
                 return $this->createResponse('Invalid selection. Please try again.');
@@ -657,8 +656,8 @@ class UssdSession extends BaseModel
         
         // Validate vote count
         $voteCount = (int)$input;
-        if ($voteCount < 1 || $voteCount > 1000) {
-            return $this->createResponse("Invalid vote count. Please enter a number between 1 and 1000:");
+        if ($voteCount < 1 || $voteCount > 10000) {
+            return $this->createResponse("Invalid vote count. Please enter a number between 1 and 10,000:");
         }
         
         $sessionData = $this->getSessionData($sessionId);
@@ -795,10 +794,13 @@ class UssdSession extends BaseModel
     private function buildBundleMenu($bundles, $contestantName)
     {
         $menu = "Vote for: " . $contestantName . "\n";
-        $menu .= "Select Package:\n";
+        $menu .= "Select vote package:\n";
         
         foreach ($bundles as $index => $bundle) {
-            $menu .= ($index + 1) . ". " . $bundle['name'] . " - GHS " . number_format($bundle['price'], 2) . "\n";
+            // Shorten display: "5 Votes = 2.25" instead of "Vote Pack (5) - GHS 2.25"
+            $votes = $bundle['votes'];
+            $price = number_format($bundle['price'], 2);
+            $menu .= ($index + 1) . ". {$votes} Votes = {$price}\n";
         }
         $menu .= "0. Back";
         
