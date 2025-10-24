@@ -5,6 +5,11 @@
  * Configure your SMS gateways and settings here
  */
 
+// Load env helper if not already loaded
+if (!function_exists('env')) {
+    require_once __DIR__ . '/../src/Helpers/env.php';
+}
+
 return [
     
     // Default SMS settings
@@ -121,22 +126,3 @@ return [
         ],
     ],
 ];
-
-/**
- * Helper function to get environment variables
- */
-function env($key, $default = null) {
-    $value = $_ENV[$key] ?? getenv($key);
-    
-    if ($value === false) {
-        return $default;
-    }
-    
-    // Convert string booleans
-    if (in_array(strtolower($value), ['true', 'false'])) {
-        return strtolower($value) === 'true';
-    }
-    
-    return $value;
-}
-?>

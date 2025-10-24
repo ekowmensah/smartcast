@@ -1,3 +1,7 @@
+<?php
+require_once __DIR__ . '/../../../src/Helpers/UssdHelper.php';
+$baseCode = \SmartCast\Helpers\UssdHelper::getBaseCodeFormatted();
+?>
 <!-- USSD Management Dashboard -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -106,7 +110,7 @@
                         </td>
                         <td>
                             <?php if ($tenant['ussd_code']): ?>
-                                <span class="badge bg-primary">*920*<?= $tenant['ussd_code'] ?>#</span>
+                                <span class="badge bg-primary"><?= htmlspecialchars(\SmartCast\Helpers\UssdHelper::formatUssdCode($tenant['ussd_code'])) ?></span>
                             <?php else: ?>
                                 <span class="text-muted">Not assigned</span>
                             <?php endif; ?>
@@ -179,7 +183,7 @@
                     <div class="mb-3">
                         <label class="form-label">USSD Code</label>
                         <div class="input-group">
-                            <span class="input-group-text">*920*</span>
+                            <span class="input-group-text"><?= htmlspecialchars($baseCode) ?></span>
                             <select class="form-select" id="assign_ussd_code" name="ussd_code" required>
                                 <option value="">Select code...</option>
                                 <?php foreach ($availableCodes as $code): ?>
@@ -199,7 +203,7 @@
                     
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        <strong>Preview:</strong> *920*<span id="preview_code">XX</span># will be assigned to this tenant
+                        <strong>Preview:</strong> <?= htmlspecialchars($baseCode) ?><span id="preview_code">XX</span># will be assigned to this tenant
                     </div>
                 </form>
             </div>

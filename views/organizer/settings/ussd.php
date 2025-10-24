@@ -1,3 +1,8 @@
+<?php
+require_once __DIR__ . '/../../../src/Helpers/UssdHelper.php';
+$fullUssdCode = $tenant['ussd_code'] ? \SmartCast\Helpers\UssdHelper::formatUssdCode($tenant['ussd_code']) : '';
+$baseCode = \SmartCast\Helpers\UssdHelper::getBaseCodeFormatted();
+?>
 <!-- USSD Settings -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -19,7 +24,7 @@
                         <h4 class="mb-2">
                             <?php if ($tenant['ussd_code']): ?>
                                 <i class="fas fa-hashtag text-primary me-2"></i>
-                                Your USSD Code: <span class="badge bg-primary fs-5">*920*<?= $tenant['ussd_code'] ?>#</span>
+                                Your USSD Code: <span class="badge bg-primary fs-5"><?= htmlspecialchars($fullUssdCode) ?></span>
                             <?php else: ?>
                                 <i class="fas fa-exclamation-triangle text-warning me-2"></i>
                                 USSD Code Not Assigned
@@ -141,9 +146,7 @@
                     <div class="mb-3">
                         <label class="form-label">USSD Code</label>
                         <div class="input-group">
-                            <span class="input-group-text">*920*</span>
-                            <input type="text" class="form-control" value="<?= $tenant['ussd_code'] ?>" readonly>
-                            <span class="input-group-text">#</span>
+                            <input type="text" class="form-control" value="<?= htmlspecialchars($fullUssdCode) ?>" readonly>
                         </div>
                         <small class="text-muted">Assigned by system administrator</small>
                     </div>
@@ -219,7 +222,7 @@
             <div class="col-md-6">
                 <h6 class="text-primary">For Voters:</h6>
                 <ol>
-                    <li>Dial <strong>*920*<?= $tenant['ussd_code'] ?>#</strong> on any phone</li>
+                    <li>Dial <strong><?= htmlspecialchars($fullUssdCode) ?></strong> on any phone</li>
                     <li>Follow the menu prompts</li>
                     <li>Select event and contestant</li>
                     <li>Choose vote package</li>

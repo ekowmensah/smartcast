@@ -6,6 +6,11 @@
  * Configure your base USSD code and related settings
  */
 
+// Load env helper if not already loaded
+if (!function_exists('env')) {
+    require_once __DIR__ . '/../src/Helpers/env.php';
+}
+
 return [
     /**
      * Base USSD Code (without asterisks and hash)
@@ -16,6 +21,7 @@ return [
      * - '384' for *384*XX#
      * 
      * This is the short code you register with your telecom provider (Hubtel, MTN, etc.)
+     * IMPORTANT: This MUST match the code registered in your Hubtel/MTN dashboard
      */
     'base_code' => env('USSD_BASE_CODE', '711'),
     

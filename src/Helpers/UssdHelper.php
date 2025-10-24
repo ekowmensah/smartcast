@@ -2,6 +2,9 @@
 
 namespace SmartCast\Helpers;
 
+// Load env helper
+require_once __DIR__ . '/env.php';
+
 /**
  * USSD Helper Functions
  */
@@ -17,7 +20,7 @@ class UssdHelper
         if ($config === null) {
             $configFile = __DIR__ . '/../../config/ussd_config.php';
             $config = file_exists($configFile) ? require $configFile : [
-                'base_code' => '920',
+                'base_code' => '711',
                 'format' => '*{base}*{tenant}#',
                 'tenant_code_length' => 2,
                 'max_tenants' => 99

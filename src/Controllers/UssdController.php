@@ -5,6 +5,7 @@ namespace SmartCast\Controllers;
 use SmartCast\Models\Tenant;
 use SmartCast\Models\UssdSession;
 use SmartCast\Models\Event;
+use SmartCast\Helpers\UssdHelper;
 
 /**
  * USSD Controller
@@ -163,19 +164,19 @@ class UssdController extends BaseController
      * Extract tenant from service code
      * 
      * Examples:
-     * *920*01# → tenant with ussd_code = '01'
-     * *920*02# → tenant with ussd_code = '02'
-     * *920# → null (base code without tenant)
+     * *711*01# → tenant with ussd_code = '01'
+     * *711*02# → tenant with ussd_code = '02'
+     * *711# → null (base code without tenant)
+     * 
+     * Uses dynamic base code from config
      */
     private function getTenantFromServiceCode($serviceCode)
     {
-        // Extract tenant code from service code
-        // Format: *920*XX# where XX is the tenant code
+        // Use UssdHelper to extract tenant code dynamically
+        $tenantCode = UssdHelper::extractTenantCode($serviceCode);
         
-        if (preg_match('/\*920\*(\d+)#/', $serviceCode, $matches)) {
-            $tenantCode = $matches[1];
-            
-            error_log("USSD: Extracted tenant code: {$tenantCode}");
+        if ($tenantCode) {
+            error_log("USSD: Extracted tenant code: {$tenantCode} from service code: {$serviceCode}");
             
             // Find tenant by USSD code
             $tenant = $this->tenantModel->findAll(['ussd_code' => $tenantCode], null, 1);
@@ -187,7 +188,7 @@ class UssdController extends BaseController
             
             error_log("USSD: No tenant found with code: {$tenantCode}");
         } else {
-            error_log("USSD: Service code format not recognized: {$serviceCode}");
+            error_log("USSD: Could not extract tenant code from service code: {$serviceCode}");
         }
         
         return null;

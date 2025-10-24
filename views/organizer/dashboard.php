@@ -69,7 +69,11 @@
 <?php endif; ?>
 
 <!-- USSD Code Display -->
-<?php if (isset($tenant) && $tenant['ussd_code']): ?>
+<?php 
+if (isset($tenant) && $tenant['ussd_code']): 
+    require_once __DIR__ . '/../../src/Helpers/UssdHelper.php';
+    $fullUssdCode = \SmartCast\Helpers\UssdHelper::formatUssdCode($tenant['ussd_code']);
+?>
 <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="card-body p-4">
         <div class="row align-items-center">
@@ -87,7 +91,7 @@
                 <div class="d-flex align-items-center">
                     <div class="bg-white rounded px-4 py-3 me-3">
                         <h1 class="mb-0 fw-bold" style="color: #667eea; font-size: 2.5rem; letter-spacing: 2px;">
-                            *920*<?= $tenant['ussd_code'] ?>#
+                            <?= htmlspecialchars($fullUssdCode) ?>
                         </h1>
                     </div>
                     
@@ -103,7 +107,7 @@
                 </div>
                 
                 <div class="mt-3">
-                    <button class="btn btn-light btn-sm me-2" onclick="copyUssdCode('*920*<?= $tenant['ussd_code'] ?>#')">
+                    <button class="btn btn-light btn-sm me-2" onclick="copyUssdCode('<?= htmlspecialchars($fullUssdCode) ?>')">
                         <i class="fas fa-copy me-1"></i>Copy Code
                     </button>
                     <a href="<?= ORGANIZER_URL ?>/settings/ussd" class="btn btn-outline-light btn-sm">
@@ -119,7 +123,7 @@
                     </div>
                     <div class="text-white-50 small text-start">
                         <ol class="mb-0 ps-3">
-                            <li>Dial <strong class="text-white">*920*<?= $tenant['ussd_code'] ?>#</strong></li>
+                            <li>Dial <strong class="text-white"><?= htmlspecialchars($fullUssdCode) ?></strong></li>
                             <li>Select event</li>
                             <li>Choose contestant</li>
                             <li>Complete payment</li>
