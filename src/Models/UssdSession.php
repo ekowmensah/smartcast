@@ -614,55 +614,49 @@ class UssdSession extends BaseModel
             // Get tenant_id from session data
             $tenantId = $sessionData['tenant_id'] ?? $sessionData['selected_event']['tenant_id'];
             
-            // Create transaction
+            // Create pending transaction to track the vote
             $transactionModel = new Transaction();
             $transactionId = $transactionModel->createTransaction([
                 'tenant_id' => $tenantId,
                 'event_id' => $sessionData['selected_event']['id'],
                 'contestant_id' => $sessionData['selected_contestant']['id'],
+                'category_id' => $sessionData['selected_category']['id'] ?? null,
                 'bundle_id' => $sessionData['selected_bundle']['id'],
                 'amount' => $sessionData['selected_bundle']['price'],
                 'msisdn' => $session['msisdn'],
-                'status' => 'pending', // Changed from 'success' to 'pending'
-                'provider' => 'ussd'
+                'status' => 'pending',
+                'provider' => 'hubtel_ussd',
+                'provider_reference' => $sessionId // Use session ID as reference
             ]);
             
-            // Initiate mobile money payment
-            $paymentService = new \SmartCast\Services\PaymentService();
-            $paymentResult = $paymentService->initializeMobileMoneyPayment([
-                'amount' => $sessionData['selected_bundle']['price'],
-                'phone' => $session['msisdn'],
-                'description' => "Vote for {$sessionData['selected_contestant']['name']} - {$sessionData['selected_bundle']['votes']} vote(s)",
-                'callback_url' => APP_URL . "/api/payment/callback/{$transactionId}",
-                'tenant_id' => $tenantId,
-                'voting_transaction_id' => $transactionId,
-                'related_id' => $transactionId,
-                'metadata' => [
-                    'transaction_id' => $transactionId,
-                    'event_id' => $sessionData['selected_event']['id'],
-                    'contestant_id' => $sessionData['selected_contestant']['id'],
-                    'category_id' => $sessionData['selected_category']['id'] ?? null,
-                    'votes' => $sessionData['selected_bundle']['votes'],
-                    'source' => 'ussd'
-                ]
-            ]);
+            // Store transaction ID in session for fulfillment callback
+            $this->setSessionData($sessionId, 'transaction_id', $transactionId);
             
-            if ($paymentResult['success']) {
-                $this->updateSession($sessionId, self::STATE_PAYMENT);
-                
-                $message = "Payment initiated!\n";
-                $message .= "Please approve the payment on your phone.\n";
-                $message .= "Amount: GHS " . number_format($sessionData['selected_bundle']['price'], 2) . "\n";
-                $message .= "Your vote will be recorded after payment approval.\n";
-                $message .= "Thank you!";
-                
-                return $this->createResponse($message, true);
-            } else {
-                throw new \Exception($paymentResult['message'] ?? 'Payment initiation failed');
-            }
+            // Update session state
+            $this->updateSession($sessionId, self::STATE_PAYMENT);
+            
+            // Log for debugging
+            error_log("USSD: Created pending transaction {$transactionId} for session {$sessionId}");
+            error_log("USSD: Vote details - Event: {$sessionData['selected_event']['id']}, Contestant: {$sessionData['selected_contestant']['id']}, Votes: {$sessionData['selected_bundle']['votes']}");
+            
+            // Return AddToCart response for Hubtel to collect payment
+            // This is handled by UssdController, we just return the data
+            return [
+                'message' => 'Processing payment...',
+                'end' => true,
+                'add_to_cart' => true,
+                'item' => [
+                    'ItemName' => "Vote for {$sessionData['selected_contestant']['name']}",
+                    'Qty' => $sessionData['selected_bundle']['votes'],
+                    'Price' => $sessionData['selected_bundle']['price']
+                ],
+                'session_id' => $sessionId,
+                'transaction_id' => $transactionId
+            ];
             
         } catch (\Exception $e) {
             error_log("USSD Vote Error: " . $e->getMessage());
+            error_log("USSD Vote Error Stack: " . $e->getTraceAsString());
             $this->updateSession($sessionId, self::STATE_ERROR);
             return $this->createResponse('Vote failed. Please try again later.', true);
         }

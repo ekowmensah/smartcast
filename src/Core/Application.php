@@ -79,7 +79,7 @@ class Application
         $this->router->get('/verify-receipt', 'VoteController@showReceiptVerification'); // Show receipt verification page
         
         // USSD routes
-        $this->router->post('/api/ussd/callback', 'UssdController@handleRequest'); // Handle USSD requests from Hubtel
+        $this->router->post('/api/ussd/callback', 'UssdController@handleRequest'); // Handle USSD requests from Hubtel (Service Interaction + Service Fulfillment)
         $this->router->get('/api/ussd/callback', 'UssdController@handleRequest'); // Handle USSD requests (GET fallback)
         $this->router->post('/verify-receipt', 'VoteController@processReceiptVerification'); // Process receipt verification
         

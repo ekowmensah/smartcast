@@ -52,6 +52,13 @@ class UssdController extends BaseController
                 error_log("USSD: Parsed JSON - " . json_encode($input));
             }
             
+            // Check if this is a Service Fulfillment request (has OrderId)
+            if (isset($input['OrderId'])) {
+                error_log("USSD: Detected Service Fulfillment request");
+                return $this->handleServiceFulfillment();
+            }
+            
+            // Otherwise, it's a Service Interaction request (normal USSD flow)
             // Get Hubtel USSD parameters (Hubtel uses capitalized keys)
             $sessionId = $input['SessionId'] ?? $input['sessionId'] ?? null;
             $serviceCode = $input['ServiceCode'] ?? $input['serviceCode'] ?? null;
@@ -91,6 +98,11 @@ class UssdController extends BaseController
             
             // Existing session - process user input
             $response = $this->ussdSession->processUssdInput($sessionId, $text);
+            
+            // Check if this is an AddToCart response (for payment)
+            if (isset($response['add_to_cart']) && $response['add_to_cart']) {
+                return $this->ussdAddToCartResponse($response, $sessionId);
+            }
             
             return $this->ussdResponse($response['message'], $response['end'], $sessionId);
             
@@ -248,5 +260,216 @@ class UssdController extends BaseController
         // Output JSON response and exit
         echo json_encode($response);
         exit;
+    }
+    
+    /**
+     * Format AddToCart response for Hubtel payment collection
+     * Per Hubtel Programmable Services API documentation
+     */
+    private function ussdAddToCartResponse($data, $sessionId)
+    {
+        $response = [
+            'SessionId' => $sessionId,
+            'Type' => 'AddToCart',
+            'Message' => $data['message'] ?? 'Please wait for payment prompt',
+            'Label' => 'Payment',
+            'DataType' => 'display',
+            'FieldType' => 'text',
+            'Item' => $data['item']
+        ];
+        
+        // Log response
+        error_log("USSD AddToCart Response: " . json_encode($response));
+        
+        // Set content type to JSON
+        header('Content-Type: application/json; charset=utf-8');
+        
+        // Output JSON response and exit
+        echo json_encode($response);
+        exit;
+    }
+    
+    /**
+     * Handle Service Fulfillment callback from Hubtel
+     * Called after user completes payment
+     */
+    public function handleServiceFulfillment()
+    {
+        try {
+            // Get JSON payload from Hubtel
+            $rawInput = file_get_contents('php://input');
+            error_log("USSD Service Fulfillment Input: " . $rawInput);
+            
+            $payload = json_decode($rawInput, true);
+            
+            if (!$payload) {
+                error_log("USSD Fulfillment Error: Invalid JSON");
+                return $this->json(['success' => false, 'message' => 'Invalid payload'], 400);
+            }
+            
+            $sessionId = $payload['SessionId'] ?? null;
+            $orderId = $payload['OrderId'] ?? null;
+            $orderInfo = $payload['OrderInfo'] ?? null;
+            
+            if (!$sessionId || !$orderId || !$orderInfo) {
+                error_log("USSD Fulfillment Error: Missing required fields");
+                return $this->json(['success' => false, 'message' => 'Missing required fields'], 400);
+            }
+            
+            // Check payment status
+            $paymentStatus = $orderInfo['Status'] ?? null;
+            $paymentInfo = $orderInfo['Payment'] ?? null;
+            
+            if ($paymentStatus !== 'Paid' || !$paymentInfo || !$paymentInfo['IsSuccessful']) {
+                error_log("USSD Fulfillment: Payment not successful - Status: {$paymentStatus}");
+                return $this->json(['success' => false, 'message' => 'Payment not successful'], 400);
+            }
+            
+            // Get session data
+            $session = $this->ussdSession->getSession($sessionId);
+            if (!$session) {
+                error_log("USSD Fulfillment Error: Session not found - {$sessionId}");
+                return $this->json(['success' => false, 'message' => 'Session not found'], 404);
+            }
+            
+            $sessionData = $session['data'];
+            $transactionId = $sessionData['transaction_id'] ?? null;
+            
+            if (!$transactionId) {
+                error_log("USSD Fulfillment Error: Transaction ID not found in session");
+                return $this->json(['success' => false, 'message' => 'Transaction not found'], 404);
+            }
+            
+            // Process the vote
+            $result = $this->processVoteFulfillment($transactionId, $orderId, $orderInfo);
+            
+            if ($result['success']) {
+                error_log("USSD Fulfillment: Vote processed successfully - Transaction: {$transactionId}");
+                
+                // Send success callback to Hubtel
+                $this->sendFulfillmentCallback($sessionId, $orderId, 'success');
+                
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Vote processed successfully',
+                    'transaction_id' => $transactionId
+                ]);
+            } else {
+                error_log("USSD Fulfillment Error: Vote processing failed - " . $result['message']);
+                
+                // Send failure callback to Hubtel
+                $this->sendFulfillmentCallback($sessionId, $orderId, 'failed', $result['message']);
+                
+                return $this->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], 500);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("USSD Fulfillment Exception: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
+            return $this->json([
+                'success' => false,
+                'message' => 'Fulfillment processing failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Process vote after successful payment
+     */
+    private function processVoteFulfillment($transactionId, $orderId, $orderInfo)
+    {
+        try {
+            $transactionModel = new \SmartCast\Models\Transaction();
+            $voteModel = new \SmartCast\Models\Vote();
+            
+            // Get transaction
+            $transaction = $transactionModel->find($transactionId);
+            if (!$transaction) {
+                throw new \Exception('Transaction not found');
+            }
+            
+            // Update transaction with payment info
+            $transactionModel->update($transactionId, [
+                'status' => 'success',
+                'provider_reference' => $orderId,
+                'payment_details' => json_encode($orderInfo)
+            ]);
+            
+            // Get vote count from bundle
+            $bundleModel = new \SmartCast\Models\VoteBundle();
+            $bundle = $bundleModel->find($transaction['bundle_id']);
+            $voteCount = $bundle ? $bundle['votes'] : 1;
+            
+            // Cast the votes
+            $voteId = $voteModel->castVote(
+                $transactionId,
+                $transaction['tenant_id'],
+                $transaction['event_id'],
+                $transaction['contestant_id'],
+                $transaction['category_id'],
+                $voteCount
+            );
+            
+            error_log("USSD: Vote cast successfully - Vote ID: {$voteId}, Count: {$voteCount}");
+            
+            return [
+                'success' => true,
+                'vote_id' => $voteId,
+                'votes_cast' => $voteCount
+            ];
+            
+        } catch (\Exception $e) {
+            error_log("USSD Vote Processing Error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Send fulfillment callback to Hubtel
+     * Per Hubtel documentation: https://gs-callback.hubtel.com:9055/callback
+     */
+    private function sendFulfillmentCallback($sessionId, $orderId, $status, $metadata = null)
+    {
+        try {
+            $callbackUrl = 'https://gs-callback.hubtel.com:9055/callback';
+            
+            $payload = [
+                'SessionId' => $sessionId,
+                'OrderId' => $orderId,
+                'ServiceStatus' => $status, // 'success' or 'failed'
+                'MetaData' => $metadata
+            ];
+            
+            error_log("USSD: Sending fulfillment callback to Hubtel - " . json_encode($payload));
+            
+            $ch = curl_init($callbackUrl);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Accept: application/json'
+            ]);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            error_log("USSD: Fulfillment callback response - HTTP {$httpCode}: {$response}");
+            
+            return true;
+            
+        } catch (\Exception $e) {
+            error_log("USSD: Fulfillment callback failed - " . $e->getMessage());
+            return false;
+        }
     }
 }
