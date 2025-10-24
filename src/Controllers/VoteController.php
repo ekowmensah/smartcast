@@ -445,6 +445,32 @@ class VoteController extends BaseController
                 error_log("Transaction data: " . print_r($transaction, true));
             }
             
+            // If transaction is already successful, return success immediately
+            if ($transaction['status'] === 'success') {
+                error_log("Transaction already successful, returning success status: " . $transactionId);
+                
+                // Get receipt if available
+                $receiptShortCode = null;
+                try {
+                    $receipt = $this->receiptModel->getReceiptByTransaction($transactionId);
+                    if ($receipt) {
+                        $receiptShortCode = $receipt['short_code'];
+                    }
+                } catch (\Exception $e) {
+                    error_log("Error getting receipt: " . $e->getMessage());
+                }
+                
+                return $this->json([
+                    'success' => true,
+                    'transaction_id' => $transactionId,
+                    'payment_status' => 'success',
+                    'message' => 'Payment completed successfully',
+                    'receipt_number' => $receiptShortCode,
+                    'amount' => $transaction['amount'],
+                    'timestamp' => date('Y-m-d H:i:s')
+                ]);
+            }
+            
             // Check if provider_reference exists
             if (empty($transaction['provider_reference'])) {
                 // If no provider reference, the payment initiation likely failed
