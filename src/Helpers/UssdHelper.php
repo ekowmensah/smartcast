@@ -113,10 +113,8 @@ class UssdHelper
      */
     public static function isValidTenantCode($tenantCode)
     {
-        $config = self::getConfig();
-        $length = $config['tenant_code_length'];
-        
-        return preg_match('/^\d{' . $length . '}$/', $tenantCode);
+        // Accept codes from 1 to 999 (flexible length)
+        return preg_match('/^\d{1,3}$/', $tenantCode) && $tenantCode >= 1 && $tenantCode <= 999;
     }
     
     /**

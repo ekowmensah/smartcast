@@ -71,7 +71,7 @@ $baseCode = \SmartCast\Helpers\UssdHelper::getBaseCodeFormatted();
                 <div>
                     <div class="fs-4 fw-semibold"><?= count($availableCodes ?? []) ?></div>
                     <div>Available Codes</div>
-                    <div class="small">Unassigned (01-99)</div>
+                    <div class="small">Unassigned (1-999)</div>
                 </div>
                 <div class="dropdown">
                     <i class="fas fa-list fa-2x opacity-75"></i>
@@ -192,7 +192,7 @@ $baseCode = \SmartCast\Helpers\UssdHelper::getBaseCodeFormatted();
                             </select>
                             <span class="input-group-text">#</span>
                         </div>
-                        <small class="text-muted">Choose an available 2-digit code</small>
+                        <small class="text-muted">Choose an available code (1-999)</small>
                     </div>
                     
                     <div class="mb-3">

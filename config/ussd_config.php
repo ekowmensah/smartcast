@@ -37,18 +37,16 @@ return [
     /**
      * Tenant Code Length
      * 
-     * Number of digits for tenant codes
-     * 2 = 01-99 (99 tenants max)
-     * 3 = 001-999 (999 tenants max)
+     * Maximum number of digits for tenant codes
+     * Supports flexible length: 1, 11, 235, 999 (not padded with zeros)
      */
     'tenant_code_length' => 3,
     
     /**
      * Maximum Tenants
      * 
-     * Based on tenant_code_length:
-     * 2 digits = 99 tenants
-     * 3 digits = 999 tenants
+     * Maximum tenant code value (1-999)
+     * Supports flexible length codes without zero padding
      */
     'max_tenants' => 999,
     

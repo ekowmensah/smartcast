@@ -4,6 +4,7 @@ namespace SmartCast\Controllers;
 
 use SmartCast\Models\Tenant;
 use SmartCast\Models\UssdSession;
+use SmartCast\Helpers\UssdHelper;
 
 /**
  * USSD Management Controller
@@ -66,15 +67,16 @@ class UssdManagementController extends BaseController
                     throw new \Exception('Tenant ID and USSD code are required');
                 }
                 
-                // Validate USSD code format (2 digits)
-                if (!preg_match('/^\d{2}$/', $ussdCode)) {
-                    throw new \Exception('USSD code must be 2 digits (01-99)');
+                // Validate USSD code format (1-999)
+                if (!preg_match('/^\d{1,3}$/', $ussdCode) || $ussdCode < 1 || $ussdCode > 999) {
+                    throw new \Exception('USSD code must be between 1 and 999');
                 }
                 
                 // Check if code is already taken
                 $existing = $this->tenantModel->findAll(['ussd_code' => $ussdCode], null, 1);
                 if (!empty($existing) && $existing[0]['id'] != $tenantId) {
-                    throw new \Exception("USSD code *920*{$ussdCode}# is already assigned to another tenant");
+                    $fullCode = UssdHelper::formatUssdCode($ussdCode);
+                    throw new \Exception("USSD code {$fullCode} is already assigned to another tenant");
                 }
                 
                 // Update tenant
@@ -84,9 +86,10 @@ class UssdManagementController extends BaseController
                     'ussd_welcome_message' => $welcomeMessage
                 ]);
                 
+                $fullCode = UssdHelper::formatUssdCode($ussdCode);
                 $this->jsonResponse([
                     'success' => true,
-                    'message' => "USSD code *920*{$ussdCode}# assigned successfully"
+                    'message' => "USSD code {$fullCode} assigned successfully"
                 ]);
                 
             } catch (\Exception $e) {
@@ -298,10 +301,10 @@ class UssdManagementController extends BaseController
         
         $assigned = array_column($assignedCodes, 'ussd_code');
         
-        // Generate available codes (01-99)
+        // Generate available codes (1-999)
         $available = [];
-        for ($i = 1; $i <= 99; $i++) {
-            $code = str_pad($i, 2, '0', STR_PAD_LEFT);
+        for ($i = 1; $i <= 999; $i++) {
+            $code = (string)$i;
             if (!in_array($code, $assigned)) {
                 $available[] = $code;
             }
