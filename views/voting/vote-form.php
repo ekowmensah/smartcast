@@ -1444,8 +1444,7 @@ function showPaymentStatus(paymentData) {
             <div class="alert-icon"><i class="fas fa-mobile-alt"></i></div>
             <div class="alert-content">
                 <h4>Payment Initiated 📱</h4>
-                <p>${paymentData.message}</p>
-                <p><strong>Reference:</strong> ${paymentData.payment_reference}</p>
+                <p>Transaction Pending. Check your mobile phone to Approve Payment.</p>
                 <div style="margin-top: 1rem;">
                     <div class="payment-status-loader">
                         <i class="fas fa-spinner fa-spin"></i>
