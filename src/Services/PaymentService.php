@@ -159,12 +159,14 @@ class PaymentService
             if ($verificationResult['success']) {
                 $status = $verificationResult['status'];
                 
-                // Update payment transaction
-                $this->updatePaymentTransaction($paymentTransaction['id'], [
-                    'status' => $status,
-                    'gateway_response' => json_encode($verificationResult),
-                    'webhook_verified' => 1
-                ]);
+                // Only update payment transaction if status is not pending
+                if ($status !== 'pending') {
+                    $this->updatePaymentTransaction($paymentTransaction['id'], [
+                        'status' => $status,
+                        'gateway_response' => json_encode($verificationResult),
+                        'webhook_verified' => 1
+                    ]);
+                }
                 
                 if ($status === 'success') {
                     // Process the vote
@@ -178,18 +180,30 @@ class PaymentService
                         'vote_processed' => $voteResult['success'] ?? false,
                         'vote_details' => $voteResult
                     ];
+                } elseif ($status === 'pending') {
+                    // Payment still pending - don't treat as failure
+                    return [
+                        'success' => true,
+                        'status' => 'pending',
+                        'message' => $verificationResult['message'] ?? 'Payment is still pending approval',
+                        'payment_verified' => false,
+                        'vote_processed' => false
+                    ];
                 } else {
+                    // Other statuses (failed, expired, etc.)
                     return [
                         'success' => true,
                         'status' => $status,
-                        'message' => 'Payment verification completed',
+                        'message' => $verificationResult['message'] ?? 'Payment verification completed',
                         'payment_verified' => true,
                         'vote_processed' => false
                     ];
                 }
             } else {
+                // Verification failed - treat as error, not pending
                 return [
                     'success' => false,
+                    'status' => 'error',
                     'message' => $verificationResult['message'],
                     'error_code' => $verificationResult['error_code']
                 ];
