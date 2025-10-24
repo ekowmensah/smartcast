@@ -665,7 +665,7 @@ class UssdSession extends BaseModel
         $event = $sessionData['selected_event'];
         
         // Calculate price (price per vote from event settings)
-        $pricePerVote = $event['price_per_vote'] ?? 0.50; // Default GHS 0.50 per vote
+        $pricePerVote = $event['vote_price'] ?? 0.50; // Default GHS 0.50 per vote
         $totalPrice = $voteCount * $pricePerVote;
         
         // Create custom bundle data
