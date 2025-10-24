@@ -1053,9 +1053,12 @@ class VoteController extends BaseController
                 if ($transaction['status'] === 'success') {
                     error_log("Hubtel callback ignored - transaction already processed: " . $transactionId);
                     
-                    // Redirect to success page for card payments
-                    if (!empty($_GET['status'])) {
-                        $this->redirect('/voting/success?transaction=' . $transactionId, 'Payment already processed', 'success');
+                    // Redirect to success page for card payments (if coming from Hubtel redirect)
+                    if (!empty($_GET['checkoutId']) || !empty($_GET['checkoutid']) || !empty($_GET['status'])) {
+                        $event = $this->eventModel->find($transaction['event_id']);
+                        $eventSlug = $event['slug'] ?? $event['id'];
+                        
+                        $this->redirect("/voting/{$eventSlug}?payment=success&transaction=" . $transactionId, 'Payment successful! Your vote has been recorded.', 'success');
                         return;
                     }
                     
