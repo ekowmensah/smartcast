@@ -401,7 +401,7 @@ class VoteController extends BaseController
             } else {
                 // Mobile money payment (default)
                 $paymentData['phone'] = $data['msisdn'];
-                $paymentResult = $this->paymentService->initiatePayment($paymentData);
+                $paymentResult = $this->paymentService->initializeMobileMoneyPayment($paymentData);
             }
             
             if (!$paymentResult['success']) {
