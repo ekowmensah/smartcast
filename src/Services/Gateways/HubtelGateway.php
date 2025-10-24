@@ -180,9 +180,19 @@ class HubtelGateway
                     'raw_response' => $response
                 ];
             } else {
+                // If payment not found or still pending, return pending status instead of error
+                $message = $response['message'] ?? 'Payment verification failed';
+                if (stripos($message, 'not found') !== false || stripos($message, 'pending') !== false) {
+                    return [
+                        'success' => true,
+                        'status' => 'pending',
+                        'message' => 'Payment is still pending approval'
+                    ];
+                }
+                
                 return [
                     'success' => false,
-                    'message' => $response['message'] ?? 'Payment verification failed',
+                    'message' => $message,
                     'error_code' => 'VERIFICATION_FAILED'
                 ];
             }

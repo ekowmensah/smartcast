@@ -206,7 +206,7 @@ class VoteCompletionService
                     'event_id' => $vote['event_id'],
                     'contestant_id' => $vote['contestant_id'],
                     'amount' => $transaction['amount'],
-                    'vote_count' => $vote['vote_count'],
+                    'vote_count' => $vote['vote_count'] ?? $vote['quantity'] ?? 1,
                     'sms_sent' => $smsResult['success'] ?? false,
                     'sms_error' => $smsResult['error'] ?? null
                 ]),
