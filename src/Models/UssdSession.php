@@ -89,6 +89,19 @@ class UssdSession extends BaseModel
         );
     }
     
+    /**
+     * Update session columns (tenant_id, service_code, etc.)
+     */
+    public function updateSessionColumns($sessionId, $columns)
+    {
+        return $this->db->update(
+            $this->table,
+            $columns,
+            'session_id = :session_id',
+            ['session_id' => $sessionId]
+        );
+    }
+    
     public function getSessionData($sessionId, $key = null)
     {
         $session = $this->getSession($sessionId);
@@ -187,9 +200,23 @@ class UssdSession extends BaseModel
     
     private function handleWelcomeState($sessionId, $input)
     {
-        // Get active events
+        // Get session data to extract tenant_id
+        $sessionData = $this->getSessionData($sessionId);
+        $tenantId = $sessionData['tenant_id'] ?? null;
+        
+        // Get active events for this tenant only
         $eventModel = new Event();
-        $events = $eventModel->getPublicEvents();
+        
+        if ($tenantId) {
+            // Filter by tenant
+            $events = $eventModel->findAll([
+                'tenant_id' => $tenantId,
+                'status' => 'active'
+            ]);
+        } else {
+            // Fallback to public events if no tenant
+            $events = $eventModel->getPublicEvents();
+        }
         
         if (empty($events)) {
             return $this->createResponse('No active events available. Thank you!', true);
@@ -371,38 +398,58 @@ class UssdSession extends BaseModel
         $sessionData = $session['data'];
         
         try {
+            // Get tenant_id from session data
+            $tenantId = $sessionData['tenant_id'] ?? $sessionData['selected_event']['tenant_id'];
+            
             // Create transaction
             $transactionModel = new Transaction();
             $transactionId = $transactionModel->createTransaction([
-                'tenant_id' => $sessionData['selected_event']['tenant_id'],
+                'tenant_id' => $tenantId,
                 'event_id' => $sessionData['selected_event']['id'],
                 'contestant_id' => $sessionData['selected_contestant']['id'],
                 'bundle_id' => $sessionData['selected_bundle']['id'],
                 'amount' => $sessionData['selected_bundle']['price'],
                 'msisdn' => $session['msisdn'],
-                'status' => 'success',
+                'status' => 'pending', // Changed from 'success' to 'pending'
                 'provider' => 'ussd'
             ]);
             
-            // Create vote
-            $voteModel = new Vote();
-            $voteModel->castVote(
-                $transactionId,
-                $sessionData['selected_event']['tenant_id'],
-                $sessionData['selected_event']['id'],
-                $sessionData['selected_contestant']['id'],
-                $sessionData['selected_bundle']['votes']
-            );
+            // Initiate mobile money payment
+            $paymentService = new \SmartCast\Services\PaymentService();
+            $paymentResult = $paymentService->initializeMobileMoneyPayment([
+                'amount' => $sessionData['selected_bundle']['price'],
+                'phone' => $session['msisdn'],
+                'description' => "Vote for {$sessionData['selected_contestant']['name']} - {$sessionData['selected_bundle']['votes']} vote(s)",
+                'callback_url' => APP_URL . "/api/payment/callback/{$transactionId}",
+                'tenant_id' => $tenantId,
+                'voting_transaction_id' => $transactionId,
+                'related_id' => $transactionId,
+                'metadata' => [
+                    'transaction_id' => $transactionId,
+                    'event_id' => $sessionData['selected_event']['id'],
+                    'contestant_id' => $sessionData['selected_contestant']['id'],
+                    'category_id' => $sessionData['selected_category']['id'] ?? null,
+                    'votes' => $sessionData['selected_bundle']['votes'],
+                    'source' => 'ussd'
+                ]
+            ]);
             
-            $this->updateSession($sessionId, self::STATE_SUCCESS);
-            
-            $message = "Vote successful!\n";
-            $message .= "Transaction ID: " . $transactionId . "\n";
-            $message .= "Thank you for voting!";
-            
-            return $this->createResponse($message, true);
+            if ($paymentResult['success']) {
+                $this->updateSession($sessionId, self::STATE_PAYMENT);
+                
+                $message = "Payment initiated!\n";
+                $message .= "Please approve the payment on your phone.\n";
+                $message .= "Amount: GHS " . number_format($sessionData['selected_bundle']['price'], 2) . "\n";
+                $message .= "Your vote will be recorded after payment approval.\n";
+                $message .= "Thank you!";
+                
+                return $this->createResponse($message, true);
+            } else {
+                throw new \Exception($paymentResult['message'] ?? 'Payment initiation failed');
+            }
             
         } catch (\Exception $e) {
+            error_log("USSD Vote Error: " . $e->getMessage());
             $this->updateSession($sessionId, self::STATE_ERROR);
             return $this->createResponse('Vote failed. Please try again later.', true);
         }
