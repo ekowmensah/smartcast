@@ -39,10 +39,10 @@ class PaymentService
                 }
             }
             
-            // Get active mobile money gateway (Paystack)
-            $gateway = $this->getActiveGateway('mobile_money');
+            // Get Hubtel gateway for mobile money (Direct Receive Money)
+            $gateway = $this->getGatewayByProvider('hubtel');
             if (!$gateway) {
-                throw new \Exception('No active mobile money gateway available');
+                throw new \Exception('Hubtel gateway not configured');
             }
             
             // Generate unique reference
@@ -75,8 +75,8 @@ class PaymentService
                 'phone' => $paymentData['phone'],
                 'reference' => $reference,
                 'currency' => $paymentData['currency'] ?? 'GHS',
-                'email' => $paymentData['email'],
-                'customer_name' => $paymentData['customer_name'] ?? null,
+                'email' => $paymentData['email'] ?? 'voter@smartcast.com',
+                'customer_name' => $paymentData['customer_name'] ?? 'SmartCast Voter',
                 'description' => $paymentData['description'],
                 'callback_url' => $paymentData['callback_url'] ?? null,
                 'metadata' => $paymentData['metadata']

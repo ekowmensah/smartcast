@@ -381,6 +381,8 @@ class VoteController extends BaseController
                 'callback_url' => APP_URL . "/api/payment/callback/{$transactionId}",
                 'return_url' => APP_URL . "/api/payment/callback/{$transactionId}",
                 'cancellation_url' => APP_URL . "/voting/{$eventSlug}",
+                'email' => $data['email'] ?? 'voter@smartcast.com',
+                'customer_name' => $data['customer_name'] ?? 'SmartCast Voter',
                 'tenant_id' => $event['tenant_id'],
                 'voting_transaction_id' => $transactionId,
                 'related_id' => $transactionId,
