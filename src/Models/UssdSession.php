@@ -19,7 +19,9 @@ class UssdSession extends BaseModel
     const STATE_SELECT_EVENT = 'select_event';
     const STATE_SELECT_CATEGORY = 'select_category';
     const STATE_SELECT_CONTESTANT = 'select_contestant';
+    const STATE_SELECT_VOTE_TYPE = 'select_vote_type';
     const STATE_SELECT_BUNDLE = 'select_bundle';
+    const STATE_ENTER_CUSTOM_VOTES = 'enter_custom_votes';
     const STATE_CONFIRM_VOTE = 'confirm_vote';
     const STATE_PAYMENT = 'payment';
     const STATE_SUCCESS = 'success';
@@ -195,8 +197,14 @@ class UssdSession extends BaseModel
             case self::STATE_SELECT_CONTESTANT:
                 return $this->handleSelectContestantState($sessionId, $input);
                 
+            case self::STATE_SELECT_VOTE_TYPE:
+                return $this->handleSelectVoteTypeState($sessionId, $input);
+                
             case self::STATE_SELECT_BUNDLE:
                 return $this->handleSelectBundleState($sessionId, $input);
+                
+            case self::STATE_ENTER_CUSTOM_VOTES:
+                return $this->handleEnterCustomVotesState($sessionId, $input);
                 
             case self::STATE_CONFIRM_VOTE:
                 return $this->handleConfirmVoteState($sessionId, $input);
@@ -542,16 +550,49 @@ class UssdSession extends BaseModel
         
         $selectedContestant = $contestants[$contestantIndex];
         
-        // Get vote bundles for this event
-        $bundleModel = new VoteBundle();
-        $bundles = $bundleModel->getBundlesByEvent($sessionData['selected_event']['id']);
-        
-        $this->updateSession($sessionId, self::STATE_SELECT_BUNDLE, [
-            'selected_contestant' => $selectedContestant,
-            'bundles' => $bundles
+        // Store contestant and show vote type selection
+        $this->updateSession($sessionId, self::STATE_SELECT_VOTE_TYPE, [
+            'selected_contestant' => $selectedContestant
         ]);
         
-        return $this->buildBundleMenu($bundles, $selectedContestant['name']);
+        return $this->buildVoteTypeMenu($selectedContestant['name']);
+    }
+    
+    private function handleSelectVoteTypeState($sessionId, $input)
+    {
+        if ($input == '0') {
+            // Go back to contestant selection
+            $sessionData = $this->getSessionData($sessionId);
+            $this->updateSession($sessionId, self::STATE_SELECT_CONTESTANT);
+            return $this->buildContestantMenu($sessionData['contestants']);
+        }
+        
+        $sessionData = $this->getSessionData($sessionId);
+        
+        switch ($input) {
+            case '1':
+                // Vote Bundles - Show bundles list
+                $bundleModel = new VoteBundle();
+                $bundles = $bundleModel->getBundlesByEvent($sessionData['selected_event']['id']);
+                
+                if (empty($bundles)) {
+                    return $this->createResponse('No vote bundles available. Please try custom votes.', true);
+                }
+                
+                $this->updateSession($sessionId, self::STATE_SELECT_BUNDLE, [
+                    'bundles' => $bundles
+                ]);
+                
+                return $this->buildBundleMenu($bundles, $sessionData['selected_contestant']['name']);
+                
+            case '2':
+                // Custom Votes - Ask for vote count
+                $this->updateSession($sessionId, self::STATE_ENTER_CUSTOM_VOTES);
+                return $this->createResponse("Enter number of votes (1-1000):");
+                
+            default:
+                return $this->createResponse('Invalid selection. Please try again.');
+        }
     }
     
     private function handleSelectBundleState($sessionId, $input)
@@ -584,7 +625,7 @@ class UssdSession extends BaseModel
         $message .= "Event: " . $event['name'] . "\n";
         $message .= "Contestant: " . $contestant['name'] . "\n";
         $message .= "Votes: " . $selectedBundle['votes'] . "\n";
-        $message .= "Amount: $" . number_format($selectedBundle['price'], 2) . "\n\n";
+        $message .= "Amount: GHS " . number_format($selectedBundle['price'], 2) . "\n\n";
         $message .= "1. Confirm\n0. Cancel";
         
         return $this->createResponse($message);
@@ -603,6 +644,54 @@ class UssdSession extends BaseModel
         }
         
         return $this->createResponse('Invalid selection. Please enter 1 to confirm or 0 to cancel.');
+    }
+    
+    private function handleEnterCustomVotesState($sessionId, $input)
+    {
+        if ($input == '0') {
+            // Go back to vote type selection
+            $sessionData = $this->getSessionData($sessionId);
+            $this->updateSession($sessionId, self::STATE_SELECT_VOTE_TYPE);
+            return $this->buildVoteTypeMenu($sessionData['selected_contestant']['name']);
+        }
+        
+        // Validate vote count
+        $voteCount = (int)$input;
+        if ($voteCount < 1 || $voteCount > 1000) {
+            return $this->createResponse("Invalid vote count. Please enter a number between 1 and 1000:");
+        }
+        
+        $sessionData = $this->getSessionData($sessionId);
+        $event = $sessionData['selected_event'];
+        
+        // Calculate price (price per vote from event settings)
+        $pricePerVote = $event['price_per_vote'] ?? 0.50; // Default GHS 0.50 per vote
+        $totalPrice = $voteCount * $pricePerVote;
+        
+        // Create custom bundle data
+        $customBundle = [
+            'id' => null,
+            'name' => 'Custom Votes',
+            'votes' => $voteCount,
+            'price' => $totalPrice,
+            'is_custom' => true
+        ];
+        
+        $this->updateSession($sessionId, self::STATE_CONFIRM_VOTE, [
+            'selected_bundle' => $customBundle
+        ]);
+        
+        // Build confirmation message
+        $contestant = $sessionData['selected_contestant'];
+        
+        $message = "Confirm your vote:\n";
+        $message .= "Event: " . $event['name'] . "\n";
+        $message .= "Contestant: " . $contestant['name'] . "\n";
+        $message .= "Votes: " . $voteCount . "\n";
+        $message .= "Amount: GHS " . number_format($totalPrice, 2) . "\n\n";
+        $message .= "1. Confirm\n0. Cancel";
+        
+        return $this->createResponse($message);
     }
     
     private function processVote($sessionId)
@@ -692,13 +781,24 @@ class UssdSession extends BaseModel
         return $this->createResponse($menu);
     }
     
+    private function buildVoteTypeMenu($contestantName)
+    {
+        $menu = "Vote for: " . $contestantName . "\n";
+        $menu .= "Select option:\n";
+        $menu .= "1. Vote Bundles\n";
+        $menu .= "2. Custom Votes\n";
+        $menu .= "0. Back";
+        
+        return $this->createResponse($menu);
+    }
+    
     private function buildBundleMenu($bundles, $contestantName)
     {
         $menu = "Vote for: " . $contestantName . "\n";
-        $menu .= "Select vote package:\n";
+        $menu .= "Select Package:\n";
         
         foreach ($bundles as $index => $bundle) {
-            $menu .= ($index + 1) . ". " . $bundle['name'] . " - $" . number_format($bundle['price'], 2) . "\n";
+            $menu .= ($index + 1) . ". " . $bundle['name'] . " - GHS " . number_format($bundle['price'], 2) . "\n";
         }
         $menu .= "0. Back";
         
