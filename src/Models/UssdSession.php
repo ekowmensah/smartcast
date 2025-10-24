@@ -261,7 +261,7 @@ class UssdSession extends BaseModel
         $menu = $welcomeMessage . "\n\n";
         $menu .= "1. Vote for Nominee\n";
         $menu .= "2. Vote on an Event\n";
-        $menu .= "3. Get Support\n";
+        $menu .= "3. Create an Event\n";
         $menu .= "4. Exit";
         
         return $this->createResponse($menu);

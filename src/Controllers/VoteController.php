@@ -630,10 +630,18 @@ class VoteController extends BaseController
             
             // Update transaction status
             error_log("Updating transaction status to success");
-            $this->transactionModel->update($transaction['id'], [
+            $updateData = [
                 'status' => 'success',
                 'provider_reference' => $paymentStatus['receipt_number'] ?? $transaction['provider_reference']
-            ]);
+            ];
+            
+            // Add phone number if provided in payment details (for card payments)
+            if (!empty($paymentStatus['phone_number']) && empty($transaction['msisdn'])) {
+                $updateData['msisdn'] = $paymentStatus['phone_number'];
+                error_log("Adding phone number to transaction: " . $paymentStatus['phone_number']);
+            }
+            
+            $this->transactionModel->update($transaction['id'], $updateData);
             
             // Get vote count
             $voteCount = $this->getVoteCountFromTransaction($transaction);
@@ -1130,7 +1138,8 @@ class VoteController extends BaseController
                             'status' => 'success',
                             'receipt_number' => $callbackData['Data']['TransactionId'] ?? $callbackData['Data']['ClientReference'] ?? 'HUBTEL_' . time(),
                             'amount' => $callbackData['Data']['Amount'] ?? $transaction['amount'],
-                            'payment_date' => $callbackData['Data']['PaymentDate'] ?? null
+                            'payment_date' => $callbackData['Data']['PaymentDate'] ?? null,
+                            'phone_number' => $callbackData['Data']['CustomerPhoneNumber'] ?? null
                         ];
                         
                         error_log("Hubtel mobile money payment approved at: " . ($callbackData['Data']['PaymentDate'] ?? 'unknown'));
