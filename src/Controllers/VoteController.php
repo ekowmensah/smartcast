@@ -1037,11 +1037,13 @@ class VoteController extends BaseController
             error_log("GET parameters: " . json_encode($_GET));
             error_log("POST data: " . json_encode($_POST));
             
-            // Check if this is a Hubtel callback (has ResponseCode field or status field from Hubtel)
+            // Check if this is a Hubtel callback (has ResponseCode field or checkout ID from Hubtel)
             $isHubtelCallback = isset($callbackData['ResponseCode']) || 
                                isset($callbackData['status']) || 
                                isset($callbackData['Data']) ||
-                               !empty($_GET['status']); // Hubtel card payments use query params
+                               !empty($_GET['status']) ||
+                               !empty($_GET['checkoutId']) ||
+                               !empty($_GET['checkoutid']); // Hubtel card payments use query params
             
             if ($isHubtelCallback) {
                 error_log("Hubtel callback detected for transaction: " . $transactionId);
@@ -1061,13 +1063,19 @@ class VoteController extends BaseController
                 }
                 
                 // Handle Hubtel Checkout (card payment) callback - uses query parameters
-                if (!empty($_GET['status'])) {
-                    $status = $_GET['status'];
-                    $checkoutId = $_GET['checkoutId'] ?? null;
+                $checkoutId = $_GET['checkoutId'] ?? $_GET['checkoutid'] ?? null;
+                
+                if (!empty($checkoutId)) {
+                    error_log("Hubtel card payment callback - CheckoutId: {$checkoutId}");
                     
-                    error_log("Hubtel card payment callback - Status: {$status}, CheckoutId: {$checkoutId}");
-                    
-                    if ($status === 'paid' || $status === 'success' || $status === 'successful') {
+                    // Hubtel doesn't send status in callback, just checkout ID
+                    // We'll verify the payment status with Hubtel API
+                    try {
+                        $verificationResult = $this->paymentService->verifyPaymentByVotingTransactionId($transactionId);
+                        
+                        error_log("Hubtel payment verification result: " . json_encode($verificationResult));
+                        
+                        if ($verificationResult['success'] && $verificationResult['status'] === 'success') {
                         $paymentDetails = [
                             'status' => 'success',
                             'receipt_number' => $checkoutId ?? 'HUBTEL_CARD_' . time(),
@@ -1081,24 +1089,40 @@ class VoteController extends BaseController
                         $event = $this->eventModel->find($transaction['event_id']);
                         $eventSlug = $event['slug'] ?? $event['id'];
                         
-                        // Redirect back to voting page with success message
-                        $this->redirect("/voting/{$eventSlug}?payment=success&transaction=" . $transactionId, 'Payment successful! Your vote has been recorded.', 'success');
-                        return;
-                    } else {
-                        // Payment failed or cancelled
-                        error_log("Hubtel card payment failed/cancelled for transaction: " . $transactionId . " - Status: {$status}");
+                            // Redirect back to voting page with success message
+                            $this->redirect("/voting/{$eventSlug}?payment=success&transaction=" . $transactionId, 'Payment successful! Your vote has been recorded.', 'success');
+                            return;
+                        } elseif ($verificationResult['status'] === 'pending') {
+                            // Payment still pending
+                            error_log("Hubtel card payment still pending for transaction: " . $transactionId);
+                            
+                            $event = $this->eventModel->find($transaction['event_id']);
+                            $eventSlug = $event['slug'] ?? $event['id'];
+                            
+                            $this->redirect("/voting/{$eventSlug}?payment=pending&transaction=" . $transactionId, 'Payment is being processed. Please wait...', 'info');
+                            return;
+                        } else {
+                            // Payment failed
+                            error_log("Hubtel card payment failed for transaction: " . $transactionId);
+                            
+                            $this->transactionModel->update($transactionId, [
+                                'status' => 'failed',
+                                'failure_reason' => $verificationResult['message'] ?? 'Payment verification failed'
+                            ]);
+                            
+                            $event = $this->eventModel->find($transaction['event_id']);
+                            $eventSlug = $event['slug'] ?? $event['id'];
+                            
+                            $this->redirect("/voting/{$eventSlug}?payment=failed&transaction=" . $transactionId, 'Payment failed or was cancelled', 'error');
+                            return;
+                        }
+                    } catch (\Exception $e) {
+                        error_log("Hubtel card payment verification error: " . $e->getMessage());
                         
-                        $this->transactionModel->update($transactionId, [
-                            'status' => 'failed',
-                            'failure_reason' => 'Payment ' . $status
-                        ]);
-                        
-                        // Get event for redirect
                         $event = $this->eventModel->find($transaction['event_id']);
                         $eventSlug = $event['slug'] ?? $event['id'];
                         
-                        // Redirect back to voting page with error message
-                        $this->redirect("/voting/{$eventSlug}?payment=failed&transaction=" . $transactionId, 'Payment failed or was cancelled', 'error');
+                        $this->redirect("/voting/{$eventSlug}?payment=error&transaction=" . $transactionId, 'Payment verification error. Please contact support.', 'error');
                         return;
                     }
                 }
