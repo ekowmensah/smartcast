@@ -1034,6 +1034,8 @@ class VoteController extends BaseController
             }
             
             error_log("Callback data received: " . json_encode($callbackData));
+            error_log("GET parameters: " . json_encode($_GET));
+            error_log("POST data: " . json_encode($_POST));
             
             // Check if this is a Hubtel callback (has ResponseCode field or status field from Hubtel)
             $isHubtelCallback = isset($callbackData['ResponseCode']) || 
@@ -1043,6 +1045,7 @@ class VoteController extends BaseController
             
             if ($isHubtelCallback) {
                 error_log("Hubtel callback detected for transaction: " . $transactionId);
+                error_log("Hubtel status from GET: " . ($_GET['status'] ?? 'not set'));
                 
                 // Check if transaction has already been processed successfully
                 if ($transaction['status'] === 'success') {
@@ -1064,7 +1067,7 @@ class VoteController extends BaseController
                     
                     error_log("Hubtel card payment callback - Status: {$status}, CheckoutId: {$checkoutId}");
                     
-                    if ($status === 'paid' || $status === 'success') {
+                    if ($status === 'paid' || $status === 'success' || $status === 'successful') {
                         $paymentDetails = [
                             'status' => 'success',
                             'receipt_number' => $checkoutId ?? 'HUBTEL_CARD_' . time(),
@@ -1074,8 +1077,12 @@ class VoteController extends BaseController
                         $this->processSuccessfulPayment($transaction, $paymentDetails);
                         error_log("Hubtel card payment processed successfully for transaction: " . $transactionId);
                         
-                        // Redirect to success page
-                        $this->redirect('/voting/success?transaction=' . $transactionId, 'Payment successful! Your vote has been recorded.', 'success');
+                        // Get event for redirect
+                        $event = $this->eventModel->find($transaction['event_id']);
+                        $eventSlug = $event['slug'] ?? $event['id'];
+                        
+                        // Redirect back to voting page with success message
+                        $this->redirect("/voting/{$eventSlug}?payment=success&transaction=" . $transactionId, 'Payment successful! Your vote has been recorded.', 'success');
                         return;
                     } else {
                         // Payment failed or cancelled
@@ -1086,8 +1093,12 @@ class VoteController extends BaseController
                             'failure_reason' => 'Payment ' . $status
                         ]);
                         
-                        // Redirect to failure page
-                        $this->redirect('/voting/failed?transaction=' . $transactionId, 'Payment failed or was cancelled', 'error');
+                        // Get event for redirect
+                        $event = $this->eventModel->find($transaction['event_id']);
+                        $eventSlug = $event['slug'] ?? $event['id'];
+                        
+                        // Redirect back to voting page with error message
+                        $this->redirect("/voting/{$eventSlug}?payment=failed&transaction=" . $transactionId, 'Payment failed or was cancelled', 'error');
                         return;
                     }
                 }
