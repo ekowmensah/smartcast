@@ -493,10 +493,20 @@ class PaymentService
     }
     
     /**
-     * Get payment transaction by voting transaction ID from metadata
+     * Get payment transaction by voting transaction ID
+     * First tries related_id column, then falls back to metadata JSON extraction
      */
     private function getPaymentTransactionByVotingTransactionId($votingTransactionId)
     {
+        // First try: Use related_id column (faster and more reliable)
+        $sql = "SELECT * FROM payment_transactions WHERE related_type = 'vote' AND related_id = :transaction_id ORDER BY id DESC LIMIT 1";
+        $result = $this->db->selectOne($sql, ['transaction_id' => $votingTransactionId]);
+        
+        if ($result) {
+            return $result;
+        }
+        
+        // Fallback: Try JSON_EXTRACT from metadata (for older records)
         $sql = "SELECT * FROM payment_transactions WHERE JSON_EXTRACT(metadata, '$.transaction_id') = :transaction_id ORDER BY id DESC LIMIT 1";
         return $this->db->selectOne($sql, ['transaction_id' => $votingTransactionId]);
     }

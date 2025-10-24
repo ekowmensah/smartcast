@@ -1538,7 +1538,7 @@ function continueStatusCheck(transactionId, statusUrl) {
 
 function checkPaymentStatus(transactionId, statusUrl) {
     let attempts = 0;
-    const maxAttempts = 60; // Check for 5 minutes (every 5 seconds)
+    const maxAttempts = 120; // Check for 10 minutes (every 5 seconds) - increased for Hubtel phone approval
     let popupClosed = false;
     let statusChecker;
     
@@ -1603,7 +1603,8 @@ function checkPaymentStatus(transactionId, statusUrl) {
         })
         .catch(error => {
             console.error('Status check error:', error);
-            if (attempts >= 3) { // Stop after 3 failed attempts
+            // Only stop on network errors if we've tried many times
+            if (attempts >= 10) { // Stop after 10 failed network attempts (50 seconds)
                 clearInterval(statusChecker);
                 showPaymentError();
             }

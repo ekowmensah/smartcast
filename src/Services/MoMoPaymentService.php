@@ -54,7 +54,7 @@ class MoMoPaymentService
             'metadata' => $paymentData['metadata'] ?? [],
             'tenant_id' => $paymentData['tenant_id'] ?? null,
             'related_type' => 'vote',
-            'related_id' => $paymentData['contestant_id'] ?? null
+            'related_id' => $paymentData['voting_transaction_id'] ?? $paymentData['contestant_id'] ?? null
         ];
         
         // Initialize payment through PaymentService

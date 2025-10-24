@@ -372,6 +372,8 @@ class VoteController extends BaseController
                 'reference' => 'VOTE_' . $transactionId,
                 'description' => "Vote for {$contestant['name']} - {$bundle['votes']} vote(s)",
                 'callback_url' => APP_URL . "/api/payment/callback/{$transactionId}",
+                'tenant_id' => $event['tenant_id'],
+                'voting_transaction_id' => $transactionId,
                 'metadata' => [
                     'transaction_id' => $transactionId,
                     'event_id' => $eventId,
