@@ -41,7 +41,7 @@ return [
      * 2 = 01-99 (99 tenants max)
      * 3 = 001-999 (999 tenants max)
      */
-    'tenant_code_length' => 2,
+    'tenant_code_length' => 3,
     
     /**
      * Maximum Tenants
@@ -50,7 +50,7 @@ return [
      * 2 digits = 99 tenants
      * 3 digits = 999 tenants
      */
-    'max_tenants' => 99,
+    'max_tenants' => 999,
     
     /**
      * Callback URL
