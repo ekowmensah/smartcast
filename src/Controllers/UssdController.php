@@ -347,20 +347,27 @@ class UssdController extends BaseController
             if ($result['success']) {
                 error_log("USSD Fulfillment: Vote processed successfully - Transaction: {$transactionId}");
                 
-                // Send success callback to Hubtel
-                $this->sendFulfillmentCallback($sessionId, $orderId, 'success');
+                // Optional: Try to send callback to Hubtel (not required by API)
+                // This may fail if Hubtel doesn't use this endpoint
+                $callbackSent = $this->sendFulfillmentCallback($sessionId, $orderId, 'success');
+                if (!$callbackSent) {
+                    error_log("USSD Fulfillment: Callback to Hubtel failed, but service was completed successfully");
+                }
                 
+                // Return success response to Hubtel (this is what they actually need)
                 return $this->json([
                     'success' => true,
                     'message' => 'Vote processed successfully',
-                    'transaction_id' => $transactionId
+                    'transaction_id' => $transactionId,
+                    'votes_cast' => $result['votes_cast']
                 ]);
             } else {
                 error_log("USSD Fulfillment Error: Vote processing failed - " . $result['message']);
                 
-                // Send failure callback to Hubtel
+                // Optional: Try to send failure callback
                 $this->sendFulfillmentCallback($sessionId, $orderId, 'failed', $result['message']);
                 
+                // Return error response to Hubtel
                 return $this->json([
                     'success' => false,
                     'message' => $result['message']
@@ -457,12 +464,12 @@ class UssdController extends BaseController
     
     /**
      * Send fulfillment callback to Hubtel
-     * Per Hubtel documentation: https://gs-callback.hubtel.com:9055/callback
+     * Per Hubtel documentation: https://gs-callback.hubtel.com/callback
      */
     private function sendFulfillmentCallback($sessionId, $orderId, $status, $metadata = null)
     {
         try {
-            $callbackUrl = 'https://gs-callback.hubtel.com:9055/callback';
+            $callbackUrl = 'https://gs-callback.hubtel.com/callback';
             
             $payload = [
                 'SessionId' => $sessionId,

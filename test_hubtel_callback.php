@@ -9,7 +9,7 @@ $sessionId = 'test_session_' . time();
 $orderId = 'test_order_' . time();
 $status = 'success';
 
-$callbackUrl = 'https://gs-callback.hubtel.com:9055/callback';
+$callbackUrl = 'https://gs-callback.hubtel.com/callback';
 
 $payload = [
     'SessionId' => $sessionId,
