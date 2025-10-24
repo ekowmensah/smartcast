@@ -55,7 +55,12 @@ class ContestantCategory extends BaseModel
     public function findByShortCode($shortCode, $categoryId = null)
     {
         $sql = "
-            SELECT cc.*, c.name as contestant_name, c.image_url, cat.name as category_name
+            SELECT cc.*, 
+                   c.name as contestant_name, 
+                   c.image_url, 
+                   c.event_id,
+                   cat.name as category_name,
+                   cat.event_id as category_event_id
             FROM contestant_categories cc
             INNER JOIN contestants c ON cc.contestant_id = c.id
             INNER JOIN categories cat ON cc.category_id = cat.id

@@ -190,12 +190,9 @@ $ussdCallbackUrl = APP_URL . '/api/ussd/callback';
             
             // Remove CON/END prefix for cleaner display
             const cleanResponse = responseText.replace(/^(CON|END)\s+/, '');
-            const sessionType = responseText.startsWith('CON') ? 'Continue Session' : 
-                               responseText.startsWith('END') ? 'End Session' : 'Unknown';
             
-            // Display response with session type badge
-            const displayText = `[${sessionType}]\n\n${cleanResponse}`;
-            document.getElementById('response').textContent = displayText;
+            // Display clean response without prefix
+            document.getElementById('response').textContent = cleanResponse;
             document.getElementById('responseSection').style.display = 'block';
             
             // Check the checkbox if successful

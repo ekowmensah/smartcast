@@ -118,19 +118,41 @@ class UssdController extends BaseController
             'service_code' => $serviceCode
         ]);
         
-        // Build welcome menu
-        $welcomeMessage = $tenant['ussd_welcome_message'] ?? 'Welcome to SmartCast Voting!';
+        // Build main menu
+        if (!empty($tenant['ussd_welcome_message'])) {
+            // Truncate custom welcome message if too long
+            $customMessage = $tenant['ussd_welcome_message'];
+            // If it starts with "Welcome to", extract the part after it
+            if (stripos($customMessage, 'Welcome to ') === 0) {
+                $namePart = substr($customMessage, 11); // Remove "Welcome to "
+                if (strlen($namePart) > 15) {
+                    $namePart = substr($namePart, 0, 15);
+                }
+                $welcomeMessage = "Welcome to {$namePart}";
+            } else {
+                // If custom format, just truncate to reasonable length
+                if (strlen($customMessage) > 30) {
+                    $customMessage = substr($customMessage, 0, 30);
+                }
+                $welcomeMessage = $customMessage;
+            }
+        } else {
+            // Use tenant name, truncate if too long
+            $tenantName = $tenant['name'] ?? 'SmartCastGH';
+            if (strlen($tenantName) > 15) {
+                $tenantName = substr($tenantName, 0, 15);
+            }
+            $welcomeMessage = "Welcome to {$tenantName}!";
+        }
         
         $menu = $welcomeMessage . "\n\n";
-        $menu .= "Select an event:\n";
+        $menu .= "1. Vote for Nominee\n";
+        $menu .= "2. Vote on an Event\n";
+        $menu .= "3. Create an Event\n";
+        $menu .= "4. Exit";
         
-        foreach ($events as $index => $event) {
-            $menu .= ($index + 1) . ". " . $event['name'] . "\n";
-        }
-        $menu .= "0. Exit";
-        
-        // Update state to select event
-        $this->ussdSession->updateSession($sessionId, UssdSession::STATE_SELECT_EVENT);
+        // Update state to main menu
+        $this->ussdSession->updateSession($sessionId, UssdSession::STATE_MAIN_MENU);
         
         error_log("USSD: New session created for tenant {$tenant['id']}, " . count($events) . " events available");
         

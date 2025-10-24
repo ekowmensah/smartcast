@@ -14,6 +14,8 @@ class UssdSession extends BaseModel
     
     // USSD States
     const STATE_WELCOME = 'welcome';
+    const STATE_MAIN_MENU = 'main_menu';
+    const STATE_ENTER_SHORTCODE = 'enter_shortcode';
     const STATE_SELECT_EVENT = 'select_event';
     const STATE_SELECT_CATEGORY = 'select_category';
     const STATE_SELECT_CONTESTANT = 'select_contestant';
@@ -177,6 +179,12 @@ class UssdSession extends BaseModel
         switch ($session['state']) {
             case self::STATE_WELCOME:
                 return $this->handleWelcomeState($sessionId, $input);
+            
+            case self::STATE_MAIN_MENU:
+                return $this->handleMainMenuState($sessionId, $input);
+            
+            case self::STATE_ENTER_SHORTCODE:
+                return $this->handleEnterShortcodeState($sessionId, $input);
                 
             case self::STATE_SELECT_EVENT:
                 return $this->handleSelectEventState($sessionId, $input);
@@ -200,50 +208,255 @@ class UssdSession extends BaseModel
     
     private function handleWelcomeState($sessionId, $input)
     {
-        // Get session data to extract tenant_id
+        // Show main menu
+        $this->updateSession($sessionId, self::STATE_MAIN_MENU);
+        
+        // Get tenant info from session
         $sessionData = $this->getSessionData($sessionId);
         $tenantId = $sessionData['tenant_id'] ?? null;
         
-        // Get active events for this tenant only
+        $welcomeMessage = "Welcome to SmartCastGH!";
+        
+        if ($tenantId) {
+            $tenantModel = new Tenant();
+            $tenant = $tenantModel->find($tenantId);
+            
+            if ($tenant) {
+                if (!empty($tenant['ussd_welcome_message'])) {
+                    // Truncate custom welcome message if too long
+                    $customMessage = $tenant['ussd_welcome_message'];
+                    // If it starts with "Welcome to", extract the part after it
+                    if (stripos($customMessage, 'Welcome to ') === 0) {
+                        $namePart = substr($customMessage, 11); // Remove "Welcome to "
+                        if (strlen($namePart) > 15) {
+                            $namePart = substr($namePart, 0, 15);
+                        }
+                        $welcomeMessage = "Welcome to {$namePart}";
+                    } else {
+                        // If custom format, just truncate to reasonable length
+                        if (strlen($customMessage) > 30) {
+                            $customMessage = substr($customMessage, 0, 30);
+                        }
+                        $welcomeMessage = $customMessage;
+                    }
+                } else {
+                    // Use tenant name, truncate if too long
+                    $tenantName = $tenant['name'] ?? 'SmartCastGH';
+                    if (strlen($tenantName) > 15) {
+                        $tenantName = substr($tenantName, 0, 15);
+                    }
+                    $welcomeMessage = "Welcome to {$tenantName}!";
+                }
+            }
+        }
+        
+        $menu = $welcomeMessage . "\n\n";
+        $menu .= "1. Vote for Nominee\n";
+        $menu .= "2. Vote on an Event\n";
+        $menu .= "3. Create an Event\n";
+        $menu .= "4. Exit";
+        
+        return $this->createResponse($menu);
+    }
+    
+    private function handleMainMenuState($sessionId, $input)
+    {
+        $sessionData = $this->getSessionData($sessionId);
+        $tenantId = $sessionData['tenant_id'] ?? null;
+        
+        switch ($input) {
+            case '1':
+                // Vote for Nominee - Enter Shortcode
+                $this->updateSession($sessionId, self::STATE_ENTER_SHORTCODE);
+                return $this->createResponse("Enter nominee shortcode:");
+                
+            case '2':
+                // Vote on Event - Show events list
+                return $this->showEventsList($sessionId, $tenantId);
+                
+            case '3':
+                // Create an Event - Send registration link
+                return $this->sendRegistrationLink($sessionId);
+                
+            case '4':
+            case '0':
+                // Exit
+                $this->endSession($sessionId);
+                return $this->createResponse('Thank you for using SmartCastGH!', true);
+                
+            default:
+                return $this->createResponse('Invalid selection. Please try again.');
+        }
+    }
+    
+    private function handleEnterShortcodeState($sessionId, $input)
+    {
+        $sessionData = $this->getSessionData($sessionId);
+        $tenantId = $sessionData['tenant_id'] ?? null;
+        $shortCode = strtoupper(trim($input));
+        
+        if (empty($shortCode)) {
+            return $this->createResponse('Please enter a valid shortcode.');
+        }
+        
+        // Find contestant by shortcode
+        $contestantCategoryModel = new ContestantCategory();
+        $result = $contestantCategoryModel->findByShortCode($shortCode);
+        
+        if (!$result) {
+            $menu = "Shortcode '{$shortCode}' not found.\n\n";
+            $menu .= "1. Try again\n";
+            $menu .= "0. Main menu";
+            return $this->createResponse($menu);
+        }
+        
+        // Verify contestant belongs to tenant's event (if tenant specified)
+        if ($tenantId) {
+            $eventModel = new Event();
+            $event = $eventModel->find($result['event_id']);
+            
+            if (!$event || $event['tenant_id'] != $tenantId) {
+                return $this->createResponse('Nominee not found in your events.', true);
+            }
+        }
+        
+        // Get contestant details
+        $contestantModel = new Contestant();
+        $contestant = $contestantModel->find($result['contestant_id']);
+        
+        // Get event details
+        $eventModel = new Event();
+        $event = $eventModel->find($result['event_id']);
+        
+        // Get category details
+        $categoryModel = new Category();
+        $category = $categoryModel->find($result['category_id']);
+        
+        // Get vote bundles for this event
+        $bundleModel = new VoteBundle();
+        $bundles = $bundleModel->getBundlesByEvent($event['id']);
+        
+        // Store in session
+        $this->updateSession($sessionId, self::STATE_SELECT_BUNDLE, [
+            'selected_event' => $event,
+            'selected_category' => $category,
+            'selected_contestant' => $contestant,
+            'bundles' => $bundles
+        ]);
+        
+        return $this->buildBundleMenu($bundles, $contestant['name']);
+    }
+    
+    private function showEventsList($sessionId, $tenantId, $page = 1)
+    {
+        // Get active events for this tenant
         $eventModel = new Event();
         
         if ($tenantId) {
-            // Filter by tenant
             $events = $eventModel->findAll([
                 'tenant_id' => $tenantId,
                 'status' => 'active'
             ]);
         } else {
-            // Fallback to public events if no tenant
             $events = $eventModel->getPublicEvents();
         }
         
         if (empty($events)) {
-            return $this->createResponse('No active events available. Thank you!', true);
+            return $this->createResponse('No active events available.', true);
         }
         
-        // Update session state
-        $this->updateSession($sessionId, self::STATE_SELECT_EVENT, ['events' => $events]);
+        // Pagination settings
+        $itemsPerPage = 5;
+        $totalEvents = count($events);
+        $totalPages = ceil($totalEvents / $itemsPerPage);
+        $page = max(1, min($page, $totalPages)); // Ensure valid page
+        
+        // Get events for current page
+        $startIndex = ($page - 1) * $itemsPerPage;
+        $pageEvents = array_slice($events, $startIndex, $itemsPerPage);
+        
+        // Update session state with all events and current page
+        $this->updateSession($sessionId, self::STATE_SELECT_EVENT, [
+            'events' => $events,
+            'current_page' => $page,
+            'total_pages' => $totalPages
+        ]);
         
         // Build menu
-        $menu = "Welcome to SmartCast Voting!\nSelect an event:\n";
-        foreach ($events as $index => $event) {
-            $menu .= ($index + 1) . ". " . $event['name'] . "\n";
+        $menu = "Select an event";
+        if ($totalPages > 1) {
+            $menu .= " (Page {$page}/{$totalPages})";
         }
-        $menu .= "0. Exit";
+        $menu .= ":\n";
+        
+        foreach ($pageEvents as $index => $event) {
+            $actualIndex = $startIndex + $index;
+            $eventName = $event['name'];
+            
+            // Truncate long event names (max 30 chars)
+            if (strlen($eventName) > 30) {
+                $eventName = substr($eventName, 0, 27) . '...';
+            }
+            
+            $menu .= ($actualIndex + 1) . ". " . $eventName . "\n";
+        }
+        
+        // Add navigation options
+        if ($page < $totalPages) {
+            $menu .= "9. Next Page\n";
+        }
+        if ($page > 1) {
+            $menu .= "8. Previous Page\n";
+        }
+        $menu .= "0. Back";
         
         return $this->createResponse($menu);
+    }
+    
+    private function sendRegistrationLink($sessionId)
+    {
+        $session = $this->getSession($sessionId);
+        $phoneNumber = $session['msisdn'];
+        
+        // Build registration URL
+        $registrationUrl = APP_URL . '/register';
+        
+        // TODO: Send SMS with registration link
+        // $smsService = new SmsService();
+        // $smsService->send($phoneNumber, "Create your event on SmartCastGH: {$registrationUrl}");
+        
+        $this->endSession($sessionId);
+        
+        $message = "Registration link sent to {$phoneNumber}\n\n";
+        $message .= "Visit: {$registrationUrl}\n\n";
+        $message .= "Thank you!";
+        
+        return $this->createResponse($message, true);
     }
     
     private function handleSelectEventState($sessionId, $input)
     {
         if ($input == '0') {
-            $this->endSession($sessionId);
-            return $this->createResponse('Thank you for using SmartCast!', true);
+            // Go back to main menu
+            return $this->handleWelcomeState($sessionId, '');
         }
         
         $sessionData = $this->getSessionData($sessionId);
         $events = $sessionData['events'] ?? [];
+        $currentPage = $sessionData['current_page'] ?? 1;
+        $totalPages = $sessionData['total_pages'] ?? 1;
+        $tenantId = $sessionData['tenant_id'] ?? null;
+        
+        // Handle pagination
+        if ($input == '9' && $currentPage < $totalPages) {
+            // Next page
+            return $this->showEventsList($sessionId, $tenantId, $currentPage + 1);
+        }
+        
+        if ($input == '8' && $currentPage > 1) {
+            // Previous page
+            return $this->showEventsList($sessionId, $tenantId, $currentPage - 1);
+        }
         
         $eventIndex = (int)$input - 1;
         if (!isset($events[$eventIndex])) {
