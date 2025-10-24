@@ -192,7 +192,7 @@ $baseCode = \SmartCast\Helpers\UssdHelper::getBaseCodeFormatted();
                         <br><br>
                         1. Vote for Nominee<br>
                         2. Vote on an Event<br>
-                        3. Get Support<br>
+                        3. Create an Event<br>
                         4. Exit
                     </code>
                 </div>
