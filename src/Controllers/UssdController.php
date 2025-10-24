@@ -219,21 +219,29 @@ class UssdController extends BaseController
      */
     private function ussdResponse($message, $end = false)
     {
-        // Hubtel expects plain text response with prefix:
-        // CON = Continue session (show menu, wait for input)
-        // END = End session (final message)
+        // Hubtel expects JSON response with specific format
+        $type = $end ? 'Release' : 'Response';
         
-        $prefix = $end ? 'END' : 'CON';
-        $response = $prefix . ' ' . $message;
+        $response = [
+            'Type' => $type,
+            'Message' => $message,
+            'ClientState' => '',
+            'MaskNextRoute' => false,
+            'Label' => null,
+            'DataType' => 'display',
+            'FieldType' => null,
+            'Item' => []
+        ];
         
         // Log response
-        error_log("USSD Response ({$prefix}): " . substr($message, 0, 100) . (strlen($message) > 100 ? '...' : ''));
+        error_log("USSD Response ({$type}): " . substr($message, 0, 100) . (strlen($message) > 100 ? '...' : ''));
+        error_log("USSD Response JSON: " . json_encode($response));
         
-        // Set content type to plain text
-        header('Content-Type: text/plain; charset=utf-8');
+        // Set content type to JSON
+        header('Content-Type: application/json; charset=utf-8');
         
-        // Output response and exit
-        echo $response;
+        // Output JSON response and exit
+        echo json_encode($response);
         exit;
     }
 }
