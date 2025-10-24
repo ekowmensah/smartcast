@@ -334,6 +334,7 @@ class UssdController extends BaseController
             
             $sessionData = $session['data'];
             $transactionId = $sessionData['transaction_id'] ?? null;
+            $voteCount = $sessionData['vote_count'] ?? null;
             
             if (!$transactionId) {
                 error_log("USSD Fulfillment Error: Transaction ID not found in session");
@@ -341,7 +342,7 @@ class UssdController extends BaseController
             }
             
             // Process the vote
-            $result = $this->processVoteFulfillment($transactionId, $orderId, $orderInfo);
+            $result = $this->processVoteFulfillment($transactionId, $orderId, $orderInfo, $voteCount);
             
             if ($result['success']) {
                 error_log("USSD Fulfillment: Vote processed successfully - Transaction: {$transactionId}");
@@ -380,7 +381,7 @@ class UssdController extends BaseController
     /**
      * Process vote after successful payment
      */
-    private function processVoteFulfillment($transactionId, $orderId, $orderInfo)
+    private function processVoteFulfillment($transactionId, $orderId, $orderInfo, $voteCountFromSession = null)
     {
         try {
             $transactionModel = new \SmartCast\Models\Transaction();
@@ -399,10 +400,19 @@ class UssdController extends BaseController
                 'payment_details' => json_encode($orderInfo)
             ]);
             
-            // Get vote count from bundle
-            $bundleModel = new \SmartCast\Models\VoteBundle();
-            $bundle = $bundleModel->find($transaction['bundle_id']);
-            $voteCount = $bundle ? $bundle['votes'] : 1;
+            // Get vote count - prioritize session data (for custom votes), then bundle
+            if ($voteCountFromSession) {
+                $voteCount = $voteCountFromSession;
+                error_log("USSD: Using vote count from session: {$voteCount}");
+            } else if ($transaction['bundle_id']) {
+                $bundleModel = new \SmartCast\Models\VoteBundle();
+                $bundle = $bundleModel->find($transaction['bundle_id']);
+                $voteCount = $bundle ? $bundle['votes'] : 1;
+                error_log("USSD: Using vote count from bundle: {$voteCount}");
+            } else {
+                $voteCount = 1;
+                error_log("USSD: No vote count found, defaulting to 1");
+            }
             
             // Cast the votes
             $voteId = $voteModel->castVote(

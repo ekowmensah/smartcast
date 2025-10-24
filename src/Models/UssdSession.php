@@ -704,21 +704,35 @@ class UssdSession extends BaseModel
             
             // Create pending transaction to track the vote
             $transactionModel = new Transaction();
-            $transactionId = $transactionModel->createTransaction([
+            
+            // Prepare transaction data
+            $selectedBundle = $sessionData['selected_bundle'];
+            $transactionData = [
                 'tenant_id' => $tenantId,
                 'event_id' => $sessionData['selected_event']['id'],
                 'contestant_id' => $sessionData['selected_contestant']['id'],
                 'category_id' => $sessionData['selected_category']['id'] ?? null,
-                'bundle_id' => $sessionData['selected_bundle']['id'],
-                'amount' => $sessionData['selected_bundle']['price'],
+                'amount' => $selectedBundle['price'],
                 'msisdn' => $session['msisdn'],
                 'status' => 'pending',
                 'provider' => 'hubtel_ussd',
                 'provider_reference' => $sessionId // Use session ID as reference
-            ]);
+            ];
             
-            // Store transaction ID in session for fulfillment callback
+            // Only add bundle_id if it's not null (custom votes have null bundle_id)
+            if (!empty($selectedBundle['id'])) {
+                $transactionData['bundle_id'] = $selectedBundle['id'];
+            } else {
+                // For custom votes, store vote count in a way that can be retrieved later
+                // Log that this is a custom vote transaction
+                error_log("USSD: Creating custom vote transaction - Votes: {$selectedBundle['votes']}, Price: {$selectedBundle['price']}");
+            }
+            
+            $transactionId = $transactionModel->createTransaction($transactionData);
+            
+            // Store transaction ID and vote count in session for fulfillment callback
             $this->setSessionData($sessionId, 'transaction_id', $transactionId);
+            $this->setSessionData($sessionId, 'vote_count', $selectedBundle['votes']);
             
             // Update session state
             $this->updateSession($sessionId, self::STATE_PAYMENT);
@@ -745,8 +759,17 @@ class UssdSession extends BaseModel
         } catch (\Exception $e) {
             error_log("USSD Vote Error: " . $e->getMessage());
             error_log("USSD Vote Error Stack: " . $e->getTraceAsString());
+            error_log("USSD Vote Error Session Data: " . json_encode($sessionData));
             $this->updateSession($sessionId, self::STATE_ERROR);
-            return $this->createResponse('Vote failed. Please try again later.', true);
+            
+            // More descriptive error message
+            $errorMsg = 'Vote failed. ';
+            if (strpos($e->getMessage(), 'bundle') !== false) {
+                $errorMsg .= 'Bundle error. ';
+            }
+            $errorMsg .= 'Please try again.';
+            
+            return $this->createResponse($errorMsg, true);
         }
     }
     
