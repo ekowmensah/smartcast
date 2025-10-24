@@ -37,14 +37,23 @@ class UssdController extends BaseController
     public function handleRequest()
     {
         try {
-            // Get Hubtel USSD parameters (support both POST and GET)
-            $sessionId = $_POST['sessionId'] ?? $_GET['sessionId'] ?? null;
-            $serviceCode = $_POST['serviceCode'] ?? $_GET['serviceCode'] ?? null;
-            $phoneNumber = $_POST['phoneNumber'] ?? $_GET['phoneNumber'] ?? null;
-            $text = $_POST['text'] ?? $_GET['text'] ?? '';
+            // Hubtel sends JSON data, not form-urlencoded
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            // If JSON parsing failed, try form data (for testing)
+            if (!$input) {
+                $input = $_POST ?: $_GET;
+            }
+            
+            // Get Hubtel USSD parameters
+            $sessionId = $input['SessionId'] ?? $input['sessionId'] ?? null;
+            $serviceCode = $input['ServiceCode'] ?? $input['serviceCode'] ?? null;
+            $phoneNumber = $input['Mobile'] ?? $input['phoneNumber'] ?? null;
+            $text = $input['Message'] ?? $input['text'] ?? '';
+            $type = $input['Type'] ?? $input['type'] ?? 'Initiation';
             
             // Log request for debugging
-            error_log("USSD Request - Session: {$sessionId}, Code: {$serviceCode}, Phone: {$phoneNumber}, Text: '{$text}'");
+            error_log("USSD Request - Type: {$type}, Session: {$sessionId}, Code: {$serviceCode}, Phone: {$phoneNumber}, Text: '{$text}'");
             
             // Validate required parameters
             if (!$sessionId || !$serviceCode || !$phoneNumber) {
