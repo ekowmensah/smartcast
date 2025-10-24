@@ -137,11 +137,18 @@ class PaymentService
     public function verifyPaymentByVotingTransactionId($votingTransactionId)
     {
         try {
+            // Debug logging
+            error_log("PaymentService: Looking up payment for voting transaction ID: " . $votingTransactionId);
+            
             // Get payment transaction by voting transaction ID
             $paymentTransaction = $this->getPaymentTransactionByVotingTransactionId($votingTransactionId);
+            
             if (!$paymentTransaction) {
+                error_log("PaymentService: Payment transaction NOT FOUND for voting transaction ID: " . $votingTransactionId);
                 throw new \Exception('Payment transaction not found');
             }
+            
+            error_log("PaymentService: Found payment transaction ID: " . $paymentTransaction['id'] . ", gateway_reference: " . $paymentTransaction['gateway_reference']);
             
             // Get gateway and verify payment
             $gateway = $this->getGatewayById($paymentTransaction['gateway_id']);
@@ -498,17 +505,31 @@ class PaymentService
      */
     private function getPaymentTransactionByVotingTransactionId($votingTransactionId)
     {
+        error_log("PaymentService: Searching for payment transaction with voting_transaction_id: " . $votingTransactionId);
+        
         // First try: Use related_id column (faster and more reliable)
-        $sql = "SELECT * FROM payment_transactions WHERE related_type = 'vote' AND related_id = :transaction_id ORDER BY id DESC LIMIT 1";
+        // Cast both sides to ensure type matching (related_id might be stored as string or int)
+        $sql = "SELECT * FROM payment_transactions WHERE related_type = 'vote' AND CAST(related_id AS CHAR) = CAST(:transaction_id AS CHAR) ORDER BY id DESC LIMIT 1";
         $result = $this->db->selectOne($sql, ['transaction_id' => $votingTransactionId]);
         
         if ($result) {
+            error_log("PaymentService: Found via related_id - Payment Transaction ID: " . $result['id']);
             return $result;
         }
         
+        error_log("PaymentService: Not found via related_id, trying JSON_EXTRACT...");
+        
         // Fallback: Try JSON_EXTRACT from metadata (for older records)
         $sql = "SELECT * FROM payment_transactions WHERE JSON_EXTRACT(metadata, '$.transaction_id') = :transaction_id ORDER BY id DESC LIMIT 1";
-        return $this->db->selectOne($sql, ['transaction_id' => $votingTransactionId]);
+        $result = $this->db->selectOne($sql, ['transaction_id' => $votingTransactionId]);
+        
+        if ($result) {
+            error_log("PaymentService: Found via JSON_EXTRACT - Payment Transaction ID: " . $result['id']);
+        } else {
+            error_log("PaymentService: NOT FOUND via either method for voting_transaction_id: " . $votingTransactionId);
+        }
+        
+        return $result;
     }
     
     /**
