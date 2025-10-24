@@ -129,6 +129,99 @@ class PaymentService
     }
     
     /**
+     * Initialize a card payment
+     * 
+     * @param array $paymentData Payment data
+     * @return array Payment response
+     */
+    public function initializeCardPayment($paymentData)
+    {
+        try {
+            // Validate required fields
+            $required = ['amount', 'description', 'metadata'];
+            foreach ($required as $field) {
+                if (empty($paymentData[$field])) {
+                    throw new \Exception("Missing required field: {$field}");
+                }
+            }
+            
+            // Get Hubtel gateway
+            $gateway = $this->getGatewayByProvider('hubtel');
+            if (!$gateway) {
+                throw new \Exception('Hubtel gateway not configured');
+            }
+            
+            // Generate unique reference
+            $reference = $this->generatePaymentReference();
+            
+            // Create payment transaction record
+            $paymentTransactionId = $this->createPaymentTransaction([
+                'reference' => $reference,
+                'gateway_id' => $gateway['id'],
+                'amount' => $paymentData['amount'],
+                'currency' => $paymentData['currency'] ?? 'GHS',
+                'payment_method' => 'card',
+                'phone_number' => $paymentData['phone'] ?? null,
+                'email' => $paymentData['email'] ?? 'voter@smartcast.com',
+                'customer_name' => $paymentData['customer_name'] ?? 'SmartCast Voter',
+                'description' => $paymentData['description'],
+                'metadata' => json_encode($paymentData['metadata']),
+                'tenant_id' => $paymentData['tenant_id'] ?? null,
+                'related_type' => $paymentData['related_type'] ?? 'vote',
+                'related_id' => $paymentData['related_id'] ?? null,
+                'gateway_provider' => 'hubtel'
+            ]);
+            
+            // Initialize card payment with Hubtel
+            $gatewayService = $this->getGatewayService($gateway);
+            $gatewayData = [
+                'amount' => $paymentData['amount'],
+                'reference' => $reference,
+                'description' => $paymentData['description'],
+                'callback_url' => $paymentData['callback_url'] ?? null,
+                'return_url' => $paymentData['return_url'] ?? null,
+                'cancellation_url' => $paymentData['cancellation_url'] ?? null,
+                'phone' => $paymentData['phone'] ?? '',
+                'email' => $paymentData['email'] ?? 'voter@smartcast.com',
+                'customer_name' => $paymentData['customer_name'] ?? 'SmartCast Voter'
+            ];
+            
+            $result = $gatewayService->initializeCardPayment($gatewayData);
+            
+            if ($result['success']) {
+                // Update payment transaction with gateway reference
+                $this->updatePaymentTransaction($paymentTransactionId, [
+                    'gateway_reference' => $result['gateway_reference'],
+                    'status' => 'pending'
+                ]);
+                
+                return [
+                    'success' => true,
+                    'payment_transaction_id' => $paymentTransactionId,
+                    'reference' => $reference,
+                    'gateway_reference' => $result['gateway_reference'],
+                    'payment_url' => $result['payment_url'],
+                    'checkout_id' => $result['checkout_id'] ?? null,
+                    'provider' => 'card',
+                    'charge_status' => 'pending',
+                    'requires_approval' => true,
+                    'message' => $result['message']
+                ];
+            }
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            error_log("Card payment initialization error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 'CARD_INITIALIZATION_ERROR'
+            ];
+        }
+    }
+    
+    /**
      * Verify a payment by voting transaction ID and process vote if successful
      * 
      * @param int $votingTransactionId Voting transaction ID

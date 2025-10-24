@@ -15,7 +15,7 @@ use SmartCast\Models\Coupon;
 use SmartCast\Models\Referral;
 use SmartCast\Models\RevenueShare;
 use SmartCast\Models\TenantBalance;
-use SmartCast\Services\MoMoPaymentService;
+use SmartCast\Services\PaymentService;
 use SmartCast\Services\RevenueWebhookService;
 use SmartCast\Services\VoteCompletionService;
 
@@ -54,7 +54,7 @@ class VoteController extends BaseController
         $this->revenueShareModel = new RevenueShare();
         $this->tenantBalanceModel = new TenantBalance();
         $this->webhookService = new RevenueWebhookService();
-        $this->paymentService = new MoMoPaymentService();
+        $this->paymentService = new PaymentService();
         $this->voteCompletionService = new VoteCompletionService();
     }
     
@@ -220,9 +220,14 @@ class VoteController extends BaseController
         // Validate input - bundle_id is optional for custom votes
         $validationRules = [
             'contestant_id' => ['required' => true, 'numeric' => true],
-            'msisdn' => ['required' => true, 'min' => 10],
             'category_id' => ['required' => true, 'numeric' => true]
         ];
+        
+        // Phone number only required for mobile money payments
+        $paymentMethod = $data['payment_method'] ?? 'mobile_money';
+        if ($paymentMethod === 'mobile_money') {
+            $validationRules['msisdn'] = ['required' => true, 'min' => 10];
+        }
         
         // If it's not a custom vote, require bundle_id
         if (empty($data['vote_method']) || $data['vote_method'] !== 'custom') {
@@ -364,16 +369,21 @@ class VoteController extends BaseController
             
             $transactionId = $this->transactionModel->createTransaction($transactionData);
             
-            // Initiate MoMo payment
+            // Get payment method (mobile_money or card)
+            $paymentMethod = $data['payment_method'] ?? 'mobile_money';
+            
+            // Prepare common payment data
+            $eventSlug = $event['slug'] ?? $event['id'];
             $paymentData = [
                 'amount' => $bundle['price'],
                 'currency' => 'GHS',
-                'phone' => $data['msisdn'],
-                'reference' => 'VOTE_' . $transactionId,
                 'description' => "Vote for {$contestant['name']} - {$bundle['votes']} vote(s)",
                 'callback_url' => APP_URL . "/api/payment/callback/{$transactionId}",
+                'return_url' => APP_URL . "/api/payment/callback/{$transactionId}",
+                'cancellation_url' => APP_URL . "/voting/{$eventSlug}",
                 'tenant_id' => $event['tenant_id'],
                 'voting_transaction_id' => $transactionId,
+                'related_id' => $transactionId,
                 'metadata' => [
                     'transaction_id' => $transactionId,
                     'event_id' => $eventId,
@@ -383,16 +393,28 @@ class VoteController extends BaseController
                 ]
             ];
             
-            $paymentResult = $this->paymentService->initiatePayment($paymentData);
+            // Initialize payment based on method
+            if ($paymentMethod === 'card') {
+                // Card payment
+                $paymentData['phone'] = $data['msisdn'] ?? '';
+                $paymentResult = $this->paymentService->initializeCardPayment($paymentData);
+            } else {
+                // Mobile money payment (default)
+                $paymentData['phone'] = $data['msisdn'];
+                $paymentResult = $this->paymentService->initiatePayment($paymentData);
+            }
             
             if (!$paymentResult['success']) {
                 throw new \Exception('Payment initiation failed: ' . $paymentResult['message']);
             }
             
-            // Update transaction with payment reference
-            $this->transactionModel->update($transactionId, [
-                'provider_reference' => $paymentResult['payment_reference']
-            ]);
+            // Update transaction with payment reference (if available)
+            $paymentReference = $paymentResult['payment_reference'] ?? $paymentResult['gateway_reference'] ?? null;
+            if ($paymentReference) {
+                $this->transactionModel->update($transactionId, [
+                    'provider_reference' => $paymentReference
+                ]);
+            }
             
             $this->transactionModel->getDatabase()->commit();
             
@@ -400,13 +422,13 @@ class VoteController extends BaseController
                 'success' => true,
                 'payment_initiated' => true,
                 'transaction_id' => $transactionId,
-                'payment_reference' => $paymentResult['payment_reference'],
+                'payment_reference' => $paymentReference,
                 'payment_url' => $paymentResult['payment_url'] ?? null,
                 'provider' => $paymentResult['provider'] ?? null,
                 'message' => $paymentResult['message'],
                 'status_check_url' => APP_URL . "/api/payment/status/{$transactionId}",
-                'expires_at' => $paymentResult['expires_at'],
-                'receipt' => $paymentResult['payment_reference'] ?? $transactionId,
+                'expires_at' => $paymentResult['expires_at'] ?? null,
+                'receipt' => $paymentReference ?? $transactionId,
                 'votes_cast' => $votes,
                 'contestant_name' => $contestant['name']
             ]);

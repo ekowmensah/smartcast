@@ -128,6 +128,96 @@ class HubtelGateway
     }
     
     /**
+     * Initialize a card payment (Checkout API)
+     * 
+     * @param array $data Payment data
+     * @return array Payment response with checkout URL
+     */
+    public function initializeCardPayment($data)
+    {
+        $required = ['amount', 'reference'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                throw new \Exception("Missing required field: {$field}");
+            }
+        }
+        
+        // Prepare payment data for Hubtel Checkout API
+        $paymentData = [
+            'clientReference' => $data['reference'],
+            'description' => $data['description'] ?? 'SmartCast Vote Payment',
+            'totalAmount' => (float) $data['amount'],
+            'callbackUrl' => $data['callback_url'] ?? $this->getDefaultCallbackUrl(),
+            'returnUrl' => $data['return_url'] ?? $data['callback_url'] ?? $this->getDefaultCallbackUrl(),
+            'cancellationUrl' => $data['cancellation_url'] ?? $data['callback_url'] ?? $this->getDefaultCallbackUrl(),
+            'merchantAccountNumber' => $this->config['merchant_account'] ?? '',
+            'customerName' => $data['customer_name'] ?? 'SmartCast Voter',
+            'customerEmail' => $data['email'] ?? 'voter@smartcast.com',
+            'customerPhoneNumber' => $data['phone'] ?? '',
+        ];
+        
+        try {
+            // Hubtel Checkout API endpoint
+            $endpoint = '/items/initiate';
+            $response = $this->makeApiCall('POST', $endpoint, $paymentData, [], false, 'https://payproxyapi.hubtel.com/items/initiate');
+            
+            // Check response
+            $status = $response['status'] ?? '';
+            $httpStatus = $response['_http_status'] ?? 200;
+            
+            // Log the request
+            $this->logGatewayActivity(
+                'initialize_card',
+                $data['reference'],
+                $paymentData,
+                $response,
+                $status,
+                $httpStatus
+            );
+            
+            if ($status === 'Success' || $httpStatus === 200) {
+                $checkoutData = $response['data'] ?? [];
+                
+                return [
+                    'success' => true,
+                    'message' => 'Card payment initialized successfully',
+                    'payment_url' => $checkoutData['checkoutUrl'] ?? null,
+                    'checkout_id' => $checkoutData['checkoutId'] ?? null,
+                    'gateway_reference' => $data['reference'],
+                    'requires_approval' => true,
+                    'provider' => 'card',
+                    'charge_status' => 'pending'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => $response['message'] ?? 'Card payment initialization failed',
+                    'error_code' => 'CARD_INIT_FAILED'
+                ];
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Hubtel card payment error: " . $e->getMessage());
+            
+            $this->logGatewayActivity(
+                'initialize_card',
+                $data['reference'],
+                $paymentData,
+                [],
+                'ERROR',
+                0,
+                $e->getMessage()
+            );
+            
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 'CARD_INIT_ERROR'
+            ];
+        }
+    }
+    
+    /**
      * Verify a payment transaction
      * 
      * @param string $clientReference Client reference
@@ -404,10 +494,15 @@ class HubtelGateway
     /**
      * Make API call to Hubtel
      */
-    private function makeApiCall($method, $endpoint, $data = null, $queryParams = [], $useStatusCheckUrl = false)
+    private function makeApiCall($method, $endpoint, $data = null, $queryParams = [], $useStatusCheckUrl = false, $customUrl = null)
     {
-        $baseUrl = $useStatusCheckUrl ? $this->statusCheckUrl : $this->baseUrl;
-        $url = $baseUrl . $endpoint;
+        // Use custom URL if provided, otherwise use configured base URLs
+        if ($customUrl) {
+            $url = $customUrl;
+        } else {
+            $baseUrl = $useStatusCheckUrl ? $this->statusCheckUrl : $this->baseUrl;
+            $url = $baseUrl . $endpoint;
+        }
         
         // Add query parameters for GET requests
         if (!empty($queryParams)) {

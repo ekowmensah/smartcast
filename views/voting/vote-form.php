@@ -1062,14 +1062,42 @@ body {
             </div>
         </div>
 
+        <!-- Payment Method Selection -->
+        <div class="payment-method-section" style="margin-bottom: 1.5rem;">
+            <div class="interface-header" style="margin-bottom: 1rem;">
+                <h3 class="interface-title" style="margin-bottom: 0.25rem;">Payment Method</h3>
+                <p class="interface-subtitle" style="margin-bottom: 0;">Choose how you want to pay</p>
+            </div>
+            
+            <div class="payment-methods" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <label class="payment-method-option" style="cursor: pointer;">
+                    <input type="radio" name="payment_method" value="mobile_money" checked style="display: none;">
+                    <div class="method-card" style="background: rgba(255, 255, 255, 0.95); border: 2px solid #667eea; border-radius: 1rem; padding: 1.5rem; text-align: center; transition: all 0.3s ease;">
+                        <i class="fas fa-mobile-alt" style="font-size: 2.5rem; color: #667eea; margin-bottom: 0.75rem;"></i>
+                        <div style="font-weight: 600; font-size: 1.1rem; color: #2d3748; margin-bottom: 0.25rem;">Mobile Money</div>
+                        <small style="color: #718096; font-size: 0.875rem;">MTN, Telecel, AirtelTigo</small>
+                    </div>
+                </label>
+                
+                <label class="payment-method-option" style="cursor: pointer;">
+                    <input type="radio" name="payment_method" value="card" style="display: none;">
+                    <div class="method-card" style="background: rgba(255, 255, 255, 0.95); border: 2px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; text-align: center; transition: all 0.3s ease;">
+                        <i class="fas fa-credit-card" style="font-size: 2.5rem; color: #718096; margin-bottom: 0.75rem;"></i>
+                        <div style="font-weight: 600; font-size: 1.1rem; color: #2d3748; margin-bottom: 0.25rem;">Card Payment</div>
+                        <small style="color: #718096; font-size: 0.875rem;">Visa, Mastercard</small>
+                    </div>
+                </label>
+            </div>
+        </div>
+
         <!-- Contact Information -->
-        <div class="contact-section">
+        <div class="contact-section" id="contact-section">
             <div class="interface-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0;">
                 <div style="flex: 1;">
                     <h3 class="interface-title" style="margin-bottom: 0.25rem;">Contact Information</h3>
-                    <p class="interface-subtitle" style="margin-bottom: 0;">We need your phone number to process the vote</p>
+                    <p class="interface-subtitle" style="margin-bottom: 0;" id="contact-subtitle">We need your phone number to process the vote</p>
                 </div>
-                <div class="form-group" style="margin: 0; min-width: 250px; flex-shrink: 0;">
+                <div class="form-group" style="margin: 0; min-width: 250px; flex-shrink: 0;" id="phone-field">
                     <label class="form-label" style="margin-bottom: 0.25rem;">Mobile Number *</label>
                     <input type="tel" id="msisdn" name="msisdn" class="form-input" 
                            placeholder="+233 545 644 749" required>
@@ -1121,7 +1149,51 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listeners
     document.getElementById('msisdn').addEventListener('input', updateSubmitButton);
     document.getElementById('custom-votes').addEventListener('input', updateCustomVotes);
+    
+    // Payment method selection
+    document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            handlePaymentMethodChange(this.value);
+        });
+    });
+    
+    // Style payment method cards on selection
+    document.querySelectorAll('.payment-method-option').forEach(label => {
+        label.addEventListener('click', function() {
+            // Remove selected style from all cards
+            document.querySelectorAll('.method-card').forEach(card => {
+                card.style.borderColor = '#e2e8f0';
+                card.querySelector('i').style.color = '#718096';
+            });
+            
+            // Add selected style to clicked card
+            const card = this.querySelector('.method-card');
+            const icon = card.querySelector('i');
+            card.style.borderColor = '#667eea';
+            icon.style.color = '#667eea';
+        });
+    });
 });
+
+function handlePaymentMethodChange(method) {
+    const phoneField = document.getElementById('phone-field');
+    const msisdnInput = document.getElementById('msisdn');
+    const contactSubtitle = document.getElementById('contact-subtitle');
+    
+    if (method === 'card') {
+        // Card payment - phone optional
+        phoneField.style.display = 'none';
+        msisdnInput.required = false;
+        contactSubtitle.textContent = 'Card payment will redirect to secure checkout page';
+    } else {
+        // Mobile money - phone required
+        phoneField.style.display = 'block';
+        msisdnInput.required = true;
+        contactSubtitle.textContent = 'We need your phone number to process the vote';
+    }
+    
+    updateSubmitButton();
+}
 
 function selectVoteMethod(method) {
     // Remove active class from all methods
@@ -1255,20 +1327,32 @@ function updateVoteSummary() {
 function updateSubmitButton() {
     const submitBtn = document.getElementById('vote-button');
     const msisdn = document.getElementById('msisdn').value;
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value || 'mobile_money';
     
     const hasVotes = (currentVoteMethod === 'custom' && customVoteCount > 0) || 
                      (currentVoteMethod === 'package' && selectedBundle);
-    const hasPhone = msisdn.length >= 10;
     
-    submitBtn.disabled = !(hasVotes && hasPhone);
+    // Phone is only required for mobile money
+    if (paymentMethod === 'card') {
+        // Card payment - only need votes selected
+        submitBtn.disabled = !hasVotes;
+    } else {
+        // Mobile money - need both votes and phone
+        const hasPhone = msisdn.length >= 10;
+        submitBtn.disabled = !(hasVotes && hasPhone);
+    }
 }
 
 // Form submission
 document.getElementById('votingForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
+    // Get payment method
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+    
+    // Validate phone number only for mobile money
     const msisdn = document.getElementById('msisdn').value;
-    if (!msisdn || msisdn.length < 10) {
+    if (paymentMethod === 'mobile_money' && (!msisdn || msisdn.length < 10)) {
         showAlert('Please enter a valid phone number', 'error');
         return;
     }
@@ -1298,9 +1382,10 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     const referralCodeElement = document.getElementById('referral_code');
     
     formData.append('category_id', categoryIdElement ? categoryIdElement.value : '');
-    formData.append('msisdn', msisdn);
+    formData.append('msisdn', msisdn || '');
     formData.append('coupon_code', couponCodeElement ? couponCodeElement.value : '');
     formData.append('referral_code', referralCodeElement ? referralCodeElement.value : '');
+    formData.append('payment_method', paymentMethod);
     
     if (currentVoteMethod === 'package') {
         formData.append('bundle_id', selectedBundle.id);
@@ -1319,12 +1404,17 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success && data.payment_initiated) {
-            // Check if we have a payment URL for mobile money
+            // Check if we have a payment URL
             if (data.payment_url) {
-                // Open Paystack in popup for mobile money verification
-                showPaymentPopup(data);
+                if (paymentMethod === 'card') {
+                    // Card payment - redirect to Hubtel checkout
+                    window.location.href = data.payment_url;
+                } else {
+                    // Mobile money - open Paystack in popup
+                    showPaymentPopup(data);
+                }
             } else {
-                // Payment initiated - show payment status
+                // Direct charge (Hubtel mobile money) - show payment status
                 showPaymentStatus(data);
             }
         } else if (data.success) {
