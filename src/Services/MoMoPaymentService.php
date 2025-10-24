@@ -65,9 +65,10 @@ class MoMoPaymentService
                 'success' => true,
                 'transaction_id' => $result['reference'],
                 'payment_reference' => $result['gateway_reference'],
-                'payment_url' => $result['payment_url'],
+                'payment_url' => $result['payment_url'] ?? null,
                 'access_code' => $result['access_code'] ?? null,
                 'provider' => $result['provider'] ?? null,
+                'requires_approval' => $result['requires_approval'] ?? false,
                 'status' => 'pending',
                 'message' => $result['message'],
                 'expires_at' => date('Y-m-d H:i:s', strtotime('+10 minutes'))

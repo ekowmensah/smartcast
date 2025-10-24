@@ -96,11 +96,12 @@ class PaymentService
                     'payment_transaction_id' => $paymentTransactionId,
                     'reference' => $reference,
                     'gateway_reference' => $result['gateway_reference'],
-                    'payment_url' => $result['payment_url'],
+                    'payment_url' => $result['payment_url'] ?? null,
                     'access_code' => $result['access_code'] ?? null,
                     'provider' => $result['provider'] ?? null,
                     'charge_status' => $result['charge_status'] ?? 'pending',
                     'requires_otp' => $result['requires_otp'] ?? false,
+                    'requires_approval' => $result['requires_approval'] ?? false,
                     'message' => $result['message']
                 ];
             } else {
