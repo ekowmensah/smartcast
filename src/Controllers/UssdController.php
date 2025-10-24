@@ -482,14 +482,32 @@ class UssdController extends BaseController
                 'Accept: application/json'
             ]);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_VERBOSE, true);
             
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            $curlInfo = curl_getinfo($ch);
             curl_close($ch);
+            
+            if ($curlError) {
+                error_log("USSD: Fulfillment callback CURL error - " . $curlError);
+                error_log("USSD: CURL info - " . json_encode($curlInfo));
+            }
             
             error_log("USSD: Fulfillment callback response - HTTP {$httpCode}: {$response}");
             
-            return true;
+            if ($httpCode >= 200 && $httpCode < 300) {
+                error_log("USSD: Fulfillment callback sent successfully");
+                return true;
+            } else {
+                error_log("USSD: Fulfillment callback failed with HTTP {$httpCode}");
+                return false;
+            }
             
         } catch (\Exception $e) {
             error_log("USSD: Fulfillment callback failed - " . $e->getMessage());
