@@ -85,7 +85,7 @@ class MoMoPaymentService
     /**
      * Check payment status
      * 
-     * @param string $transactionId
+     * @param string $transactionId Voting transaction ID
      * @return array Status response
      */
     public function checkPaymentStatus($transactionId)
@@ -96,8 +96,8 @@ class MoMoPaymentService
         }
         
         try {
-            // Verify payment and process vote if successful
-            $result = $this->paymentService->verifyPaymentAndProcessVote($transactionId);
+            // Verify payment by voting transaction ID and process vote if successful
+            $result = $this->paymentService->verifyPaymentByVotingTransactionId($transactionId);
             
             if ($result['success']) {
                 return [

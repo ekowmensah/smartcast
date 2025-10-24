@@ -129,6 +129,76 @@ class PaymentService
     }
     
     /**
+     * Verify a payment by voting transaction ID and process vote if successful
+     * 
+     * @param int $votingTransactionId Voting transaction ID
+     * @return array Verification result
+     */
+    public function verifyPaymentByVotingTransactionId($votingTransactionId)
+    {
+        try {
+            // Get payment transaction by voting transaction ID
+            $paymentTransaction = $this->getPaymentTransactionByVotingTransactionId($votingTransactionId);
+            if (!$paymentTransaction) {
+                throw new \Exception('Payment transaction not found');
+            }
+            
+            // Get gateway and verify payment
+            $gateway = $this->getGatewayById($paymentTransaction['gateway_id']);
+            $gatewayService = $this->getGatewayService($gateway);
+            
+            $verificationResult = $gatewayService->verifyPayment($paymentTransaction['gateway_reference']);
+            
+            if ($verificationResult['success']) {
+                $status = $verificationResult['status'];
+                
+                // Update payment transaction
+                $this->updatePaymentTransaction($paymentTransaction['id'], [
+                    'status' => $status,
+                    'gateway_response' => json_encode($verificationResult),
+                    'webhook_verified' => 1
+                ]);
+                
+                if ($status === 'success') {
+                    // Process the vote
+                    $voteResult = $this->processVoteFromPayment($paymentTransaction);
+                    
+                    return [
+                        'success' => true,
+                        'status' => 'success',
+                        'message' => 'Payment verified and vote processed successfully',
+                        'payment_verified' => true,
+                        'vote_processed' => $voteResult['success'] ?? false,
+                        'vote_details' => $voteResult
+                    ];
+                } else {
+                    return [
+                        'success' => true,
+                        'status' => $status,
+                        'message' => 'Payment verification completed',
+                        'payment_verified' => true,
+                        'vote_processed' => false
+                    ];
+                }
+            } else {
+                return [
+                    'success' => false,
+                    'message' => $verificationResult['message'],
+                    'error_code' => $verificationResult['error_code']
+                ];
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Payment verification error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error_code' => 'VERIFICATION_ERROR'
+            ];
+        }
+    }
+    
+    /**
      * Verify a payment and process vote if successful
      * 
      * @param string $reference Payment reference
@@ -420,6 +490,15 @@ class PaymentService
     {
         $sql = "SELECT * FROM payment_transactions WHERE gateway_reference = :gateway_reference";
         return $this->db->selectOne($sql, ['gateway_reference' => $gatewayReference]);
+    }
+    
+    /**
+     * Get payment transaction by voting transaction ID from metadata
+     */
+    private function getPaymentTransactionByVotingTransactionId($votingTransactionId)
+    {
+        $sql = "SELECT * FROM payment_transactions WHERE JSON_EXTRACT(metadata, '$.transaction_id') = :transaction_id ORDER BY id DESC LIMIT 1";
+        return $this->db->selectOne($sql, ['transaction_id' => $votingTransactionId]);
     }
     
     /**
