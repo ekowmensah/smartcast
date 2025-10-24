@@ -65,7 +65,7 @@ class UssdController extends BaseController
             // Validate required parameters
             if (!$sessionId || !$serviceCode || !$phoneNumber) {
                 error_log("USSD Error: Missing required parameters");
-                return $this->ussdResponse('Invalid USSD request. Please try again.', true);
+                return $this->ussdResponse('Invalid USSD request. Please try again.', true, $sessionId);
             }
             
             // Extract tenant from service code
@@ -73,12 +73,12 @@ class UssdController extends BaseController
             
             if (!$tenant) {
                 error_log("USSD Error: No tenant found for service code: {$serviceCode}");
-                return $this->ussdResponse('Service not available. Please contact support.', true);
+                return $this->ussdResponse('Service not available. Please contact support.', true, $sessionId);
             }
             
             if (!$tenant['ussd_enabled']) {
                 error_log("USSD Error: USSD not enabled for tenant: {$tenant['id']}");
-                return $this->ussdResponse('USSD voting is currently disabled for this service.', true);
+                return $this->ussdResponse('USSD voting is currently disabled for this service.', true, $sessionId);
             }
             
             // Check if session exists
@@ -92,12 +92,12 @@ class UssdController extends BaseController
             // Existing session - process user input
             $response = $this->ussdSession->processUssdInput($sessionId, $text);
             
-            return $this->ussdResponse($response['message'], $response['end']);
+            return $this->ussdResponse($response['message'], $response['end'], $sessionId);
             
         } catch (\Exception $e) {
             error_log("USSD Error: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
-            return $this->ussdResponse('An error occurred. Please try again later.', true);
+            return $this->ussdResponse('An error occurred. Please try again later.', true, $sessionId ?? null);
         }
     }
     
@@ -114,7 +114,7 @@ class UssdController extends BaseController
         
         if (empty($events)) {
             error_log("USSD: No active events for tenant {$tenant['id']}");
-            return $this->ussdResponse('No active voting events available at this time.', true);
+            return $this->ussdResponse('No active voting events available at this time.', true, $sessionId);
         }
         
         // Create new session
@@ -173,7 +173,7 @@ class UssdController extends BaseController
         
         error_log("USSD: New session created for tenant {$tenant['id']}, " . count($events) . " events available");
         
-        return $this->ussdResponse($menu);
+        return $this->ussdResponse($menu, false, $sessionId);
     }
     
     /**
@@ -217,21 +217,26 @@ class UssdController extends BaseController
      * @param bool $end Whether to end the session
      * @return void
      */
-    private function ussdResponse($message, $end = false)
+    private function ussdResponse($message, $end = false, $sessionId = null)
     {
-        // Hubtel expects JSON response with specific format
-        $type = $end ? 'Release' : 'Response';
+        // Hubtel Programmable Services API Response Format
+        // Documentation: https://developers.hubtel.com/documentations/programmable-services
+        
+        $type = $end ? 'release' : 'response';  // lowercase as per Hubtel docs
         
         $response = [
+            'SessionId' => $sessionId ?? $_POST['SessionId'] ?? $_GET['SessionId'] ?? '',
             'Type' => $type,
             'Message' => $message,
-            'ClientState' => '',
-            'MaskNextRoute' => false,
-            'Label' => null,
-            'DataType' => 'display',
-            'FieldType' => null,
-            'Item' => []
+            'Label' => $end ? 'Goodbye' : 'Menu',
+            'DataType' => $end ? 'display' : 'input',
+            'FieldType' => 'text'
         ];
+        
+        // Add ClientState for continuation
+        if (!$end) {
+            $response['ClientState'] = '';
+        }
         
         // Log response
         error_log("USSD Response ({$type}): " . substr($message, 0, 100) . (strlen($message) > 100 ? '...' : ''));
