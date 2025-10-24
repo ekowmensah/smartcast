@@ -199,7 +199,30 @@ class HubtelGateway
         } catch (\Exception $e) {
             error_log("Hubtel verification error: " . $e->getMessage());
             
-            // Log the error
+            // Check if error is "payment record not found" - treat as pending
+            $errorMessage = $e->getMessage();
+            if (stripos($errorMessage, 'not found') !== false || stripos($errorMessage, 'record not found') !== false) {
+                error_log("Hubtel: Payment record not found, treating as pending");
+                
+                // Log as pending, not error
+                $this->logGatewayActivity(
+                    'verify',
+                    $clientReference,
+                    ['clientReference' => $clientReference],
+                    [],
+                    'PENDING',
+                    0,
+                    'Payment record not found - still pending'
+                );
+                
+                return [
+                    'success' => true,
+                    'status' => 'pending',
+                    'message' => 'Payment is still pending approval'
+                ];
+            }
+            
+            // Log the error for other exceptions
             $this->logGatewayActivity(
                 'verify',
                 $clientReference,
