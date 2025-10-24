@@ -74,16 +74,32 @@ class UssdHelper
     /**
      * Extract tenant code from service code
      * 
-     * @param string $serviceCode Full USSD code (e.g., '*920*01#')
-     * @return string|null Tenant code (e.g., '01') or null if invalid
+     * Handles multiple formats:
+     * - Hubtel format: "711*734" (no asterisks/hash)
+     * - Full format: "*711*734#"
+     * - Message format: "*711*734#"
+     * 
+     * @param string $serviceCode USSD code in any format
+     * @return string|null Tenant code (e.g., '734') or null if invalid
      */
     public static function extractTenantCode($serviceCode)
     {
         $baseCode = self::getBaseCode();
-        $pattern = '/\*' . preg_quote($baseCode, '/') . '\*(\d+)#/';
         
-        if (preg_match($pattern, $serviceCode, $matches)) {
-            return $matches[1];
+        // Try multiple patterns to handle different formats
+        $patterns = [
+            // Hubtel ServiceCode format: "711*734"
+            '/' . preg_quote($baseCode, '/') . '\*(\d+)/',
+            // Full format: "*711*734#"
+            '/\*' . preg_quote($baseCode, '/') . '\*(\d+)#/',
+            // Partial format: "*711*734"
+            '/\*' . preg_quote($baseCode, '/') . '\*(\d+)/',
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $serviceCode, $matches)) {
+                return $matches[1];
+            }
         }
         
         return null;
