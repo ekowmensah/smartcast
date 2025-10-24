@@ -37,23 +37,30 @@ class UssdController extends BaseController
     public function handleRequest()
     {
         try {
-            // Hubtel sends JSON data, not form-urlencoded
-            $input = json_decode(file_get_contents('php://input'), true);
+            // Log raw input for debugging
+            $rawInput = file_get_contents('php://input');
+            error_log("USSD Raw Input: " . $rawInput);
+            
+            // Hubtel sends JSON data
+            $input = json_decode($rawInput, true);
             
             // If JSON parsing failed, try form data (for testing)
             if (!$input) {
                 $input = $_POST ?: $_GET;
+                error_log("USSD: Using form data - " . json_encode($input));
+            } else {
+                error_log("USSD: Parsed JSON - " . json_encode($input));
             }
             
-            // Get Hubtel USSD parameters
+            // Get Hubtel USSD parameters (Hubtel uses capitalized keys)
             $sessionId = $input['SessionId'] ?? $input['sessionId'] ?? null;
             $serviceCode = $input['ServiceCode'] ?? $input['serviceCode'] ?? null;
             $phoneNumber = $input['Mobile'] ?? $input['phoneNumber'] ?? null;
             $text = $input['Message'] ?? $input['text'] ?? '';
             $type = $input['Type'] ?? $input['type'] ?? 'Initiation';
             
-            // Log request for debugging
-            error_log("USSD Request - Type: {$type}, Session: {$sessionId}, Code: {$serviceCode}, Phone: {$phoneNumber}, Text: '{$text}'");
+            // Log parsed parameters
+            error_log("USSD Parsed - Type: {$type}, Session: {$sessionId}, Code: {$serviceCode}, Phone: {$phoneNumber}, Text: '{$text}'");
             
             // Validate required parameters
             if (!$sessionId || !$serviceCode || !$phoneNumber) {
