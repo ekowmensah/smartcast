@@ -191,6 +191,14 @@
                 </ul>
             </li>
             
+            <!-- USSD Management -->
+            <li class="nav-item">
+                <a class="nav-link" href="<?= SUPERADMIN_URL ?>/ussd">
+                    <i class="nav-icon fas fa-mobile-alt"></i>
+                    USSD Management
+                </a>
+            </li>
+            
             <!-- Security & Compliance -->
             <li class="nav-group">
                 <a class="nav-link nav-group-toggle" href="#">

@@ -78,6 +78,10 @@ class OrganizerController extends BaseController
             $availablePlans = $planModel->getPlansForPricing();
         }
         
+        // Get tenant USSD information
+        $tenantModel = new \SmartCast\Models\Tenant();
+        $tenant = $tenantModel->find($tenantId);
+        
         $content = $this->renderView('organizer/dashboard', [
             'stats' => $stats,
             'recentEvents' => $recentEvents,
@@ -85,6 +89,7 @@ class OrganizerController extends BaseController
             'balance' => $balance,
             'currentSubscription' => $currentSubscription,
             'availablePlans' => $availablePlans,
+            'tenant' => $tenant,
             'title' => 'Organizer Dashboard'
         ]);
         

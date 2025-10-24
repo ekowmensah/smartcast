@@ -187,6 +187,8 @@ class Application
             $router->post('/settings/integrations', 'OrganizerController@updateIntegrationSettings');
             $router->get('/settings/security', 'OrganizerController@securitySettings');
             $router->post('/settings/security', 'OrganizerController@updateSecuritySettings');
+            $router->get('/settings/ussd', 'UssdManagementController@organizerSettings');
+            $router->post('/settings/ussd/update', 'UssdManagementController@updateOrganizerSettings');
         });
         
         // Admin routes (protected)
@@ -287,6 +289,12 @@ class Application
             $router->post('/payouts/recalculate-fees/{id}', 'SuperAdmin\\PayoutController@recalculateFees');
             $router->get('/payouts/debug/{id}', 'SuperAdmin\\PayoutController@debugPayoutMethods');
             $router->post('/payouts/bulk-approve', 'SuperAdmin\\PayoutController@bulkApprove');
+            
+            // USSD Management
+            $router->get('/ussd', 'UssdManagementController@superAdminDashboard');
+            $router->post('/ussd/assign', 'UssdManagementController@assignUssdCode');
+            $router->post('/ussd/revoke', 'UssdManagementController@revokeUssdCode');
+            $router->post('/ussd/toggle', 'UssdManagementController@toggleUssdStatus');
             $router->get('/payouts/process/{id}', 'SuperAdmin\\PayoutController@process');
             $router->get('/payouts/details/{id}', 'SuperAdmin\\PayoutController@details');
             $router->get('/payouts/{id}/receipt', 'SuperAdmin\\PayoutController@downloadReceipt');

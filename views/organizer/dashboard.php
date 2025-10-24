@@ -68,6 +68,106 @@
 </div>
 <?php endif; ?>
 
+<!-- USSD Code Display -->
+<?php if (isset($tenant) && $tenant['ussd_code']): ?>
+<div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-white rounded-circle p-3 me-3" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-mobile-alt fa-2x" style="color: #667eea;"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-white mb-1">Your USSD Voting Code</h5>
+                        <p class="text-white-50 mb-0">Share this code with your voters for easy mobile voting</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <div class="bg-white rounded px-4 py-3 me-3">
+                        <h1 class="mb-0 fw-bold" style="color: #667eea; font-size: 2.5rem; letter-spacing: 2px;">
+                            *920*<?= $tenant['ussd_code'] ?>#
+                        </h1>
+                    </div>
+                    
+                    <?php if ($tenant['ussd_enabled']): ?>
+                        <span class="badge bg-success px-3 py-2" style="font-size: 0.9rem;">
+                            <i class="fas fa-check-circle me-1"></i>Active
+                        </span>
+                    <?php else: ?>
+                        <span class="badge bg-warning px-3 py-2" style="font-size: 0.9rem;">
+                            <i class="fas fa-pause-circle me-1"></i>Disabled
+                        </span>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-light btn-sm me-2" onclick="copyUssdCode('*920*<?= $tenant['ussd_code'] ?>#')">
+                        <i class="fas fa-copy me-1"></i>Copy Code
+                    </button>
+                    <a href="<?= ORGANIZER_URL ?>/settings/ussd" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-cog me-1"></i>Manage USSD
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-md-4 text-center">
+                <div class="bg-white bg-opacity-10 rounded p-3">
+                    <div class="text-white mb-2">
+                        <i class="fas fa-info-circle me-2"></i>How to Vote
+                    </div>
+                    <div class="text-white-50 small text-start">
+                        <ol class="mb-0 ps-3">
+                            <li>Dial <strong class="text-white">*920*<?= $tenant['ussd_code'] ?>#</strong></li>
+                            <li>Select event</li>
+                            <li>Choose contestant</li>
+                            <li>Complete payment</li>
+                            <li>Vote recorded!</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyUssdCode(code) {
+    navigator.clipboard.writeText(code).then(function() {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-light');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-light');
+        }, 2000);
+    }).catch(function(err) {
+        alert('Failed to copy code. Please copy manually: ' + code);
+    });
+}
+</script>
+<?php elseif (isset($tenant)): ?>
+<!-- No USSD Code Assigned -->
+<div class="alert alert-info mb-4" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-mobile-alt fa-2x me-3"></i>
+        <div class="flex-grow-1">
+            <h6 class="alert-heading mb-1">USSD Voting Available</h6>
+            <p class="mb-2">Enable mobile voting for your events! Contact support to get your USSD code assigned.</p>
+            <a href="mailto:support@smartcast.com" class="btn btn-info btn-sm">
+                <i class="fas fa-envelope me-2"></i>Request USSD Code
+            </a>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-sm-6 col-lg-3">

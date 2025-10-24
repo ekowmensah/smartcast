@@ -223,6 +223,12 @@
                             Security
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= ORGANIZER_URL ?>/settings/ussd">
+                            <i class="nav-icon fas fa-mobile-alt"></i>
+                            USSD Settings
+                        </a>
+                    </li>
                 </ul>
             </li>
             

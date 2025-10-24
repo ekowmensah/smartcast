@@ -9,7 +9,8 @@ class Tenant extends BaseModel
 {
     protected $table = 'tenants';
     protected $fillable = [
-        'name', 'email', 'phone', 'website', 'address', 'plan', 'active', 'verified'
+        'name', 'email', 'phone', 'website', 'address', 'plan', 'active', 'verified',
+        'ussd_code', 'ussd_enabled', 'ussd_welcome_message'
     ];
     
     public function getActiveTenants()
