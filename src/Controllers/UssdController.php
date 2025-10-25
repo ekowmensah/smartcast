@@ -115,88 +115,56 @@ class UssdController extends BaseController
     
     /**
      * Handle new USSD session
+     * Simplified flow: Welcome → Enter nominee shortcode → Vote
      */
     private function handleNewSession($sessionId, $phoneNumber, $serviceCode, $tenant)
     {
-        // Get tenant's active events
-        $events = $this->eventModel->findAll([
-            'tenant_id' => $tenant['id'],
-            'status' => 'active'
-        ]);
-        
-        if (empty($events)) {
-            error_log("USSD: No active events for tenant {$tenant['id']}");
-            return $this->ussdResponse('No active voting events available at this time.', true, $sessionId);
-        }
-        
-        // Create new session
+        // Create new session - go directly to shortcode entry
         $this->ussdSession->createSession(
             $sessionId,
             $phoneNumber,
-            UssdSession::STATE_WELCOME,
+            UssdSession::STATE_ENTER_SHORTCODE,
             [
-                'tenant_id' => $tenant['id'],
                 'service_code' => $serviceCode,
-                'events' => $events
+                'ussd_code' => $tenant['ussd_code'] // Store the USSD code, not specific tenant
             ]
         );
         
-        // Update session with tenant info
+        // Update session with service code
         $this->ussdSession->updateSessionColumns($sessionId, [
-            'tenant_id' => $tenant['id'],
             'service_code' => $serviceCode
         ]);
         
-        // Build main menu
+        // Build welcome message
+        $welcomeMessage = "Welcome to SmartCast Voting!\n\nEnter nominee code to vote:";
+        
+        // Use custom welcome message if any tenant has one configured
+        // (For shared codes, we use a generic message or the first tenant's message)
         if (!empty($tenant['ussd_welcome_message'])) {
-            // Truncate custom welcome message if too long
             $customMessage = $tenant['ussd_welcome_message'];
-            // If it starts with "Welcome to", extract the part after it
-            if (stripos($customMessage, 'Welcome to ') === 0) {
-                $namePart = substr($customMessage, 11); // Remove "Welcome to "
-                if (strlen($namePart) > 15) {
-                    $namePart = substr($namePart, 0, 15);
-                }
-                $welcomeMessage = "Welcome to {$namePart}";
+            // Ensure it ends with prompt for nominee code
+            if (stripos($customMessage, 'code') === false) {
+                $welcomeMessage = $customMessage . "\n\nEnter nominee code:";
             } else {
-                // If custom format, just truncate to reasonable length
-                if (strlen($customMessage) > 30) {
-                    $customMessage = substr($customMessage, 0, 30);
-                }
                 $welcomeMessage = $customMessage;
             }
-        } else {
-            // Use tenant name, truncate if too long
-            $tenantName = $tenant['name'] ?? 'SmartCastGH';
-            if (strlen($tenantName) > 15) {
-                $tenantName = substr($tenantName, 0, 15);
-            }
-            $welcomeMessage = "Welcome to {$tenantName}!";
         }
         
-        $menu = $welcomeMessage . "\n\n";
-        $menu .= "1. Vote for Nominee\n";
-        $menu .= "2. Vote on an Event\n";
-        $menu .= "3. Create an Event\n";
-        $menu .= "4. Exit";
+        error_log("USSD: New session created for USSD code {$tenant['ussd_code']}");
         
-        // Update state to main menu
-        $this->ussdSession->updateSession($sessionId, UssdSession::STATE_MAIN_MENU);
-        
-        error_log("USSD: New session created for tenant {$tenant['id']}, " . count($events) . " events available");
-        
-        return $this->ussdResponse($menu, false, $sessionId);
+        return $this->ussdResponse($welcomeMessage, false, $sessionId);
     }
     
     /**
      * Extract tenant from service code
      * 
      * Examples:
-     * *711*01# → tenant with ussd_code = '01'
-     * *711*02# → tenant with ussd_code = '02'
+     * *711*734# → any tenant with ussd_code = '734' (can be multiple)
+     * *711*01# → any tenant with ussd_code = '01'
      * *711# → null (base code without tenant)
      * 
-     * Uses dynamic base code from config
+     * Note: For shared USSD codes, this returns the first enabled tenant.
+     * The actual tenant will be determined when user enters nominee shortcode.
      */
     private function getTenantFromServiceCode($serviceCode)
     {
@@ -204,19 +172,24 @@ class UssdController extends BaseController
         $tenantCode = UssdHelper::extractTenantCode($serviceCode);
         
         if ($tenantCode) {
-            error_log("USSD: Extracted tenant code: {$tenantCode} from service code: {$serviceCode}");
+            error_log("USSD: Extracted USSD code: {$tenantCode} from service code: {$serviceCode}");
             
-            // Find tenant by USSD code
-            $tenant = $this->tenantModel->findAll(['ussd_code' => $tenantCode], null, 1);
+            // Find any enabled tenant with this USSD code
+            // Multiple tenants can share the same code
+            $tenants = $this->tenantModel->findAll([
+                'ussd_code' => $tenantCode,
+                'ussd_enabled' => 1
+            ], null, 1);
             
-            if (!empty($tenant)) {
-                error_log("USSD: Found tenant: {$tenant[0]['name']} (ID: {$tenant[0]['id']})");
-                return $tenant[0];
+            if (!empty($tenants)) {
+                $tenant = $tenants[0];
+                error_log("USSD: Found USSD code {$tenantCode} (can be shared by multiple tenants)");
+                return $tenant;
             }
             
-            error_log("USSD: No tenant found with code: {$tenantCode}");
+            error_log("USSD: No enabled tenant found with USSD code: {$tenantCode}");
         } else {
-            error_log("USSD: Could not extract tenant code from service code: {$serviceCode}");
+            error_log("USSD: Could not extract USSD code from service code: {$serviceCode}");
         }
         
         return null;

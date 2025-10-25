@@ -300,55 +300,53 @@ class UssdSession extends BaseModel
     private function handleEnterShortcodeState($sessionId, $input)
     {
         $sessionData = $this->getSessionData($sessionId);
-        $tenantId = $sessionData['tenant_id'] ?? null;
         $shortCode = strtoupper(trim($input));
         
         if (empty($shortCode)) {
             return $this->createResponse('Please enter a valid shortcode.');
         }
         
-        // Find contestant by shortcode
+        // Find contestant by shortcode across ALL tenants
+        // This allows shared USSD codes to work for any tenant's nominees
         $contestantCategoryModel = new ContestantCategory();
         $result = $contestantCategoryModel->findByShortCode($shortCode);
         
         if (!$result) {
-            $menu = "Shortcode '{$shortCode}' not found.\n\n";
-            $menu .= "1. Try again\n";
-            $menu .= "0. Main menu";
+            $menu = "Nominee code '{$shortCode}' not found.\n\nPlease try again or dial again to exit.";
             return $this->createResponse($menu);
-        }
-        
-        // Verify contestant belongs to tenant's event (if tenant specified)
-        if ($tenantId) {
-            $eventModel = new Event();
-            $event = $eventModel->find($result['event_id']);
-            
-            if (!$event || $event['tenant_id'] != $tenantId) {
-                return $this->createResponse('Nominee not found in your events.', true);
-            }
         }
         
         // Get contestant details
         $contestantModel = new Contestant();
         $contestant = $contestantModel->find($result['contestant_id']);
         
+        if (!$contestant || !$contestant['active']) {
+            return $this->createResponse('Nominee not available for voting.', true);
+        }
+        
         // Get event details
         $eventModel = new Event();
         $event = $eventModel->find($result['event_id']);
+        
+        if (!$event || $event['status'] !== 'active') {
+            return $this->createResponse('Event is not active for voting.', true);
+        }
         
         // Get category details
         $categoryModel = new Category();
         $category = $categoryModel->find($result['category_id']);
         
-        // Get vote bundles for this event
-        $bundleModel = new VoteBundle();
-        $bundles = $bundleModel->getBundlesByEvent($event['id']);
+        // Store tenant_id from the event for transaction tracking
+        $this->updateSessionColumns($sessionId, [
+            'tenant_id' => $event['tenant_id']
+        ]);
         
         // Store in session and show vote type selection
         $this->updateSession($sessionId, self::STATE_SELECT_VOTE_TYPE, [
             'selected_event' => $event,
             'selected_category' => $category,
-            'selected_contestant' => $contestant
+            'selected_contestant' => $contestant,
+            'tenant_id' => $event['tenant_id']
         ]);
         
         return $this->buildVoteTypeMenu($contestant['name']);
