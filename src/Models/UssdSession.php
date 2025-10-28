@@ -547,12 +547,12 @@ class UssdSession extends BaseModel
         
         $selectedContestant = $contestants[$contestantIndex];
         
-        // Store contestant and show vote type selection
-        $this->updateSession($sessionId, self::STATE_SELECT_VOTE_TYPE, [
+        // Skip vote type selection - go directly to custom vote entry
+        $this->updateSession($sessionId, self::STATE_ENTER_CUSTOM_VOTES, [
             'selected_contestant' => $selectedContestant
         ]);
         
-        return $this->buildVoteTypeMenu($selectedContestant['name']);
+        return $this->createResponse("Vote for: " . $selectedContestant['name'] . "\nEnter number of votes (1-10,000):");
     }
     
     private function handleSelectVoteTypeState($sessionId, $input)
@@ -632,8 +632,8 @@ class UssdSession extends BaseModel
     {
         if ($input == '0') {
             $sessionData = $this->getSessionData($sessionId);
-            $this->updateSession($sessionId, self::STATE_SELECT_BUNDLE);
-            return $this->buildBundleMenu($sessionData['bundles'], $sessionData['selected_contestant']['name']);
+            $this->updateSession($sessionId, self::STATE_ENTER_CUSTOM_VOTES);
+            return $this->createResponse("Vote for: " . $sessionData['selected_contestant']['name'] . "\nEnter number of votes (1-10,000):");
         }
         
         if ($input == '1') {
@@ -646,10 +646,10 @@ class UssdSession extends BaseModel
     private function handleEnterCustomVotesState($sessionId, $input)
     {
         if ($input == '0') {
-            // Go back to vote type selection
+            // Go back to contestant selection
             $sessionData = $this->getSessionData($sessionId);
-            $this->updateSession($sessionId, self::STATE_SELECT_VOTE_TYPE);
-            return $this->buildVoteTypeMenu($sessionData['selected_contestant']['name']);
+            $this->updateSession($sessionId, self::STATE_SELECT_CONTESTANT);
+            return $this->buildContestantMenu($sessionData['contestants']);
         }
         
         // Validate vote count
