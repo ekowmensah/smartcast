@@ -341,15 +341,15 @@ class UssdSession extends BaseModel
             'tenant_id' => $event['tenant_id']
         ]);
         
-        // Store in session and show vote type selection
-        $this->updateSession($sessionId, self::STATE_SELECT_VOTE_TYPE, [
+        // Skip vote type selection - go directly to custom vote entry
+        $this->updateSession($sessionId, self::STATE_ENTER_CUSTOM_VOTES, [
             'selected_event' => $event,
             'selected_category' => $category,
             'selected_contestant' => $contestant,
             'tenant_id' => $event['tenant_id']
         ]);
         
-        return $this->buildVoteTypeMenu($contestant['name']);
+        return $this->createResponse("Vote for: " . $contestant['name'] . "\nEnter number of votes (1-10,000):");
     }
     
     private function showEventsList($sessionId, $tenantId, $page = 1)
