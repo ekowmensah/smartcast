@@ -64,6 +64,9 @@ class OrganizerController extends BaseController
         // Get recent votes
         $recentVotes = $this->getRecentVotes($tenantId, 10);
         
+        // Recalculate balance from revenue_transactions to ensure accuracy
+        $this->balanceModel->recalculateBalance($tenantId);
+        
         // Get financial overview
         $balance = $this->balanceModel->getBalance($tenantId);
         
@@ -806,6 +809,7 @@ class OrganizerController extends BaseController
         $sql = "
             SELECT 
                 c.name as contestant_name,
+                e.name as event_name,
                 v.quantity,
                 t.amount,
                 v.created_at,
@@ -813,9 +817,9 @@ class OrganizerController extends BaseController
             FROM votes v
             INNER JOIN contestants c ON v.contestant_id = c.id
             INNER JOIN events e ON c.event_id = e.id
-            LEFT JOIN transactions t ON v.transaction_id = t.id
+            INNER JOIN transactions t ON v.transaction_id = t.id
             WHERE e.tenant_id = :tenant_id
-            AND e.status = 'active'
+            AND t.status = 'success'
             $eventFilter
             $categoryFilter
             ORDER BY v.created_at DESC

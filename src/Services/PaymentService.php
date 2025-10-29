@@ -459,6 +459,14 @@ class PaymentService
             
             $transactionId = $transactionModel->createTransaction($transactionData);
             
+            // Create revenue transaction for financial tracking
+            $this->createRevenueTransaction(
+                $transactionId,
+                $paymentTransaction['tenant_id'],
+                $metadata['event_id'],
+                $paymentTransaction['amount']
+            );
+            
             // Cast the votes
             $voteModel = new \SmartCast\Models\Vote();
             $voteId = $voteModel->castVote(
@@ -484,6 +492,26 @@ class PaymentService
                 'message' => $e->getMessage(),
                 'error_code' => 'VOTE_PROCESSING_ERROR'
             ];
+        }
+    }
+    
+    /**
+     * Create revenue transaction record for financial tracking
+     */
+    private function createRevenueTransaction($transactionId, $tenantId, $eventId, $grossAmount)
+    {
+        try {
+            $revenueModel = new \SmartCast\Models\RevenueTransaction();
+            return $revenueModel->createRevenueTransaction(
+                $transactionId,
+                $tenantId,
+                $eventId,
+                $grossAmount
+            );
+        } catch (\Exception $e) {
+            error_log("Revenue transaction creation error: " . $e->getMessage());
+            // Don't fail the whole process if revenue tracking fails
+            return false;
         }
     }
     

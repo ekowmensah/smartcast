@@ -272,4 +272,76 @@ class TenantBalance extends BaseModel
         // This could be configurable per tenant or globally
         return 10.00; // Minimum GH₵10 payout
     }
+    
+    /**
+     * Recalculate balance from actual revenue transactions
+     * This ensures the balance is accurate based on real data
+     */
+    public function recalculateBalance($tenantId)
+    {
+        try {
+            // Calculate total earned from revenue transactions
+            $revenueQuery = "
+                SELECT COALESCE(SUM(net_tenant_amount), 0) as total_earned
+                FROM revenue_transactions
+                WHERE tenant_id = :tenant_id
+                AND distribution_status = 'completed'
+            ";
+            
+            $revenueResult = $this->db->selectOne($revenueQuery, ['tenant_id' => $tenantId]);
+            $totalEarned = $revenueResult['total_earned'] ?? 0;
+            
+            // Calculate total successfully paid out
+            $payoutQuery = "
+                SELECT COALESCE(SUM(amount), 0) as total_paid
+                FROM payouts
+                WHERE tenant_id = :tenant_id
+                AND status = 'success'
+            ";
+            
+            $payoutResult = $this->db->selectOne($payoutQuery, ['tenant_id' => $tenantId]);
+            $totalPaid = $payoutResult['total_paid'] ?? 0;
+            
+            // Calculate pending amount (queued or processing payouts)
+            $pendingQuery = "
+                SELECT COALESCE(SUM(amount), 0) as pending
+                FROM payouts
+                WHERE tenant_id = :tenant_id
+                AND status IN ('pending', 'approved', 'processing')
+            ";
+            
+            $pendingResult = $this->db->selectOne($pendingQuery, ['tenant_id' => $tenantId]);
+            $pending = $pendingResult['pending'] ?? 0;
+            
+            // Calculate available balance
+            $available = $totalEarned - $totalPaid - $pending;
+            $available = max(0, $available);
+            
+            // Get current balance record
+            $currentBalance = $this->findAll(['tenant_id' => $tenantId], null, 1);
+            
+            if (empty($currentBalance)) {
+                // Create new balance record
+                return $this->create([
+                    'tenant_id' => $tenantId,
+                    'available' => $available,
+                    'pending' => $pending,
+                    'total_earned' => $totalEarned,
+                    'total_paid' => $totalPaid
+                ]);
+            } else {
+                // Update existing balance record
+                return $this->update($currentBalance[0]['id'], [
+                    'available' => $available,
+                    'pending' => $pending,
+                    'total_earned' => $totalEarned,
+                    'total_paid' => $totalPaid
+                ]);
+            }
+            
+        } catch (\Exception $e) {
+            error_log('Recalculate balance error: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

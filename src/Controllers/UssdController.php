@@ -408,6 +408,15 @@ class UssdController extends BaseController
                 }
             }
             
+            // Create revenue transaction for financial tracking
+            $revenueModel = new \SmartCast\Models\RevenueTransaction();
+            $revenueModel->createRevenueTransaction(
+                $transactionId,
+                $transaction['tenant_id'],
+                $transaction['event_id'],
+                $transaction['amount']
+            );
+            
             // Cast the votes
             $voteId = $voteModel->castVote(
                 $transactionId,
