@@ -994,10 +994,12 @@ class OrganizerController extends BaseController
             SELECT 
                 e.id,
                 e.name,
-                COUNT(DISTINCT t.id) as transaction_count,
-                COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as total_revenue
+                COUNT(DISTINCT rt.transaction_id) as transaction_count,
+                COALESCE(SUM(rt.net_tenant_amount), 0) as total_revenue,
+                COALESCE(SUM(rt.gross_amount), 0) as gross_revenue,
+                COALESCE(SUM(rt.platform_fee), 0) as total_fees
             FROM events e
-            LEFT JOIN transactions t ON e.id = t.event_id
+            LEFT JOIN revenue_transactions rt ON e.id = rt.event_id AND rt.distribution_status = 'completed'
             WHERE e.tenant_id = :tenant_id
             GROUP BY e.id, e.name
             HAVING total_revenue > 0
@@ -1062,11 +1064,11 @@ class OrganizerController extends BaseController
             $labels[] = date('M j', strtotime($date));
             
             $sql = "
-                SELECT COALESCE(SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END), 0) as daily_revenue
-                FROM transactions t
-                INNER JOIN events e ON t.event_id = e.id
-                WHERE e.tenant_id = :tenant_id
-                AND DATE(t.created_at) = :date
+                SELECT COALESCE(SUM(rt.net_tenant_amount), 0) as daily_revenue
+                FROM revenue_transactions rt
+                WHERE rt.tenant_id = :tenant_id
+                AND rt.distribution_status = 'completed'
+                AND DATE(rt.created_at) = :date
             ";
             
             $result = $this->balanceModel->getDatabase()->selectOne($sql, [

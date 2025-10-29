@@ -40,8 +40,8 @@ class RevenueTransaction extends BaseModel
         if ($result && $result['platform_fee_percentage']) {
             return [
                 'platform_fee_percentage' => floatval($result['platform_fee_percentage']),
-                'processing_fee_percentage' => 2.9,
-                'processing_fee_fixed' => 0.30,
+                'processing_fee_percentage' => 0.0,  // Hubtel charges post-payment
+                'processing_fee_fixed' => 0.00,      // Hubtel charges post-payment
                 'referrer_commission_percentage' => 0.0,
                 'fee_rule_id' => $result['fee_rule_id'],
                 'fee_rule_name' => $result['fee_rule_name']
@@ -51,8 +51,8 @@ class RevenueTransaction extends BaseModel
         // Fallback to global default (35%)
         return [
             'platform_fee_percentage' => 35.0,
-            'processing_fee_percentage' => 2.9,
-            'processing_fee_fixed' => 0.30,
+            'processing_fee_percentage' => 0.0,  // Hubtel charges post-payment
+            'processing_fee_fixed' => 0.00,      // Hubtel charges post-payment
             'referrer_commission_percentage' => 0.0,
             'fee_rule_id' => null,
             'fee_rule_name' => 'Global Default (35%)'
@@ -88,30 +88,26 @@ class RevenueTransaction extends BaseModel
         // Default fee structure if no rules provided
         $defaultRules = [
             'platform_fee_percentage' => 5.0, // 5%
-            'processing_fee_percentage' => 2.9, // 2.9%
-            'processing_fee_fixed' => 0.30, // GH₵0.30
+            'processing_fee_percentage' => 0.0, // 0% - Hubtel charges post-payment
+            'processing_fee_fixed' => 0.00, // GH₵0.00 - Hubtel charges post-payment
             'referrer_commission_percentage' => 0.0 // 0% (if no referrer)
         ];
         
         $rules = $feeRules ?? $defaultRules;
         
-        // Calculate platform fee
-        $platformFee = ($grossAmount * $rules['platform_fee_percentage']) / 100;
+        // Calculate and round fees first
+        $platformFee = round(($grossAmount * $rules['platform_fee_percentage']) / 100, 2);
+        $processingFee = round((($grossAmount * $rules['processing_fee_percentage']) / 100) + $rules['processing_fee_fixed'], 2);
+        $referrerCommission = round(($grossAmount * $rules['referrer_commission_percentage']) / 100, 2);
         
-        // Calculate processing fee (percentage + fixed)
-        $processingFee = (($grossAmount * $rules['processing_fee_percentage']) / 100) + $rules['processing_fee_fixed'];
-        
-        // Calculate referrer commission
-        $referrerCommission = ($grossAmount * $rules['referrer_commission_percentage']) / 100;
-        
-        // Calculate net amount for tenant
-        $netTenantAmount = $grossAmount - $platformFee - $processingFee - $referrerCommission;
+        // Calculate net amount from rounded fees to ensure accuracy
+        $netTenantAmount = round($grossAmount - $platformFee - $processingFee - $referrerCommission, 2);
         
         return [
-            'platform_fee' => round($platformFee, 2),
-            'processing_fee' => round($processingFee, 2),
-            'referrer_commission' => round($referrerCommission, 2),
-            'net_tenant_amount' => round($netTenantAmount, 2),
+            'platform_fee' => $platformFee,
+            'processing_fee' => $processingFee,
+            'referrer_commission' => $referrerCommission,
+            'net_tenant_amount' => $netTenantAmount,
             'rules_applied' => $rules
         ];
     }
