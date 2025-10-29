@@ -14,6 +14,7 @@ use SmartCast\Models\AuditLog;
 use SmartCast\Models\Coupon;
 use SmartCast\Models\Referral;
 use SmartCast\Models\RevenueShare;
+use SmartCast\Models\RevenueTransaction;
 use SmartCast\Models\TenantBalance;
 use SmartCast\Services\PaymentService;
 use SmartCast\Services\RevenueWebhookService;
@@ -34,6 +35,7 @@ class VoteController extends BaseController
     private $ledgerModel;
     private $auditModel;
     private $revenueShareModel;
+    private $revenueTransactionModel;
     private $tenantBalanceModel;
     private $webhookService;
     private $paymentService;
@@ -52,6 +54,7 @@ class VoteController extends BaseController
         $this->ledgerModel = new VoteLedger();
         $this->auditModel = new AuditLog();
         $this->revenueShareModel = new RevenueShare();
+        $this->revenueTransactionModel = new RevenueTransaction();
         $this->tenantBalanceModel = new TenantBalance();
         $this->webhookService = new RevenueWebhookService();
         $this->paymentService = new PaymentService();
@@ -834,6 +837,20 @@ class VoteController extends BaseController
                 
                 error_log("Tenant net amount: $tenantNetAmount (from {$transaction['amount']} - {$revenueShare['amount']})");
                 
+                // ✅ CREATE REVENUE TRANSACTION RECORD FOR REPORTS
+                try {
+                    $this->revenueTransactionModel->createRevenueTransaction(
+                        $transaction['id'],
+                        $transaction['tenant_id'],
+                        $transaction['event_id'],
+                        $transaction['amount']
+                    );
+                    error_log("Revenue transaction record created for reports");
+                } catch (\Exception $e) {
+                    error_log("Revenue transaction creation failed: " . $e->getMessage());
+                    // Don't fail the whole process
+                }
+                
                 // Update tenant balance immediately
                 $this->tenantBalanceModel->addEarnings($transaction['tenant_id'], $tenantNetAmount);
                 
@@ -851,6 +868,19 @@ class VoteController extends BaseController
                 return $revenueBreakdown;
             } else {
                 error_log("No revenue share created - no applicable fee rules");
+                
+                // ✅ CREATE REVENUE TRANSACTION RECORD (no fees scenario)
+                try {
+                    $this->revenueTransactionModel->createRevenueTransaction(
+                        $transaction['id'],
+                        $transaction['tenant_id'],
+                        $transaction['event_id'],
+                        $transaction['amount']
+                    );
+                    error_log("Revenue transaction record created (no fees)");
+                } catch (\Exception $e) {
+                    error_log("Revenue transaction creation failed: " . $e->getMessage());
+                }
                 
                 // If no fee rules, tenant gets full amount
                 $this->tenantBalanceModel->addEarnings($transaction['tenant_id'], $transaction['amount']);

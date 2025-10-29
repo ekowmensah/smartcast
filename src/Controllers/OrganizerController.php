@@ -1021,24 +1021,25 @@ class OrganizerController extends BaseController
                 e.name as event_name,
                 c.name as contestant_name,
                 v.quantity as vote_count,
-                COALESCE(rs.amount, 0) as platform_fee,
-                (t.amount - COALESCE(rs.amount, 0)) as net_amount,
+                -- Use revenue_transactions table for accurate fee data
+                COALESCE(rt.platform_fee, 0) as platform_fee,
+                COALESCE(rt.processing_fee, 0) as processing_fee,
+                COALESCE(rt.net_tenant_amount, t.amount) as net_amount,
                 -- Calculate actual fee percentage based on platform fee amount
                 CASE 
-                    WHEN t.amount > 0 AND COALESCE(rs.amount, 0) > 0 THEN 
-                        ROUND((COALESCE(rs.amount, 0) / t.amount) * 100, 1)
+                    WHEN t.amount > 0 AND COALESCE(rt.platform_fee, 0) > 0 THEN 
+                        ROUND((COALESCE(rt.platform_fee, 0) / t.amount) * 100, 1)
                     ELSE 0
                 END as calculated_fee_percentage,
-                -- Use actual platform fee from revenue_shares table
-                COALESCE(rs.amount, 0) as calculated_platform_fee,
-                -- Use actual net amount
-                (t.amount - COALESCE(rs.amount, 0)) as calculated_net_amount
+                -- Use actual platform fee from revenue_transactions table
+                COALESCE(rt.platform_fee, 0) as calculated_platform_fee,
+                -- Use actual net amount from revenue_transactions
+                COALESCE(rt.net_tenant_amount, t.amount) as calculated_net_amount
             FROM transactions t
             INNER JOIN events e ON t.event_id = e.id
             INNER JOIN contestants c ON t.contestant_id = c.id
             LEFT JOIN votes v ON t.id = v.transaction_id
-            LEFT JOIN revenue_shares rs ON t.id = rs.transaction_id
-            LEFT JOIN fee_rules fr ON rs.fee_rule_id = fr.id
+            LEFT JOIN revenue_transactions rt ON t.id = rt.transaction_id AND rt.distribution_status = 'completed'
             WHERE e.tenant_id = :tenant_id
             AND t.status = 'success'
             ORDER BY t.created_at DESC
