@@ -161,9 +161,23 @@ class AuthController extends BaseController
             $errors['confirm_password'] = 'Passwords do not match';
         }
         
-        // Check if email already exists
+        // Check if email already exists (both user and tenant)
         if ($this->userModel->findByEmail($data['email'])) {
             $errors['email'] = 'Email already exists';
+        }
+        
+        // Check if tenant email already exists
+        $existingTenant = $this->tenantModel->findAll(['email' => $data['email']], null, 1);
+        if (!empty($existingTenant)) {
+            $errors['email'] = 'An organization with this email already exists';
+        }
+        
+        // Check if tenant phone already exists
+        if (!empty($data['phone'])) {
+            $existingTenantPhone = $this->tenantModel->findAll(['phone' => $data['phone']], null, 1);
+            if (!empty($existingTenantPhone)) {
+                $errors['phone'] = 'An organization with this phone number already exists';
+            }
         }
         
         // Validate phone number format (Ghana/Nigeria)
@@ -186,6 +200,7 @@ class AuthController extends BaseController
         if (!empty($errors)) {
             // Get plans again for the form
             $plans = $planModel->getPlansForPricing();
+            
             $this->view('auth/register', [
                 'errors' => $errors,
                 'data' => $data,
@@ -196,7 +211,7 @@ class AuthController extends BaseController
         
         try {
             // Create tenant first
-            $tenantId = $this->tenantModel->create([
+            $tenantData = [
                 'name' => $data['organization'],
                 'email' => $data['email'],
                 'phone' => $data['phone'],
@@ -206,8 +221,12 @@ class AuthController extends BaseController
                 'trial_ends_at' => $selectedPlan['trial_days'] > 0 ? 
                     date('Y-m-d H:i:s', strtotime('+' . $selectedPlan['trial_days'] . ' days')) : null,
                 'active' => 1,
-                'verified' => 0
-            ]);
+                'verified' => 0,
+                'ussd_code' => '999', // Shared USSD code for all tenants (*711*999#)
+                'ussd_enabled' => 0 // Disabled by default, can be enabled later
+            ];
+            
+            $tenantId = $this->tenantModel->create($tenantData);
             
             // Create user
             $userId = $this->userModel->createUser([

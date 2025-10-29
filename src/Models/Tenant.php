@@ -10,7 +10,8 @@ class Tenant extends BaseModel
     protected $table = 'tenants';
     protected $fillable = [
         'name', 'email', 'phone', 'website', 'address', 'plan', 'active', 'verified',
-        'ussd_code', 'ussd_enabled', 'ussd_welcome_message'
+        'ussd_code', 'ussd_enabled', 'ussd_welcome_message',
+        'current_plan_id', 'subscription_status', 'trial_ends_at', 'subscription_ends_at'
     ];
     
     public function getActiveTenants()
@@ -59,5 +60,16 @@ class Tenant extends BaseModel
     public function reactivate($tenantId)
     {
         return $this->update($tenantId, ['active' => 1]);
+    }
+    
+    /**
+     * Get all used USSD codes
+     */
+    public function getUsedUssdCodes()
+    {
+        $sql = "SELECT ussd_code FROM {$this->table} WHERE ussd_code IS NOT NULL";
+        $results = $this->db->select($sql);
+        
+        return array_column($results, 'ussd_code');
     }
 }
