@@ -1,24 +1,693 @@
-<!-- Modern Revenue Dashboard -->
-<div class="revenue-dashboard-wrapper">
-    <!-- Header Section -->
-    <div class="dashboard-header">
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+/* Embedded CSS for Revenue Dashboard */
+:root {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --success: #10b981;
+    --info: #3b82f6;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+}
+
+.revenue-dashboard-modern {
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    width: 100vw;
+    position: relative;
+    min-height: 100vh;
+    background: var(--bg-main);
+}
+
+.revenue-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    padding: 3rem 0;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+}
+
+.hero-subtitle {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn-hero {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-hero.btn-primary {
+    background: white;
+    color: var(--primary);
+}
+
+.btn-hero.btn-secondary {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.btn-hero:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.stats-section {
+    padding: 2rem 0;
+    margin-top: -2rem;
+    position: relative;
+    z-index: 2;
+}
+
+.stats-grid-modern {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.stat-card-modern {
+    background: var(--bg-card);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border-left: 4px solid var(--primary);
+}
+
+.stat-card-modern.stat-success {
+    border-left-color: var(--success);
+}
+
+.stat-card-modern.stat-info {
+    border-left-color: var(--info);
+}
+
+.stat-card-modern.stat-warning {
+    border-left-color: var(--warning);
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-icon-modern {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.stat-card-modern.stat-success .stat-icon-modern {
+    background: linear-gradient(135deg, var(--success), #059669);
+}
+
+.stat-card-modern.stat-info .stat-icon-modern {
+    background: linear-gradient(135deg, var(--info), #2563eb);
+}
+
+.stat-card-modern.stat-warning .stat-icon-modern {
+    background: linear-gradient(135deg, var(--warning), #d97706);
+}
+
+.stat-badge {
+    padding: 0.25rem 0.75rem;
+    background: var(--bg-main);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.stat-amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label-modern {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.stat-footer {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+}
+
+.stat-trend-up {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--success);
+}
+
+.stat-trend-neutral {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Simplified styles for other sections */
+.main-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.card-header-premium {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-body-premium {
+    padding: 1.5rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-secondary);
+}
+
+/* Content Grid */
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.card-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0.25rem 0 0 0;
+}
+
+/* Events List */
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.event-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-main);
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.event-item:hover {
+    background: #e0e7ff;
+    transform: translateX(4px);
+}
+
+.rank-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.rank-badge.rank-1 {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.rank-badge.rank-2 {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+}
+
+.rank-badge.rank-3 {
+    background: linear-gradient(135deg, #fb923c, #f97316);
+}
+
+.event-info {
+    flex: 1;
+}
+
+.event-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.event-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.revenue-amount {
+    font-weight: 700;
+    color: var(--success);
+    font-size: 1.125rem;
+}
+
+/* Payout Info */
+.payout-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-main);
+    border-radius: 8px;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-payout-primary {
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, var(--success), #059669);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-payout-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+}
+
+.payout-notice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    color: var(--warning);
+    font-size: 0.875rem;
+}
+
+/* Transactions Table */
+.transactions-section {
+    margin-top: 2rem;
+}
+
+.transaction-filters {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.5rem 1rem;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.transactions-table {
+    width: 100%;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr 0.8fr 1fr 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-main);
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.table-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.transaction-row {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr 0.8fr 1fr 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: all 0.2s;
+    align-items: center;
+}
+
+.transaction-row:hover {
+    border-color: var(--primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.date-primary {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.date-secondary {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.event-primary {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.event-secondary {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.votes-badge {
+    padding: 0.375rem 0.875rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    display: inline-block;
+}
+
+.amount-primary {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.fee-amount {
+    font-weight: 700;
+    color: var(--danger);
+    font-size: 0.875rem;
+}
+
+.fee-percentage {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.net-amount {
+    font-weight: 700;
+    color: var(--success);
+    font-size: 0.875rem;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: var(--bg-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: var(--text-muted);
+}
+
+.empty-state h4, .empty-state h5 {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+}
+
+/* Chart */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.btn-group-premium {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-main);
+}
+
+.btn-premium {
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-premium.active,
+.btn-premium:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    .hero-title {
+        font-size: 2rem;
+    }
+    .stats-grid-modern {
+        grid-template-columns: 1fr;
+    }
+    .table-header {
+        display: none;
+    }
+    .transaction-row {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    .transaction-row > div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+</style>
+
+<!-- Modern Revenue Dashboard - Redesigned -->
+<div class="revenue-dashboard-modern">
+    <!-- Hero Header -->
+    <div class="revenue-hero">
         <div class="container-fluid">
-            <div class="header-content">
-                <div class="header-info">
-                    <div class="header-badge">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Live Revenue</span>
+            <div class="hero-content">
+                <div class="hero-left">
+                    <div class="status-badge">
+                        <span class="pulse-dot"></span>
+                        <span>Live Dashboard</span>
                     </div>
-                    <h1 class="dashboard-title">Revenue Dashboard</h1>
-                    <p class="dashboard-subtitle">Real-time earnings and financial insights from your voting events</p>
+                    <h1 class="hero-title">Revenue & Earnings</h1>
+                    <p class="hero-subtitle">Track your earnings, monitor transactions, and manage payouts</p>
                 </div>
-                <div class="header-actions">
-                    <button class="btn-glass btn-refresh" onclick="location.reload()" title="Refresh Data">
-                        <i class="fas fa-sync"></i>
+                <div class="hero-actions">
+                    <button class="btn-hero btn-secondary" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i>
                         <span>Refresh</span>
                     </button>
-                    <button class="btn-glass btn-payout" onclick="requestPayout()" <?= ($balance['available'] < 10) ? 'disabled' : '' ?> title="Request Payout">
-                        <i class="fas fa-money-check-alt"></i>
+                    <button class="btn-hero btn-primary" onclick="requestPayout()" <?= ($balance['available'] < 10) ? 'disabled' : '' ?>>
+                        <i class="fas fa-wallet"></i>
                         <span>Request Payout</span>
                     </button>
                 </div>
@@ -26,67 +695,75 @@
         </div>
     </div>
 
-    <!-- Revenue Stats Overview -->
-    <div class="stats-overview">
+    <!-- Stats Cards -->
+    <div class="stats-section">
         <div class="container-fluid">
-            <div class="stats-grid">
+            <div class="stats-grid-modern">
                 <!-- Available Balance -->
-                <div class="stat-card stat-primary">
-                    <div class="stat-icon">
-                        <i class="fas fa-wallet"></i>
+                <div class="stat-card-modern stat-primary">
+                    <div class="stat-header">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="stat-badge">Available</div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-value">GH₵<?= number_format($balance['available'] ?? 0, 2) ?></div>
-                        <div class="stat-label">Available Balance</div>
-                        <div class="stat-meta">Ready for payout</div>
+                    <div class="stat-body">
+                        <div class="stat-amount">GH₵<?= number_format($balance['available'] ?? 0, 2) ?></div>
+                        <div class="stat-label-modern">Ready for Payout</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-arrow-up"></i>
+                    <div class="stat-footer">
+                        <span class="stat-trend-up"><i class="fas fa-arrow-up"></i> Ready</span>
                     </div>
                 </div>
 
                 <!-- Total Earned -->
-                <div class="stat-card stat-success">
-                    <div class="stat-icon">
-                        <i class="fas fa-chart-pie"></i>
+                <div class="stat-card-modern stat-success">
+                    <div class="stat-header">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-badge">Total</div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-value">GH₵<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
-                        <div class="stat-label">Total Earned</div>
-                        <div class="stat-meta">All time earnings</div>
+                    <div class="stat-body">
+                        <div class="stat-amount">GH₵<?= number_format($balance['total_earned'] ?? 0, 2) ?></div>
+                        <div class="stat-label-modern">All Time Earnings</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-trophy"></i>
+                    <div class="stat-footer">
+                        <span class="stat-trend-up"><i class="fas fa-trophy"></i> Lifetime</span>
                     </div>
                 </div>
 
                 <!-- Today's Earnings -->
-                <div class="stat-card stat-info">
-                    <div class="stat-icon">
-                        <i class="fas fa-calendar-day"></i>
+                <div class="stat-card-modern stat-info">
+                    <div class="stat-header">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-badge">Today</div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-value">GH₵<?= number_format($todayEarnings ?? 0, 2) ?></div>
-                        <div class="stat-label">Today's Earnings</div>
-                        <div class="stat-meta">Last 24 hours</div>
+                    <div class="stat-body">
+                        <div class="stat-amount">GH₵<?= number_format($todayEarnings ?? 0, 2) ?></div>
+                        <div class="stat-label-modern">Last 24 Hours</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-clock"></i>
+                    <div class="stat-footer">
+                        <span class="stat-trend-up"><i class="fas fa-clock"></i> Active</span>
                     </div>
                 </div>
 
                 <!-- Total Paid Out -->
-                <div class="stat-card stat-warning">
-                    <div class="stat-icon">
-                        <i class="fas fa-money-check-alt"></i>
+                <div class="stat-card-modern stat-warning">
+                    <div class="stat-header">
+                        <div class="stat-icon-modern">
+                            <i class="fas fa-money-check-alt"></i>
+                        </div>
+                        <div class="stat-badge">Paid</div>
                     </div>
-                    <div class="stat-content">
-                        <div class="stat-value">GH₵<?= number_format($balance['total_paid'] ?? 0, 2) ?></div>
-                        <div class="stat-label">Total Paid Out</div>
-                        <div class="stat-meta">Lifetime payouts</div>
+                    <div class="stat-body">
+                        <div class="stat-amount">GH₵<?= number_format($balance['total_paid'] ?? 0, 2) ?></div>
+                        <div class="stat-label-modern">Total Payouts</div>
                     </div>
-                    <div class="stat-trend">
-                        <i class="fas fa-check-circle"></i>
+                    <div class="stat-footer">
+                        <span class="stat-trend-neutral"><i class="fas fa-check-circle"></i> Completed</span>
                     </div>
                 </div>
             </div>
@@ -312,679 +989,7 @@
     </div>
 </div>
 
-</div>
-
-<style>
-/* ===== PROFESSIONAL REVENUE DASHBOARD STYLES ===== */
-:root {
-    --primary-color: #3b82f6;
-    --success-color: #10b981;
-    --info-color: #06b6d4;
-    --warning-color: #f59e0b;
-    --danger-color: #ef4444;
-    --bg-primary: #f8fafc;
-    --bg-secondary: #ffffff;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --text-muted: #94a3b8;
-    --border-color: #e2e8f0;
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --border-radius: 12px;
-    --transition: all 0.2s ease;
-}
-
-.revenue-dashboard-wrapper {
-    min-height: 100vh;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-}
-
-/* ===== DASHBOARD HEADER ===== */
-.dashboard-header {
-    padding: 2rem 0;
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 2rem;
-}
-
-.header-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, var(--success-color), #34d399);
-    border-radius: 50px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 1rem;
-}
-
-.dashboard-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.dashboard-subtitle {
-    font-size: 1.125rem;
-    color: var(--text-secondary);
-    margin: 0.5rem 0 0 0;
-}
-
-.header-actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-
-.btn-glass {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    color: var(--text-primary);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-}
-
-.btn-glass:hover {
-    background: var(--bg-primary);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-}
-
-.btn-glass:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* ===== STATS OVERVIEW ===== */
-.stats-overview {
-    padding: 2rem 0;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-}
-
-.stat-card {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 2rem;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    box-shadow: var(--shadow-sm);
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: var(--primary-color);
-}
-
-.stat-card.stat-success::before {
-    background: var(--success-color);
-}
-
-.stat-card.stat-info::before {
-    background: var(--info-color);
-}
-
-.stat-card.stat-warning::before {
-    background: var(--warning-color);
-}
-
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: var(--primary-color);
-}
-
-.stat-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: var(--border-radius);
-    background: var(--bg-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    flex-shrink: 0;
-    color: var(--primary-color);
-}
-
-.stat-card.stat-success .stat-icon {
-    color: var(--success-color);
-    background: rgba(16, 185, 129, 0.1);
-}
-
-.stat-card.stat-info .stat-icon {
-    color: var(--info-color);
-    background: rgba(6, 182, 212, 0.1);
-}
-
-.stat-card.stat-warning .stat-icon {
-    color: var(--warning-color);
-    background: rgba(245, 158, 11, 0.1);
-}
-
-.stat-content {
-    flex: 1;
-}
-
-.stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-}
-
-.stat-label {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
-}
-
-.stat-meta {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.stat-trend {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: var(--bg-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem;
-    color: var(--text-muted);
-}
-
-/* ===== MAIN CONTENT ===== */
-.main-content {
-    padding: 2rem 0;
-}
-
-.content-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
-}
-
-.dashboard-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--border-radius);
-    backdrop-filter: blur(20px);
-    transition: var(--transition);
-    overflow: hidden;
-}
-
-.dashboard-card:hover {
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-md);
-}
-
-.card-header-premium {
-    background: rgba(255, 255, 255, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.card-title-section {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.card-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: var(--primary-gradient);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.25rem;
-}
-
-.card-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.card-subtitle {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin: 0.25rem 0 0 0;
-}
-
-.card-body-premium {
-    padding: 1.5rem;
-}
-
-/* ===== CHART CONTROLS ===== */
-.btn-group-premium {
-    display: flex;
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.btn-premium {
-    padding: 0.5rem 1rem;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.btn-premium.active,
-.btn-premium:hover {
-    background: var(--primary-color);
-    color: white;
-}
-
-/* ===== EVENTS LIST ===== */
-.events-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.event-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: var(--transition);
-}
-
-.event-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-}
-
-.rank-badge {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: var(--primary-gradient);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.875rem;
-}
-
-.rank-badge.rank-1 {
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-    color: #1a1a1a;
-}
-
-.rank-badge.rank-2 {
-    background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
-    color: #1a1a1a;
-}
-
-.rank-badge.rank-3 {
-    background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%);
-    color: #ffffff;
-}
-
-.event-info {
-    flex: 1;
-}
-
-.event-name {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.event-meta {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.revenue-amount {
-    font-weight: 700;
-    color: var(--success-color);
-    font-size: 1.125rem;
-}
-
-/* ===== PAYOUT INFO ===== */
-.payout-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.info-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-}
-
-.info-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.info-value {
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.btn-payout-primary {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    background: var(--success-gradient);
-    border: none;
-    border-radius: 8px;
-    color: #ffffff;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.btn-payout-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-}
-
-.payout-notice {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px solid rgba(245, 158, 11, 0.2);
-    border-radius: 8px;
-    color: var(--warning-color);
-    font-size: 0.875rem;
-}
-
-/* ===== TRANSACTIONS TABLE ===== */
-.transactions-section {
-    margin-top: 2rem;
-}
-
-.transaction-filters {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.filter-btn {
-    padding: 0.5rem 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.filter-btn.active,
-.filter-btn:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.transactions-table {
-    width: 100%;
-}
-
-.table-header {
-    display: grid;
-    grid-template-columns: 1.2fr 2fr 0.8fr 1fr 1fr 1fr;
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--bg-primary);
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.table-body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.transaction-row {
-    display: grid;
-    grid-template-columns: 1.2fr 2fr 0.8fr 1fr 1fr 1fr;
-    gap: 1rem;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    transition: var(--transition);
-    align-items: center;
-}
-
-.transaction-row:hover {
-    background: var(--bg-primary);
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.date-primary {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.date-secondary {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-top: 0.25rem;
-}
-
-.event-primary {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.event-secondary {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-top: 0.25rem;
-}
-
-.votes-badge {
-    padding: 0.25rem 0.75rem;
-    background: linear-gradient(135deg, var(--primary-color), #60a5fa);
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
-}
-
-.amount-primary {
-    font-weight: 700;
-    color: var(--text-primary);
-    font-size: 0.875rem;
-}
-
-.fee-amount {
-    font-weight: 600;
-    color: var(--danger-color);
-    font-size: 0.875rem;
-}
-
-.fee-percentage {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-top: 0.25rem;
-}
-
-.net-amount {
-    font-weight: 700;
-    color: var(--success-color);
-    font-size: 0.875rem;
-}
-
-/* ===== EMPTY STATE ===== */
-.empty-state {
-    text-align: center;
-    padding: 3rem 2rem;
-}
-
-.empty-icon {
-    width: 80px;
-    height: 80px;
-    border-radius: 20px;
-    background: var(--bg-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    font-size: 2rem;
-    color: var(--text-muted);
-}
-
-.empty-state h4,
-.empty-state h5 {
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
-}
-
-.empty-state p {
-    color: var(--text-secondary);
-    margin-bottom: 1.5rem;
-}
-
-.btn-primary {
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary-color), #60a5fa);
-    border: none;
-    border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-medium);
-}
-
-/* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 1024px) {
-    .content-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .header-content {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .dashboard-title {
-        font-size: 2rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .table-header,
-    .transaction-row {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
-    
-    .table-header {
-        display: none;
-    }
-    
-    .transaction-row {
-        display: block;
-        padding: 1rem;
-    }
-    
-    .transaction-row > div {
-        margin-bottom: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .transaction-row > div::before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.75rem;
-    }
-}
-</style>
+<!-- Styles moved to external CSS file: /public/css/revenue-dashboard-modern.css -->
 
 <script>
 function requestPayout() {
@@ -1076,17 +1081,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: {
                     labels: <?= json_encode($chartLabels ?? []) ?>,
                     datasets: [{
-                        label: 'Daily Revenue',
+                        label: 'Daily Revenue (GH₵)',
                         data: <?= json_encode($chartData ?? []) ?>,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
                         tension: 0.4,
                         fill: true,
-                        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                        pointBackgroundColor: '#6366f1',
                         pointBorderColor: '#ffffff',
                         pointBorderWidth: 2,
-                        pointRadius: 6,
-                        pointHoverRadius: 8
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 3
                     }]
                 },
                 options: {
@@ -1094,25 +1100,56 @@ document.addEventListener('DOMContentLoaded', function() {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#475569',
+                                font: {
+                                    size: 12,
+                                    weight: '600'
+                                },
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#ffffff',
+                            titleColor: '#0f172a',
+                            bodyColor: '#475569',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Revenue: GH₵' + context.parsed.y.toFixed(2);
+                                }
+                            }
                         }
                     },
                     scales: {
                         x: {
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: '#e2e8f0',
+                                drawBorder: false
                             },
                             ticks: {
-                                color: 'rgba(255, 255, 255, 0.8)'
+                                color: '#64748b',
+                                font: {
+                                    size: 11
+                                }
                             }
                         },
                         y: {
                             beginAtZero: true,
                             grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                                color: '#e2e8f0',
+                                drawBorder: false
                             },
                             ticks: {
-                                color: 'rgba(255, 255, 255, 0.8)',
+                                color: '#64748b',
+                                font: {
+                                    size: 11
+                                },
                                 callback: function(value) {
                                     return 'GH₵' + value.toFixed(2);
                                 }
