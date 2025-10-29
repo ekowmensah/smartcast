@@ -277,19 +277,25 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Initialize revenue trends chart
+// Initialize revenue trends chart with real data
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('revenueTrendsChart').getContext('2d');
+    
+    // Get actual revenue data from PHP
+    const chartLabels = <?= json_encode($revenueTrends['labels'] ?? []) ?>;
+    const chartData = <?= json_encode($revenueTrends['data'] ?? []) ?>;
+    
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: chartLabels,
             datasets: [{
-                label: 'Revenue',
-                data: [1200, 1900, 3000, 5000, 2000, 3000],
+                label: 'Revenue (GH₵)',
+                data: chartData,
                 borderColor: '#007bff',
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4
+                tension: 0.4,
+                fill: true
             }]
         },
         options: {
@@ -300,7 +306,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '$' + value;
+                            return 'GH₵' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Revenue: GH₵' + context.parsed.y.toFixed(2);
                         }
                     }
                 }

@@ -614,20 +614,26 @@ class OrganizerController extends BaseController
     {
         $tenantId = $this->session->getTenantId();
         
+        // Recalculate balance from revenue_transactions to ensure accuracy
+        $this->balanceModel->recalculateBalance($tenantId);
+        
         // Get balance information
         $balance = $this->balanceModel->getBalance($tenantId);
         
-        // Get recent transactions
-        $transactions = $this->transactionModel->getSuccessfulTransactions(null, $tenantId);
-        $recentTransactions = array_slice($transactions, 0, 10);
+        // Get recent transactions with event and contestant details
+        $recentTransactions = $this->getRecentTransactionsWithDetails($tenantId, 10);
         
         // Calculate revenue stats
         $revenueStats = $this->getRevenueStats($tenantId);
+        
+        // Get revenue trend data for chart (last 6 months)
+        $revenueTrends = $this->getRevenueTrends($tenantId, 6);
         
         $content = $this->renderView('organizer/financial/overview', [
             'balance' => $balance,
             'recentTransactions' => $recentTransactions,
             'revenueStats' => $revenueStats,
+            'revenueTrends' => $revenueTrends,
             'title' => 'Financial Overview'
         ]);
         
@@ -827,6 +833,83 @@ class OrganizerController extends BaseController
         ";
         
         return $this->eventModel->getDatabase()->select($sql, $params);
+    }
+    
+    private function getRecentTransactionsWithDetails($tenantId, $limit = 10)
+    {
+        $sql = "
+            SELECT 
+                t.id as transaction_id,
+                t.amount,
+                t.status,
+                t.created_at,
+                e.name as event_name,
+                c.name as contestant_name,
+                v.quantity
+            FROM transactions t
+            INNER JOIN events e ON t.event_id = e.id
+            LEFT JOIN contestants c ON t.contestant_id = c.id
+            LEFT JOIN votes v ON t.id = v.transaction_id
+            WHERE e.tenant_id = :tenant_id
+            AND t.status = 'success'
+            ORDER BY t.created_at DESC
+            LIMIT :limit
+        ";
+        
+        return $this->eventModel->getDatabase()->select($sql, [
+            'tenant_id' => $tenantId,
+            'limit' => $limit
+        ]);
+    }
+    
+    private function getRevenueTrends($tenantId, $months = 6)
+    {
+        // Get revenue data for the last N months
+        $sql = "
+            SELECT 
+                DATE_FORMAT(rt.created_at, '%Y-%m') as month,
+                DATE_FORMAT(rt.created_at, '%b') as month_label,
+                COALESCE(SUM(rt.net_tenant_amount), 0) as revenue
+            FROM revenue_transactions rt
+            WHERE rt.tenant_id = :tenant_id
+            AND rt.distribution_status = 'completed'
+            AND rt.created_at >= DATE_SUB(NOW(), INTERVAL :months MONTH)
+            GROUP BY DATE_FORMAT(rt.created_at, '%Y-%m'), DATE_FORMAT(rt.created_at, '%b')
+            ORDER BY month ASC
+        ";
+        
+        $results = $this->balanceModel->getDatabase()->select($sql, [
+            'tenant_id' => $tenantId,
+            'months' => $months
+        ]);
+        
+        // Fill in missing months with zero revenue
+        $trends = [];
+        $labels = [];
+        $data = [];
+        
+        // Create array of last N months
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $monthKey = date('Y-m', strtotime("-$i months"));
+            $monthLabel = date('M', strtotime("-$i months"));
+            $trends[$monthKey] = 0;
+            $labels[] = $monthLabel;
+        }
+        
+        // Fill in actual revenue data
+        foreach ($results as $row) {
+            if (isset($trends[$row['month']])) {
+                $trends[$row['month']] = floatval($row['revenue']);
+            }
+        }
+        
+        // Convert to indexed array for chart
+        $data = array_values($trends);
+        
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
     }
     
     private function getRevenueStats($tenantId)
@@ -3288,7 +3371,10 @@ class OrganizerController extends BaseController
         $reportData = [
             'events_summary' => $this->getEventsSummary($tenantId),
             'voting_summary' => $this->getVotingSummary($tenantId),
-            'financial_summary' => $this->getFinancialSummary($tenantId)
+            'financial_summary' => $this->getFinancialSummary($tenantId),
+            'top_events' => $this->getTopPerformingEvents($tenantId, 10),
+            'revenue_trends' => $this->getRevenueTrendsForReports($tenantId, 30), // Last 30 days
+            'performance_metrics' => $this->getPerformanceMetrics($tenantId)
         ];
         
         $content = $this->renderView('organizer/reports/index', [
@@ -3355,17 +3441,221 @@ class OrganizerController extends BaseController
     
     private function getFinancialSummary($tenantId)
     {
+        // Get actual revenue from revenue_transactions (tenant's share after fees)
         $sql = "
             SELECT 
-                COUNT(t.id) as total_transactions,
-                SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END) as total_revenue,
-                AVG(CASE WHEN t.status = 'success' THEN t.amount ELSE NULL END) as avg_transaction
+                COUNT(DISTINCT rt.transaction_id) as total_transactions,
+                COALESCE(SUM(rt.net_tenant_amount), 0) as total_revenue,
+                COALESCE(AVG(rt.net_tenant_amount), 0) as avg_transaction,
+                COALESCE(SUM(rt.gross_amount), 0) as gross_revenue,
+                COALESCE(SUM(rt.platform_fee), 0) as total_fees
+            FROM revenue_transactions rt
+            WHERE rt.tenant_id = :tenant_id
+            AND rt.distribution_status = 'completed'
+        ";
+        
+        $result = $this->eventModel->getDatabase()->selectOne($sql, ['tenant_id' => $tenantId]);
+        
+        // Calculate growth percentage (this month vs last month)
+        $thisMonthStart = date('Y-m-01 00:00:00');
+        $lastMonthStart = date('Y-m-01 00:00:00', strtotime('first day of last month'));
+        $lastMonthEnd = date('Y-m-t 23:59:59', strtotime('last day of last month'));
+        
+        $growthSql = "
+            SELECT 
+                COALESCE(SUM(CASE WHEN rt.created_at >= :this_month THEN rt.net_tenant_amount END), 0) as this_month,
+                COALESCE(SUM(CASE WHEN rt.created_at BETWEEN :last_month_start AND :last_month_end THEN rt.net_tenant_amount END), 0) as last_month
+            FROM revenue_transactions rt
+            WHERE rt.tenant_id = :tenant_id
+            AND rt.distribution_status = 'completed'
+        ";
+        
+        $growthResult = $this->eventModel->getDatabase()->selectOne($growthSql, [
+            'tenant_id' => $tenantId,
+            'this_month' => $thisMonthStart,
+            'last_month_start' => $lastMonthStart,
+            'last_month_end' => $lastMonthEnd
+        ]);
+        
+        $thisMonth = $growthResult['this_month'] ?? 0;
+        $lastMonth = $growthResult['last_month'] ?? 0;
+        
+        $growthPercentage = 0;
+        if ($lastMonth > 0) {
+            $growthPercentage = (($thisMonth - $lastMonth) / $lastMonth) * 100;
+        }
+        
+        $result['growth_percentage'] = $growthPercentage;
+        $result['this_month_revenue'] = $thisMonth;
+        $result['last_month_revenue'] = $lastMonth;
+        
+        return $result;
+    }
+    
+    private function getTopPerformingEvents($tenantId, $limit = 10)
+    {
+        $sql = "
+            SELECT 
+                e.id,
+                e.name,
+                e.created_at,
+                e.status,
+                COALESCE(vote_data.vote_count, 0) as vote_count,
+                COALESCE(vote_data.total_votes, 0) as total_votes,
+                COALESCE(contestant_data.contestant_count, 0) as contestant_count,
+                COALESCE(revenue_data.revenue, 0) as revenue,
+                COALESCE(revenue_data.gross_revenue, 0) as gross_revenue
+            FROM events e
+            LEFT JOIN (
+                SELECT 
+                    event_id,
+                    COUNT(DISTINCT id) as vote_count,
+                    SUM(quantity) as total_votes
+                FROM votes
+                GROUP BY event_id
+            ) vote_data ON e.id = vote_data.event_id
+            LEFT JOIN (
+                SELECT 
+                    event_id,
+                    COUNT(DISTINCT id) as contestant_count
+                FROM contestants
+                GROUP BY event_id
+            ) contestant_data ON e.id = contestant_data.event_id
+            LEFT JOIN (
+                SELECT 
+                    event_id,
+                    SUM(net_tenant_amount) as revenue,
+                    SUM(gross_amount) as gross_revenue
+                FROM revenue_transactions
+                WHERE distribution_status = 'completed'
+                GROUP BY event_id
+            ) revenue_data ON e.id = revenue_data.event_id
+            WHERE e.tenant_id = :tenant_id
+            ORDER BY revenue DESC, total_votes DESC
+            LIMIT :limit
+        ";
+        
+        return $this->eventModel->getDatabase()->select($sql, [
+            'tenant_id' => $tenantId,
+            'limit' => $limit
+        ]);
+    }
+    
+    private function getRevenueTrendsForReports($tenantId, $days = 30)
+    {
+        // Get daily revenue for the last N days
+        $sql = "
+            SELECT 
+                DATE(rt.created_at) as date,
+                COALESCE(SUM(rt.net_tenant_amount), 0) as revenue,
+                COUNT(DISTINCT rt.transaction_id) as transactions,
+                COALESCE(SUM(v.quantity), 0) as votes
+            FROM revenue_transactions rt
+            LEFT JOIN transactions t ON rt.transaction_id = t.id
+            LEFT JOIN votes v ON t.id = v.transaction_id
+            WHERE rt.tenant_id = :tenant_id
+            AND rt.distribution_status = 'completed'
+            AND rt.created_at >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
+            GROUP BY DATE(rt.created_at)
+            ORDER BY date ASC
+        ";
+        
+        $results = $this->eventModel->getDatabase()->select($sql, [
+            'tenant_id' => $tenantId,
+            'days' => $days
+        ]);
+        
+        // Fill in missing days with zero values
+        $trends = [];
+        $labels = [];
+        $revenueData = [];
+        $votesData = [];
+        
+        for ($i = $days - 1; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $label = date('M j', strtotime("-$i days"));
+            $trends[$date] = ['revenue' => 0, 'votes' => 0];
+            $labels[] = $label;
+        }
+        
+        // Fill in actual data
+        foreach ($results as $row) {
+            if (isset($trends[$row['date']])) {
+                $trends[$row['date']] = [
+                    'revenue' => floatval($row['revenue']),
+                    'votes' => intval($row['votes'])
+                ];
+            }
+        }
+        
+        // Convert to arrays for chart
+        foreach ($trends as $data) {
+            $revenueData[] = $data['revenue'];
+            $votesData[] = $data['votes'];
+        }
+        
+        return [
+            'labels' => $labels,
+            'revenue' => $revenueData,
+            'votes' => $votesData
+        ];
+    }
+    
+    private function getPerformanceMetrics($tenantId)
+    {
+        // Calculate real performance metrics
+        
+        // 1. Payment Success Rate
+        $transactionStats = $this->eventModel->getDatabase()->selectOne("
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN t.status = 'success' THEN 1 ELSE 0 END) as successful
             FROM transactions t
             INNER JOIN events e ON t.event_id = e.id
             WHERE e.tenant_id = :tenant_id
-        ";
+        ", ['tenant_id' => $tenantId]);
         
-        return $this->eventModel->getDatabase()->selectOne($sql, ['tenant_id' => $tenantId]);
+        $successRate = 0;
+        if ($transactionStats['total'] > 0) {
+            $successRate = ($transactionStats['successful'] / $transactionStats['total']) * 100;
+        }
+        
+        // 2. Average votes per transaction
+        $votingStats = $this->eventModel->getDatabase()->selectOne("
+            SELECT 
+                COUNT(DISTINCT v.transaction_id) as transactions_with_votes,
+                COALESCE(SUM(v.quantity), 0) as total_votes
+            FROM votes v
+            INNER JOIN events e ON v.event_id = e.id
+            WHERE e.tenant_id = :tenant_id
+        ", ['tenant_id' => $tenantId]);
+        
+        $avgVotesPerTransaction = 0;
+        if ($votingStats['transactions_with_votes'] > 0) {
+            $avgVotesPerTransaction = $votingStats['total_votes'] / $votingStats['transactions_with_votes'];
+        }
+        
+        // 3. Average revenue per transaction
+        $revenuePerTransaction = 0;
+        if ($transactionStats['successful'] > 0) {
+            $revenueStats = $this->eventModel->getDatabase()->selectOne("
+                SELECT COALESCE(SUM(net_tenant_amount), 0) as total_revenue
+                FROM revenue_transactions
+                WHERE tenant_id = :tenant_id
+                AND distribution_status = 'completed'
+            ", ['tenant_id' => $tenantId]);
+            
+            $revenuePerTransaction = $revenueStats['total_revenue'] / $transactionStats['successful'];
+        }
+        
+        return [
+            'success_rate' => $successRate,
+            'avg_votes_per_transaction' => $avgVotesPerTransaction,
+            'avg_revenue_per_transaction' => $revenuePerTransaction,
+            'total_transactions' => $transactionStats['total'],
+            'successful_transactions' => $transactionStats['successful'],
+            'failed_transactions' => $transactionStats['total'] - $transactionStats['successful']
+        ];
     }
     
     private function getLiveVotingStats($tenantId, $eventId = null, $categoryId = null)
