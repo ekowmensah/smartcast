@@ -18,9 +18,55 @@ class RevenueTransaction extends BaseModel
     const STATUS_COMPLETED = 'completed';
     const STATUS_FAILED = 'failed';
     
+    /**
+     * Get tenant's actual fee rules from their subscription plan
+     */
+    private function getTenantFeeRules($tenantId)
+    {
+        $sql = "
+            SELECT 
+                fr.percentage_rate as platform_fee_percentage,
+                fr.id as fee_rule_id,
+                fr.name as fee_rule_name
+            FROM tenants t
+            LEFT JOIN subscription_plans sp ON t.current_plan_id = sp.id
+            LEFT JOIN fee_rules fr ON sp.fee_rule_id = fr.id
+            WHERE t.id = :tenant_id
+            LIMIT 1
+        ";
+        
+        $result = $this->db->selectOne($sql, ['tenant_id' => $tenantId]);
+        
+        if ($result && $result['platform_fee_percentage']) {
+            return [
+                'platform_fee_percentage' => floatval($result['platform_fee_percentage']),
+                'processing_fee_percentage' => 2.9,
+                'processing_fee_fixed' => 0.30,
+                'referrer_commission_percentage' => 0.0,
+                'fee_rule_id' => $result['fee_rule_id'],
+                'fee_rule_name' => $result['fee_rule_name']
+            ];
+        }
+        
+        // Fallback to global default (35%)
+        return [
+            'platform_fee_percentage' => 35.0,
+            'processing_fee_percentage' => 2.9,
+            'processing_fee_fixed' => 0.30,
+            'referrer_commission_percentage' => 0.0,
+            'fee_rule_id' => null,
+            'fee_rule_name' => 'Global Default (35%)'
+        ];
+    }
+    
     public function createRevenueTransaction($transactionId, $tenantId, $eventId, $grossAmount, $feeRules = null)
     {
-        // Calculate fees based on rules or defaults
+        // If no fee rules provided, get tenant's actual fee rules from their plan
+        if ($feeRules === null) {
+            $feeRules = $this->getTenantFeeRules($tenantId);
+        }
+        
+        // Calculate fees based on rules
         $feeCalculation = $this->calculateFees($grossAmount, $feeRules);
         
         return $this->create([
