@@ -165,15 +165,29 @@ class VoteController extends BaseController
         }
         
         // Get category information if provided, or from contestant
-        $categoryId = $_GET['category'] ?? $contestant['category_id'] ?? null;
+        $categoryId = $_GET['category'] ?? $_GET['category_id'] ?? $contestant['category_id'] ?? null;
         $category = null;
         if ($categoryId) {
             $category = $this->categoryModel->find($categoryId);
         }
         
-        // If no category found but contestant has category_id, use that
-        if (!$category && !empty($contestant['category_id'])) {
-            $category = $this->categoryModel->find($contestant['category_id']);
+        // If no category found, try to auto-detect from contestant's categories
+        if (!$category) {
+            $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+            $categories = $contestantCategoryModel->getCategoriesByContestant($contestantId);
+            
+            if (count($categories) === 1) {
+                // Only one category - use it automatically
+                $category = $categories[0];
+                $categoryId = $category['category_id'];
+                error_log("Auto-detected single category for contestant {$contestantId}: {$categoryId}");
+            } elseif (count($categories) > 1) {
+                // Multiple categories - use the first one as default
+                // In a production system, you might want to show a category selection page
+                $category = $categories[0];
+                $categoryId = $category['category_id'];
+                error_log("Multiple categories found for contestant {$contestantId}, using first: {$categoryId}");
+            }
         }
         
         // Debug logging
@@ -218,6 +232,18 @@ class VoteController extends BaseController
         $categoryId = $_GET['category'] ?? $data['category_id'] ?? null;
         if ($categoryId) {
             $data['category_id'] = $categoryId;
+        }
+        
+        // Auto-detect category if missing
+        if (empty($data['category_id']) && !empty($data['contestant_id'])) {
+            $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
+            $categories = $contestantCategoryModel->getCategoriesByContestant($data['contestant_id']);
+            
+            if (!empty($categories)) {
+                // Use the first category as default
+                $data['category_id'] = $categories[0]['category_id'];
+                error_log("Auto-detected category for vote processing: contestant_id={$data['contestant_id']}, category_id={$data['category_id']}");
+            }
         }
         
         // Validate input - bundle_id is optional for custom votes

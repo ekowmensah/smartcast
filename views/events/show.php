@@ -407,8 +407,12 @@
                                         : $event['id'];
                                         
                                     $voteUrl = APP_URL . '/events/' . $eventSlug . '/vote/' . $contestantSlug . '-' . $contestant['id'];
-                                    if (isset($contestant['category_id'])) {
+                                    // Category ID should be included from the query that loaded contestants
+                                    if (!empty($contestant['category_id'])) {
                                         $voteUrl .= '?category=' . $contestant['category_id'];
+                                    } elseif (!empty($category['id'])) {
+                                        // Fallback to current category context
+                                        $voteUrl .= '?category=' . $category['id'];
                                     }
                                     ?>
                                     <a href="<?= htmlspecialchars($voteUrl) ?>" class="btn-vote-modern">
