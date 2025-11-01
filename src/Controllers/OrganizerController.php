@@ -489,7 +489,7 @@ class OrganizerController extends BaseController
                             SUM(CASE WHEN t.status = 'success' THEN t.amount ELSE 0 END) as revenue
                         FROM votes v
                         LEFT JOIN transactions t ON v.transaction_id = t.id
-                        WHERE v.category_id = :category_id_for_votes
+                        WHERE (v.category_id = :category_id_for_votes OR v.category_id IS NULL)
                         GROUP BY v.contestant_id
                     ) vote_stats ON c.id = vote_stats.contestant_id
                     WHERE cc.category_id = :category_id

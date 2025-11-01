@@ -42,7 +42,7 @@ class Contestant extends BaseModel
             FROM contestants c
             LEFT JOIN contestant_categories cc ON c.id = cc.contestant_id AND cc.active = 1
             LEFT JOIN categories cat ON cc.category_id = cat.id
-            LEFT JOIN votes v ON c.id = v.contestant_id AND v.category_id = cc.category_id
+            LEFT JOIN votes v ON c.id = v.contestant_id AND (v.category_id = cc.category_id OR v.category_id IS NULL)
             WHERE c.event_id = :event_id AND c.active = 1
             GROUP BY c.id, cc.id
             ORDER BY cc.display_order ASC, c.name ASC
@@ -58,7 +58,7 @@ class Contestant extends BaseModel
                    COALESCE(SUM(v.quantity), 0) as total_votes
             FROM contestants c
             INNER JOIN contestant_categories cc ON c.id = cc.contestant_id
-            LEFT JOIN votes v ON c.id = v.contestant_id AND v.category_id = cc.category_id
+            LEFT JOIN votes v ON c.id = v.contestant_id AND (v.category_id = cc.category_id OR v.category_id IS NULL)
             WHERE cc.category_id = :category_id AND c.active = 1 AND cc.active = 1
             GROUP BY c.id
             ORDER BY cc.display_order ASC, c.name ASC
