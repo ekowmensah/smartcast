@@ -550,12 +550,49 @@
     border-color: #0d6efd;
     background: #fff;
 }
+/* Drag and drop styles */
+.drag-handle {
+    cursor: move;
+    user-select: none;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: #f8f9fa;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+}
+
+.sortable-chosen {
+    background: #e3f2fd;
+    border: 2px solid #2196f3;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(2deg);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.category-item,
+.nominee-item {
+    transition: all 0.2s ease;
+}
+
+.category-item:hover,
+.nominee-item:hover {
+    background: #f8f9fa;
+}
 </style>
 
 <script>
 let currentStep = 1;
 let categories = [];
 let nominees = [];
+let categorySortable = null;
+let nomineesSortable = null;
 
 // Step navigation
 function changeStep(direction) {
@@ -737,7 +774,10 @@ function addCategory() {
 }
 
 function removeCategory(categoryId) {
-    categories = categories.filter(c => c.id !== categoryId);
+    // Convert to string for comparison (database IDs are strings)
+    const idToRemove = String(categoryId);
+    categories = categories.filter(c => String(c.id) !== idToRemove);
+    console.log('Removed category:', idToRemove, 'Remaining:', categories);
     renderCategories();
 }
 
@@ -759,19 +799,28 @@ function renderCategories() {
     
     noMessage.style.display = 'none';
     
-    const html = categories.map(category => `
+    const html = categories.map((category, index) => `
         <div class="category-item" data-category-id="${category.id}">
-            <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-start gap-2">
+                <div class="drag-handle" style="cursor: move; padding: 8px; color: #6c757d;">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
                 <div class="flex-grow-1">
-                    <h6 class="mb-2">${category.name}</h6>
-                    <input type="hidden" name="categories[${category.id}][name]" value="${category.name}">
+                    <input type="text" 
+                           class="form-control form-control-sm mb-2" 
+                           name="categories[${category.id}][name]" 
+                           value="${category.name}"
+                           placeholder="Category name"
+                           onchange="updateCategoryName(${category.id}, this.value)"
+                           required>
+                    <input type="hidden" name="categories[${category.id}][order]" value="${index}">
                     <textarea class="form-control form-control-sm" 
                               name="categories[${category.id}][description]" 
                               placeholder="Category description (optional)" 
                               rows="2" 
                               onchange="updateCategoryDescription(${category.id}, this.value)">${category.description}</textarea>
                 </div>
-                <button type="button" class="btn btn-outline-danger btn-sm ms-2" onclick="removeCategory(${category.id})">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCategory(${category.id})">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -779,12 +828,31 @@ function renderCategories() {
     `).join('');
     
     container.innerHTML = html;
+    
+    // Initialize sortable if not already initialized
+    if (!categorySortable && typeof Sortable !== 'undefined') {
+        initializeCategorySortable();
+    }
+}
+
+function updateCategoryName(categoryId, name) {
+    const category = categories.find(c => String(c.id) === String(categoryId));
+    if (category) {
+        category.name = name;
+    }
 }
 
 function updateCategoryDescription(categoryId, description) {
-    const category = categories.find(c => c.id === categoryId);
+    const category = categories.find(c => String(c.id) === String(categoryId));
     if (category) {
         category.description = description;
+    }
+}
+
+function updateNomineeName(nomineeId, name) {
+    const nominee = nominees.find(n => n.id === nomineeId);
+    if (nominee) {
+        nominee.name = name;
     }
 }
 
@@ -908,89 +976,98 @@ function renderNominees() {
         }
     });
     
-    const html = nominees.map(nominee => {
-        // Create category options with pre-selection for this nominee
-        const categoryOptions = categories.map(cat => {
-            // Both should now be strings, but double-check for safety
-            const isSelected = nominee.categories && nominee.categories.includes(cat.id);
-            return `<option value="${cat.id}" ${isSelected ? 'selected' : ''}>${cat.name}</option>`;
-        }).join('');
-        
-        return `
-            <div class="nominee-item" data-nominee-id="${nominee.id}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-2">${nominee.name}</h6>
-                        <input type="hidden" name="nominees[${nominee.id}][name]" value="${nominee.name}">
-                        
-                        <div class="row mb-2">
-                            <div class="col-md-4">
-                                <label class="form-label small">Bio</label>
-                                <textarea class="form-control form-control-sm" 
-                                          name="nominees[${nominee.id}][bio]" 
-                                          placeholder="Nominee bio (optional)" 
-                                          rows="2" 
-                                          onchange="updateNomineeBio(${nominee.id}, this.value)">${nominee.bio || ''}</textarea>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small">Photo</label>
-                                <input type="file" class="form-control form-control-sm" 
-                                       name="nominee_photo_${nominee.id}" 
-                                       accept="image/*"
-                                       onchange="previewNomineePhoto(${nominee.id}, this)">
-                                <div class="form-text">JPG, PNG (max 2MB)</div>
-                                
-                                ${nominee.image_url ? `
-                                    <div class="mt-2" id="current-nominee-image-${nominee.id}">
-                                        <small class="text-success">✓ Current photo</small>
-                                        <div class="mt-1">
-                                            <img src="${getImageUrl(nominee.image_url)}" 
-                                                 alt="Current nominee photo" 
-                                                 style="width: 60px; height: 60px; object-fit: cover;" 
-                                                 class="img-thumbnail">
-                                        </div>
-                                    </div>
-                                ` : `
-                                    <div class="mt-2" id="no-nominee-image-${nominee.id}">
-                                        <small class="text-muted">No photo uploaded</small>
-                                        <div class="mt-1">
-                                            <div style="width: 60px; height: 60px; background-color: #f8f9fa; border: 1px dashed #dee2e6; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                                                <i class="fas fa-user text-muted"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `}
-                                
-                                <div id="nominee-preview-${nominee.id}" class="mt-2" style="display: none;">
-                                    <small class="text-info">New photo preview:</small>
+    const html = nominees.map((nominee, index) => `
+        <div class="nominee-item" data-nominee-id="${nominee.id}">
+            <div class="d-flex align-items-start gap-2">
+                <div class="drag-handle" style="cursor: move; padding: 8px; color: #6c757d;">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <input type="text" 
+                           class="form-control form-control-sm mb-2" 
+                           name="nominees[${nominee.id}][name]" 
+                           value="${nominee.name}"
+                           placeholder="Nominee name"
+                           onchange="updateNomineeName(${nominee.id}, this.value)"
+                           required>
+                    <input type="hidden" name="nominees[${nominee.id}][order]" value="${index}">
+                    
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label small">Bio</label>
+                            <textarea class="form-control form-control-sm" 
+                                      name="nominees[${nominee.id}][bio]" 
+                                      placeholder="Nominee bio (optional)" 
+                                      rows="2" 
+                                      onchange="updateNomineeBio(${nominee.id}, this.value)">${nominee.bio || ''}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Photo</label>
+                            <input type="file" class="form-control form-control-sm" 
+                                   name="nominee_photo_${nominee.id}" 
+                                   accept="image/*"
+                                   onchange="previewNomineePhoto(${nominee.id}, this)">
+                            <div class="form-text">JPG, PNG (max 2MB)</div>
+                            
+                            ${nominee.image_url ? `
+                                <div class="mt-2" id="current-nominee-image-${nominee.id}">
+                                    <small class="text-success">✓ Current photo</small>
                                     <div class="mt-1">
-                                        <img id="nominee-preview-img-${nominee.id}" src="" alt="Preview" 
+                                        <img src="${getImageUrl(nominee.image_url)}" 
+                                             alt="Current nominee photo" 
                                              style="width: 60px; height: 60px; object-fit: cover;" 
                                              class="img-thumbnail">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small">Categories</label>
-                                <select class="form-select form-select-sm" 
-                                        name="nominees[${nominee.id}][categories][]" 
-                                        multiple 
-                                        onchange="updateNomineeCategories(${nominee.id}, this)">
-                                    ${categoryOptions}
-                                </select>
-                                <div class="form-text">Hold Ctrl to select multiple</div>
+                            ` : `
+                                <div class="mt-2" id="no-nominee-image-${nominee.id}">
+                                    <small class="text-muted">No photo uploaded</small>
+                                    <div class="mt-1">
+                                        <div style="width: 60px; height: 60px; background-color: #f8f9fa; border: 1px dashed #dee2e6; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            `}
+                            
+                            <div id="nominee-preview-${nominee.id}" class="mt-2" style="display: none;">
+                                <small class="text-info">New photo preview:</small>
+                                <div class="mt-1">
+                                    <img id="nominee-preview-img-${nominee.id}" src="" alt="Preview" 
+                                         style="width: 60px; height: 60px; object-fit: cover;" 
+                                         class="img-thumbnail">
+                                </div>
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label small">Categories</label>
+                            <select class="form-select form-select-sm" 
+                                    name="nominees[${nominee.id}][categories][]" 
+                                    multiple 
+                                    onchange="updateNomineeCategories(${nominee.id}, this)">
+                                ${categories.map(cat => `
+                                    <option value="${cat.id}" ${nominee.categories && nominee.categories.includes(cat.id) ? 'selected' : ''}>
+                                        ${cat.name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            <div class="form-text">Hold Ctrl to select multiple</div>
+                        </div>
                     </div>
-                    <button type="button" class="btn btn-outline-danger btn-sm ms-2" onclick="removeNominee(${nominee.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
                 </div>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeNominee(${nominee.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
-        `;
-    }).join('');
+        </div>
+    `).join('');
     
     container.innerHTML = html;
+    
+    // Initialize sortable if not already initialized
+    if (!nomineesSortable && typeof Sortable !== 'undefined') {
+        initializeNomineesSortable();
+    }
     
     // Restore file inputs and previews after re-rendering
     Object.keys(fileInputs).forEach(nomineeId => {
@@ -1140,4 +1217,49 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Initialize category sortable
+function initializeCategorySortable() {
+    const container = document.getElementById('categoriesContainer');
+    if (!container || typeof Sortable === 'undefined') return;
+    
+    categorySortable = new Sortable(container, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        onEnd: function(evt) {
+            // Reorder categories array
+            const item = categories.splice(evt.oldIndex, 1)[0];
+            categories.splice(evt.newIndex, 0, item);
+            // Re-render to update order values
+            renderCategories();
+        }
+    });
+}
+
+// Initialize nominees sortable
+function initializeNomineesSortable() {
+    const container = document.getElementById('nomineesContainer');
+    if (!container || typeof Sortable === 'undefined') return;
+    
+    nomineesSortable = new Sortable(container, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        onEnd: function(evt) {
+            // Reorder nominees array
+            const item = nominees.splice(evt.oldIndex, 1)[0];
+            nominees.splice(evt.newIndex, 0, item);
+            // Re-render to update order values
+            renderNominees();
+        }
+    });
+}
 </script>
+
+<!-- SortableJS Library -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>

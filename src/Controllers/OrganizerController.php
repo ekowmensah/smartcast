@@ -1298,6 +1298,7 @@ class OrganizerController extends BaseController
                             'tenant_id' => $this->session->getTenantId(),
                             'name' => $categoryData['name'],
                             'description' => $categoryData['description'] ?? '',
+                            'display_order' => $categoryData['order'] ?? 0,
                             'created_by' => $this->session->getUserId()
                         ]);
                         $categoryIds[$categoryId] = $newCategoryId; // Map old ID to new ID
@@ -1359,6 +1360,7 @@ class OrganizerController extends BaseController
                             'event_id' => $eventId,
                             'name' => $nomineeData['name'],
                             'bio' => $nomineeData['bio'] ?? '',
+                            'display_order' => $nomineeData['order'] ?? 0,
                             'created_by' => $this->session->getUserId(),
                             'active' => 1
                         ];

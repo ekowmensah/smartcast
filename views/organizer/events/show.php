@@ -465,19 +465,25 @@ $eventStatus = getEventStatus($event);
                     <i class="fas fa-list me-2"></i>Categories & Contestants
                 </h5>
                 <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" id="dragToggle" onclick="toggleDragMode()">
+                        <i class="fas fa-arrows-alt me-1"></i><span class="d-none d-md-inline">Enable Drag</span>
+                    </button>
                     <button class="btn btn-outline-primary" onclick="expandAllCategories()">
-                        <i class="fas fa-expand-alt me-1"></i>Expand All
+                        <i class="fas fa-expand-alt me-1"></i><span class="d-none d-md-inline">Expand All</span>
                     </button>
                     <button class="btn btn-outline-secondary" onclick="collapseAllCategories()">
-                        <i class="fas fa-compress-alt me-1"></i>Collapse All
+                        <i class="fas fa-compress-alt me-1"></i><span class="d-none d-md-inline">Collapse All</span>
                     </button>
                 </div>
             </div>
             <div class="card-body">
                 <?php if (!empty($categoriesWithContestants)): ?>
-                    <div class="accordion" id="categoriesAccordion">
+                    <div class="accordion categories-container" id="categoriesAccordion">
                         <?php foreach ($categoriesWithContestants as $index => $category): ?>
-                            <div class="accordion-item">
+                            <div class="accordion-item category-item" data-category-id="<?= $category['category_id'] ?>">
+                                <div class="drag-handle" style="display: none; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); cursor: move; z-index: 10; padding: 8px; color: #6c757d;">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
                                 <h2 class="accordion-header" id="heading<?= $category['category_id'] ?>">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
                                             data-bs-target="#collapse<?= $category['category_id'] ?>" aria-expanded="false">
@@ -510,9 +516,12 @@ $eventStatus = getEventStatus($event);
                                                             <th>Actions</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody>
+                                                    <tbody class="contestants-container" data-category-id="<?= $category['category_id'] ?>">
                                                         <?php foreach ($category['contestants'] as $rank => $contestant): ?>
-                                                            <tr>
+                                                            <tr class="contestant-item" data-contestant-id="<?= $contestant['id'] ?>">
+                                                                <td class="drag-handle-cell" style="display: none; cursor: move; color: #6c757d;">
+                                                                    <i class="fas fa-grip-vertical"></i>
+                                                                </td>
                                                                 <td>
                                                                     <span class="badge bg-<?= $rank === 0 ? 'warning' : ($rank === 1 ? 'secondary' : ($rank === 2 ? 'dark' : 'light text-dark')) ?>">
                                                                         #<?= $rank + 1 ?>
@@ -981,4 +990,231 @@ function viewContestant(id) {
 function editContestant(id) {
     window.location.href = `<?= ORGANIZER_URL ?>/contestants/${id}/edit`;
 }
+
+// Drag and Drop functionality
+let categorySortables = [];
+let contestantSortables = [];
+let dragModeEnabled = false;
+
+function toggleDragMode() {
+    const dragToggle = document.getElementById('dragToggle');
+    dragModeEnabled = !dragModeEnabled;
+    
+    if (dragModeEnabled) {
+        // Enable drag mode
+        dragToggle.innerHTML = '<i class="fas fa-times me-1"></i><span class="d-none d-md-inline">Disable Drag</span>';
+        dragToggle.classList.remove('btn-outline-primary');
+        dragToggle.classList.add('btn-danger');
+        
+        // Show drag handles
+        document.querySelectorAll('.drag-handle').forEach(handle => {
+            handle.style.display = 'block';
+        });
+        document.querySelectorAll('.drag-handle-cell').forEach(cell => {
+            cell.style.display = 'table-cell';
+        });
+        
+        // Add padding to accordion headers for drag handle
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.style.paddingLeft = '40px';
+            header.dataset.dragModeActive = 'true';
+        });
+        
+        // Initialize sortables
+        initializeSortables();
+        
+        showNotification('Drag mode enabled. Drag categories and contestants to reorder them.', 'info');
+    } else {
+        // Disable drag mode
+        dragToggle.innerHTML = '<i class="fas fa-arrows-alt me-1"></i><span class="d-none d-md-inline">Enable Drag</span>';
+        dragToggle.classList.remove('btn-danger');
+        dragToggle.classList.add('btn-outline-primary');
+        
+        // Hide drag handles
+        document.querySelectorAll('.drag-handle').forEach(handle => {
+            handle.style.display = 'none';
+        });
+        document.querySelectorAll('.drag-handle-cell').forEach(cell => {
+            cell.style.display = 'none';
+        });
+        
+        // Remove padding from accordion headers
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.style.paddingLeft = '';
+            delete header.dataset.dragModeActive;
+        });
+        
+        // Destroy sortables
+        destroySortables();
+        
+        showNotification('Drag mode disabled.', 'success');
+    }
+}
+
+// Initialize sortable instances
+function initializeSortables() {
+    if (typeof Sortable === 'undefined') {
+        console.error('SortableJS library not loaded');
+        return;
+    }
+    
+    // Clear existing sortables first
+    destroySortables();
+    
+    // Initialize category sortables
+    document.querySelectorAll('.categories-container').forEach((container) => {
+        const sortable = new Sortable(container, {
+            handle: '.drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                const eventId = <?= $event['id'] ?>;
+                const categoryIds = Array.from(container.querySelectorAll('.category-item')).map(item => item.dataset.categoryId);
+                saveCategoryOrder(eventId, categoryIds);
+            }
+        });
+        categorySortables.push(sortable);
+    });
+    
+    // Initialize contestant sortables
+    document.querySelectorAll('.contestants-container').forEach((container) => {
+        const sortable = new Sortable(container, {
+            handle: '.drag-handle-cell',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                const categoryId = container.dataset.categoryId;
+                const contestantIds = Array.from(container.querySelectorAll('.contestant-item')).map(item => item.dataset.contestantId);
+                saveContestantOrder(categoryId, contestantIds);
+            }
+        });
+        contestantSortables.push(sortable);
+    });
+}
+
+// Destroy sortable instances
+function destroySortables() {
+    categorySortables.forEach(sortable => sortable.destroy());
+    contestantSortables.forEach(sortable => sortable.destroy());
+    categorySortables = [];
+    contestantSortables = [];
+}
+
+// Save category order to backend
+function saveCategoryOrder(eventId, categoryIds) {
+    fetch(`<?= ORGANIZER_URL ?>/api/categories/reorder`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            event_id: eventId,
+            category_ids: categoryIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Category order updated successfully', 'success');
+        } else {
+            showNotification('Failed to update category order: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating category order', 'error');
+    });
+}
+
+// Save contestant order to backend
+function saveContestantOrder(categoryId, contestantIds) {
+    fetch(`<?= ORGANIZER_URL ?>/api/contestants/reorder`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            category_id: categoryId,
+            contestant_ids: contestantIds
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Contestant order updated successfully', 'success');
+        } else {
+            showNotification('Failed to update contestant order: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating contestant order', 'error');
+    });
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
 </script>
+
+<!-- SortableJS Library -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<style>
+/* Drag and drop styles */
+.sortable-ghost {
+    opacity: 0.4;
+    background: #f8f9fa;
+    border: 2px dashed #007bff;
+    border-radius: 8px;
+}
+
+.sortable-chosen {
+    background: #e3f2fd;
+    border: 2px solid #2196f3;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    transform: rotate(2deg);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.category-item {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.contestant-item {
+    transition: all 0.2s ease;
+}
+
+.drag-handle {
+    user-select: none;
+}
+
+.drag-handle-cell {
+    user-select: none;
+}
+</style>
