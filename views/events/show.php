@@ -565,9 +565,9 @@
                     <div class="info-content">
                         <h4>Voting</h4>
                         <p><strong>Vote Packages:</strong> <?= count($bundles) ?></p>
-                        <?php if ($event['results_visible'] && !empty($leaderboard)): ?>
+                       <!-- <?php if ($event['results_visible'] && !empty($leaderboard)): ?>
                             <p><strong>Total Votes:</strong> <?= number_format(array_sum(array_column($leaderboard, 'total_votes'))) ?></p>
-                        <?php endif; ?>
+                        <?php endif; ?> -->
                     </div>
                 </div>
                 
