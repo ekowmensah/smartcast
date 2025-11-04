@@ -820,13 +820,18 @@ body {
                 <h3 class="category-title"><?= htmlspecialchars($category['name']) ?> (<?= count($category['contestants']) ?> contestants)</h3>
                 
                 <div class="contestants-grid">
-                    <?php foreach ($category['contestants'] as $contestant): ?>
+                    <?php foreach ($category['contestants'] as $contestant): 
+                        // Use category-specific photo if available, otherwise use default
+                        $voteImage = (!empty($contestant['category_image_url']) && $contestant['use_category_photo']) 
+                            ? $contestant['category_image_url'] 
+                            : $contestant['image_url'];
+                    ?>
                     <div class="contestant-card" 
                          data-contestant-id="<?= $contestant['id'] ?>"
                          onclick="selectContestant(<?= $contestant['id'] ?>)">
                         
-                        <?php if ($contestant['image_url']): ?>
-                            <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
+                        <?php if ($voteImage): ?>
+                            <img src="<?= htmlspecialchars(image_url($voteImage)) ?>" 
                                  alt="<?= htmlspecialchars($contestant['name']) ?>"
                                  class="contestant-image">
                         <?php elseif (!empty($event['featured_image'])): ?>

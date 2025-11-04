@@ -296,8 +296,15 @@ class ContestantCategory extends BaseModel
         
         // Generate or validate shortcode
         if ($customShortCode) {
-            // Validate custom shortcode is not taken globally
-            if ($this->isShortCodeTakenGlobally($customShortCode)) {
+            // Validate custom shortcode is not taken globally (excluding current contestant)
+            $sql = "SELECT COUNT(*) as count FROM contestant_categories 
+                    WHERE short_code = :short_code AND contestant_id != :contestant_id AND active = 1";
+            $result = $this->db->selectOne($sql, [
+                'short_code' => $customShortCode,
+                'contestant_id' => $contestantId
+            ]);
+            
+            if ($result['count'] > 0) {
                 throw new \Exception("Shortcode '{$customShortCode}' is already taken globally across all events");
             }
             $shortCode = strtoupper($customShortCode);
@@ -307,12 +314,16 @@ class ContestantCategory extends BaseModel
         }
         
         if ($existing) {
-            // Update existing assignment - preserve shortcode if custom one provided
+            // Update existing assignment - preserve existing shortcode unless custom one provided
             $updateData = ['active' => 1];
-            if ($customShortCode || !$existing['short_code']) {
-                // Only update shortcode if custom one provided or existing is empty
+            if ($customShortCode) {
+                // Only update shortcode if custom one is explicitly provided
+                $updateData['short_code'] = $shortCode;
+            } elseif (!$existing['short_code']) {
+                // Generate shortcode only if existing is empty
                 $updateData['short_code'] = $shortCode;
             }
+            // Otherwise, preserve existing shortcode (don't include in updateData)
             return $this->update($existing['id'], $updateData);
         } else {
             // Create new assignment with unique shortcode
@@ -425,6 +436,25 @@ class ContestantCategory extends BaseModel
         }
         
         return $results;
+    }
+    
+    /**
+     * Update category-specific photo for a contestant in a category
+     */
+    public function updateCategoryPhoto($contestantId, $categoryId, $categoryImageUrl)
+    {
+        $sql = "
+            UPDATE contestant_categories 
+            SET category_image_url = :category_image_url,
+                use_category_photo = 1
+            WHERE contestant_id = :contestant_id AND category_id = :category_id
+        ";
+        
+        return $this->db->query($sql, [
+            'category_image_url' => $categoryImageUrl,
+            'contestant_id' => $contestantId,
+            'category_id' => $categoryId
+        ]);
     }
     
     /**

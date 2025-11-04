@@ -287,46 +287,29 @@
                 
                 <!-- Step 3: Nominees -->
                 <div class="step-content" id="step3" style="display: none;">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="card">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0">
-                                        <i class="fas fa-users me-2"></i>
-                                        Event Nominees
-                                    </h5>
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="addNominee()">
-                                        <i class="fas fa-plus me-2"></i>Add Nominee
-                                    </button>
-                                </div>
-                                <div class="card-body">
-                                    <div class="text-center text-muted py-4" id="noNomineesMessage">
-                                        <i class="fas fa-users fa-2x mb-2"></i>
-                                        <p>No nominees added yet. Click "Add Nominee" to get started.</p>
-                                    </div>
-                                    <div id="nomineesContainer">
-                                        <!-- Nominees will be added here dynamically -->
-                                    </div>
-                                </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-users me-2"></i>
+                                    Event Nominees
+                                </h5>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="addNominee()">
+                                    <i class="fas fa-plus me-2"></i>Add Nominee
+                                </button>
+                            </div>
+                            <div class="alert alert-info mb-0 py-2 small">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Each nominee gets unique shortcodes per category for USSD voting. Shortcodes are auto-generated.
                             </div>
                         </div>
-                        
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6 class="card-title">
-                                        <i class="fas fa-mobile-alt me-2"></i>
-                                        USSD Voting
-                                    </h6>
-                                    <p class="small mb-2">Each nominee gets a unique shortcode for USSD voting:</p>
-                                    <div class="bg-white p-2 rounded border small mb-2">
-                                        <strong>Example:</strong><br>
-                                        JO01 - John Doe<br>
-                                        MA02 - Mary Jane<br>
-                                        AL03 - Alice Smith
-                                    </div>
-                                    <p class="small mb-0">Shortcodes are auto-generated but can be customized.</p>
-                                </div>
+                        <div class="card-body">
+                            <div class="text-center text-muted py-4" id="noNomineesMessage">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <p>No nominees added yet. Click "Add Nominee" to get started.</p>
+                            </div>
+                            <div id="nomineesContainer">
+                                <!-- Nominees will be added here dynamically -->
                             </div>
                         </div>
                     </div>
@@ -495,6 +478,130 @@
     </div>
 </div>
 
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">
+                    <i class="fas fa-tags me-2"></i>Add Category
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="categoryName" class="form-label">Category Name *</label>
+                    <input type="text" class="form-control" id="categoryName" placeholder="e.g., Best Actor, Best Actress" required>
+                    <div class="form-text">Enter a descriptive name for this category</div>
+                </div>
+                <div class="mb-3">
+                    <label for="categoryDescription" class="form-label">Description (Optional)</label>
+                    <textarea class="form-control" id="categoryDescription" rows="3" placeholder="Brief description of this category"></textarea>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="addNomineesNow">
+                    <label class="form-check-label" for="addNomineesNow">
+                        <i class="fas fa-user-plus me-1"></i>Add nominees for this category now
+                    </label>
+                    <div class="form-text">After saving, you'll be prompted to add nominees directly to this category</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveCategoryFromModal()">
+                    <i class="fas fa-plus me-2"></i>Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Nominee Modal -->
+<div class="modal fade" id="addNomineeModal" tabindex="-1" aria-labelledby="addNomineeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNomineeModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>Add Nominee
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Existing Nominees Section -->
+                <div class="mb-4" id="existingNomineesSection" style="display: none;">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Select existing nominees</strong> to assign them to the selected categories, or create a new nominee below.
+                    </div>
+                    <label class="form-label fw-bold">Select Existing Nominees</label>
+                    <input type="text" class="form-control mb-2" id="existingNomineeSearch" placeholder="Search nominees..." onkeyup="filterExistingNominees(this.value)">
+                    <div id="existingNomineesCheckboxList" style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px; background: #f8f9fa;">
+                        <!-- Existing nominees will be populated here -->
+                    </div>
+                    <div class="form-text mb-3">
+                        <span id="selectedExistingNomineesCount">0</span> nominees selected
+                    </div>
+                    <div class="text-center my-3">
+                        <span class="badge bg-secondary">OR</span>
+                    </div>
+                </div>
+                
+                <!-- Create New Nominee Section -->
+                <div id="createNewNomineeSection">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label class="form-label fw-bold mb-0">Create New Nominee</label>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="toggleNewNomineeBtn" onclick="toggleNewNomineeForm()" style="display: none;">
+                            <i class="fas fa-plus me-1"></i>Create New
+                        </button>
+                    </div>
+                    <div id="newNomineeForm" style="display: none;">
+                        <div class="mb-3">
+                            <label for="nomineeName" class="form-label">Nominee Name *</label>
+                            <input type="text" class="form-control" id="nomineeName" placeholder="Enter nominee's full name">
+                        </div>
+                <div class="mb-3">
+                    <label for="nomineeBio" class="form-label">Bio (Optional)</label>
+                    <textarea class="form-control" id="nomineeBio" rows="3" placeholder="Brief biography or description"></textarea>
+                </div>
+                        <div class="mb-3">
+                            <label for="nomineePhoto" class="form-label">Photo (Optional)</label>
+                            <input type="file" class="form-control" id="nomineePhoto" accept="image/*">
+                            <div class="form-text">JPG, PNG (max 2MB)</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Categories Section - Always Visible -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold mb-0">Assign to Categories *</label>
+                            <button type="button" class="btn btn-sm btn-outline-success" onclick="quickAddCategory()">
+                                <i class="fas fa-plus me-1"></i>New Category
+                            </button>
+                        </div>
+                        <input type="text" class="form-control mb-2" id="categorySearch" placeholder="Search categories...">
+                        <div id="categoriesCheckboxList" style="max-height: 200px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;">
+                            <!-- Categories will be populated dynamically as checkboxes -->
+                        </div>
+                        <div class="form-text">
+                            <span id="selectedCategoriesCount">0</span> categories selected
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveNomineeFromModal()">
+                    <i class="fas fa-user-plus me-2"></i><span id="addNomineeButtonText">Add Nominee</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .step-indicator {
     text-align: center;
@@ -538,11 +645,23 @@
     color: #198754;
 }
 
+/* Photo hover effect */
+.photo-wrapper:hover .photo-overlay {
+    opacity: 1 !important;
+}
+
+.nominee-photo-container .photo-wrapper {
+    transition: transform 0.2s;
+}
+
+.nominee-photo-container .photo-wrapper:hover {
+    transform: scale(1.05);
+}
+
 .category-item, .nominee-item {
     border: 1px solid #dee2e6;
     border-radius: 8px;
     padding: 1rem;
-    margin-bottom: 1rem;
     background: #f8f9fa;
 }
 
@@ -584,6 +703,18 @@
 .category-item:hover,
 .nominee-item:hover {
     background: #f8f9fa;
+}
+
+#nomineesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#categoriesContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
 }
 </style>
 
@@ -760,17 +891,91 @@ function populatePreview() {
 
 // Category management
 function addCategory() {
+    // Clear previous inputs
+    document.getElementById('categoryName').value = '';
+    document.getElementById('categoryDescription').value = '';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+    modal.show();
+    
+    // Focus on name input after modal is shown
+    document.getElementById('addCategoryModal').addEventListener('shown.bs.modal', function () {
+        document.getElementById('categoryName').focus();
+    }, { once: true });
+}
+
+// Quick add category from nominee modal
+function quickAddCategory() {
     const categoryName = prompt('Enter category name:');
-    if (!categoryName) return;
+    if (!categoryName || !categoryName.trim()) {
+        return;
+    }
     
     const category = {
         id: Date.now(),
-        name: categoryName,
+        name: categoryName.trim(),
         description: ''
     };
     
     categories.push(category);
+    
+    // Render categories to create form inputs (so it saves to DB)
     renderCategories();
+    
+    // Re-populate the categories checkboxes in the modal
+    populateCategoryCheckboxes();
+    
+    // Auto-select the new category
+    setTimeout(() => {
+        const newCheckbox = document.querySelector(`.category-checkbox[value="${category.id}"]`);
+        if (newCheckbox) {
+            newCheckbox.checked = true;
+            updateSelectedCategoriesCount();
+        }
+    }, 100);
+    
+    showToast(`Category "${categoryName}" added!`, 'success');
+}
+
+function saveCategoryFromModal() {
+    const categoryName = document.getElementById('categoryName').value.trim();
+    const categoryDescription = document.getElementById('categoryDescription').value.trim();
+    const addNomineesNow = document.getElementById('addNomineesNow').checked;
+    
+    if (!categoryName) {
+        alert('Please enter a category name');
+        document.getElementById('categoryName').focus();
+        return;
+    }
+    
+    const category = {
+        id: Date.now(),
+        name: categoryName,
+        description: categoryDescription
+    };
+    
+    categories.push(category);
+    renderCategories();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addCategoryModal'));
+    modal.hide();
+    
+    // Reset form
+    document.getElementById('categoryName').value = '';
+    document.getElementById('categoryDescription').value = '';
+    document.getElementById('addNomineesNow').checked = false;
+    
+    // Show success message
+    showToast('Category added successfully!', 'success');
+    
+    // If user wants to add nominees now, open Add Nominee modal with this category pre-selected
+    if (addNomineesNow) {
+        setTimeout(() => {
+            addNomineeForCategory(category.id);
+        }, 500); // Small delay for modal transition
+    }
 }
 
 function removeCategory(categoryId) {
@@ -814,11 +1019,14 @@ function renderCategories() {
                            onchange="updateCategoryName(${category.id}, this.value)"
                            required>
                     <input type="hidden" name="categories[${category.id}][order]" value="${index}">
-                    <textarea class="form-control form-control-sm" 
+                    <textarea class="form-control form-control-sm mb-2" 
                               name="categories[${category.id}][description]" 
                               placeholder="Category description (optional)" 
                               rows="2" 
                               onchange="updateCategoryDescription(${category.id}, this.value)">${category.description}</textarea>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addNomineeForCategory(${category.id})">
+                        <i class="fas fa-user-plus me-1"></i>Add Nominees
+                    </button>
                 </div>
                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCategory(${category.id})">
                     <i class="fas fa-trash"></i>
@@ -863,39 +1071,63 @@ function updateNomineeBio(nomineeId, bio) {
     }
 }
 
-function updateNomineeCategories(nomineeId, selectElement) {
+function updateNomineeCategories(nomineeId) {
     const nominee = nominees.find(n => n.id === nomineeId);
     if (nominee) {
-        nominee.categories = Array.from(selectElement.selectedOptions).map(option => parseInt(option.value));
+        const oldCategories = nominee.categories || [];
+        
+        // Get selected categories from Select2
+        const selectElement = document.getElementById(`categories-select-${nomineeId}`);
+        const newCategories = Array.from(selectElement.selectedOptions).map(option => option.value);
+        
+        nominee.categories = newCategories;
+        
+        // Shortcodes will be generated on save/publish
+        // const addedCategories = newCategories.filter(catId => !oldCategories.includes(catId));
+        // addedCategories.forEach(categoryId => {
+        //     generateShortcodeForCategory(nomineeId, nominee.name, categoryId);
+        // });
+        
+        // Remove shortcodes for removed categories
+        const removedCategories = oldCategories.filter(catId => !newCategories.includes(catId));
+        removedCategories.forEach(categoryId => {
+            if (nominee.shortcodes) {
+                delete nominee.shortcodes[categoryId];
+            }
+            if (nominee.shortcode_regenerations) {
+                delete nominee.shortcode_regenerations[categoryId];
+            }
+        });
+        
+        // Re-render to show updated shortcodes
+        renderNominees();
     }
 }
 
+function filterNomineeCategories(nomineeId, searchTerm) {
+    const categoryItems = document.querySelectorAll(`.category-item-${nomineeId}`);
+    const term = searchTerm.toLowerCase();
+    
+    categoryItems.forEach(item => {
+        const categoryName = item.getAttribute('data-category-name');
+        if (categoryName.includes(term)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
 function previewNomineePhoto(nomineeId, fileInput) {
-    const previewDiv = document.getElementById(`nominee-preview-${nomineeId}`);
-    const previewImg = document.getElementById(`nominee-preview-img-${nomineeId}`);
-    const currentImageDiv = document.getElementById(`current-nominee-image-${nomineeId}`);
-    const noImageDiv = document.getElementById(`no-nominee-image-${nomineeId}`);
+    const photoWrapper = document.getElementById(`photo-wrapper-${nomineeId}`);
     
     if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
         
         // Validate file size (2MB max)
         if (file.size > 2 * 1024 * 1024) {
-            alert('Photo must be less than 2MB');
+            alert('File size must be less than 2MB');
             fileInput.value = '';
-            previewDiv.style.display = 'none';
-            if (currentImageDiv) currentImageDiv.style.opacity = '1';
-            if (noImageDiv) noImageDiv.style.opacity = '1';
-            return;
-        }
-        
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            alert('Please select an image file');
-            fileInput.value = '';
-            previewDiv.style.display = 'none';
-            if (currentImageDiv) currentImageDiv.style.opacity = '1';
-            if (noImageDiv) noImageDiv.style.opacity = '1';
             return;
         }
         
@@ -903,50 +1135,397 @@ function previewNomineePhoto(nomineeId, fileInput) {
         const nominee = nominees.find(n => n.id === nomineeId);
         if (nominee) {
             nominee.photo_file = file;
+            nominee.image_url = ''; // Clear old URL to show new preview
         }
         
         // Show preview
         const reader = new FileReader();
         reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            previewDiv.style.display = 'block';
-            if (currentImageDiv) currentImageDiv.style.opacity = '0.5';
-            if (noImageDiv) noImageDiv.style.opacity = '0.5';
+            // Replace the entire photo wrapper content with the new image
+            photoWrapper.innerHTML = `
+                <img src="${e.target.result}" 
+                     alt="Photo" 
+                     style="width: 100%; height: 100%; object-fit: cover;">
+                <div class="photo-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;">
+                    <i class="fas fa-camera text-white"></i>
+                </div>
+            `;
         };
         reader.readAsDataURL(file);
-    } else {
-        // No file selected, hide preview
-        previewDiv.style.display = 'none';
-        if (currentImageDiv) currentImageDiv.style.opacity = '1';
-        if (noImageDiv) noImageDiv.style.opacity = '1';
+    }
+}
+
+function previewCategoryPhoto(nomineeId, categoryId, fileInput) {
+    const previewElement = document.getElementById(`cat-photo-preview-${nomineeId}-${categoryId}`);
+    
+    if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File size must be less than 2MB');
+            fileInput.value = '';
+            return;
+        }
+        
+        // Update nominee data
+        const nominee = nominees.find(n => n.id === nomineeId);
+        if (nominee) {
+            if (!nominee.category_photo_files) {
+                nominee.category_photo_files = {};
+            }
+            nominee.category_photo_files[categoryId] = file;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewElement.innerHTML = `<img src="${e.target.result}" 
+                                             alt="Category Photo" 
+                                             style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">`;
+            previewElement.style.display = 'block';
+            previewElement.classList.add('border');
+        };
+        reader.readAsDataURL(file);
     }
 }
 
 // Nominee management
 function addNominee() {
     if (categories.length === 0) {
-        alert('Please add categories first');
+        alert('Please add categories first before adding nominees');
         return;
     }
     
-    const nomineeName = prompt('Enter nominee name:');
-    if (!nomineeName) return;
+    // Clear previous inputs
+    document.getElementById('nomineeName').value = '';
+    document.getElementById('nomineeBio').value = '';
+    document.getElementById('nomineePhoto').value = '';
+    document.getElementById('categorySearch').value = '';
+    document.getElementById('existingNomineeSearch').value = '';
+    
+    // Show/hide sections based on whether there are existing nominees
+    const existingSection = document.getElementById('existingNomineesSection');
+    const newNomineeForm = document.getElementById('newNomineeForm');
+    const toggleBtn = document.getElementById('toggleNewNomineeBtn');
+    
+    if (nominees.length > 0) {
+        // Has existing nominees - show them, collapse create form
+        existingSection.style.display = 'block';
+        populateExistingNominees();
+        newNomineeForm.style.display = 'none';
+        toggleBtn.style.display = 'inline-block';
+        toggleBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Create New';
+    } else {
+        // No existing nominees - hide that section, show create form
+        existingSection.style.display = 'none';
+        newNomineeForm.style.display = 'block';
+        toggleBtn.style.display = 'none';
+    }
+    
+    // Populate categories as checkboxes
+    populateCategoryCheckboxes();
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addNomineeModal'));
+    modal.show();
+    
+    // Focus on name input after modal is shown
+    document.getElementById('addNomineeModal').addEventListener('shown.bs.modal', function () {
+        if (nominees.length > 0) {
+            document.getElementById('existingNomineeSearch').focus();
+        } else {
+            document.getElementById('nomineeName').focus();
+        }
+    }, { once: true });
+}
+
+// Add nominee with specific category pre-selected
+function addNomineeForCategory(categoryId) {
+    if (categories.length === 0) {
+        alert('Please add categories first before adding nominees');
+        return;
+    }
+    
+    // Clear previous inputs
+    document.getElementById('nomineeName').value = '';
+    document.getElementById('nomineeBio').value = '';
+    document.getElementById('nomineePhoto').value = '';
+    document.getElementById('categorySearch').value = '';
+    document.getElementById('existingNomineeSearch').value = '';
+    
+    // Show/hide sections based on whether there are existing nominees
+    const existingSection = document.getElementById('existingNomineesSection');
+    const newNomineeForm = document.getElementById('newNomineeForm');
+    const toggleBtn = document.getElementById('toggleNewNomineeBtn');
+    
+    if (nominees.length > 0) {
+        // Has existing nominees - show them, collapse create form
+        existingSection.style.display = 'block';
+        populateExistingNominees();
+        newNomineeForm.style.display = 'none';
+        toggleBtn.style.display = 'inline-block';
+        toggleBtn.innerHTML = '<i class="fas fa-plus me-1"></i>Create New';
+    } else {
+        // No existing nominees - hide that section, show create form
+        existingSection.style.display = 'none';
+        newNomineeForm.style.display = 'block';
+        toggleBtn.style.display = 'none';
+    }
+    
+    // Populate categories as checkboxes
+    populateCategoryCheckboxes();
+    
+    // Pre-select the specified category
+    const categoryCheckbox = document.querySelector(`.category-checkbox[value="${categoryId}"]`);
+    if (categoryCheckbox) {
+        categoryCheckbox.checked = true;
+        updateSelectedCategoriesCount();
+    }
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('addNomineeModal'));
+    modal.show();
+    
+    // Focus on name input after modal is shown
+    document.getElementById('addNomineeModal').addEventListener('shown.bs.modal', function () {
+        if (nominees.length > 0) {
+            document.getElementById('existingNomineeSearch').focus();
+        } else {
+            document.getElementById('nomineeName').focus();
+        }
+    }, { once: true });
+}
+
+function populateExistingNominees(searchTerm = '') {
+    const container = document.getElementById('existingNomineesCheckboxList');
+    const filteredNominees = nominees.filter(nom => 
+        nom.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (filteredNominees.length === 0) {
+        container.innerHTML = '<div class="text-muted text-center py-3">No nominees found</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredNominees.map(nom => {
+        const categoryNames = (nom.categories || []).map(catId => {
+            const cat = categories.find(c => String(c.id) === String(catId));
+            return cat ? cat.name : '';
+        }).filter(Boolean).join(', ');
+        
+        return `
+            <div class="form-check">
+                <input class="form-check-input existing-nominee-checkbox" 
+                       type="checkbox" 
+                       value="${nom.id}" 
+                       id="existing-nom-${nom.id}" 
+                       onchange="updateSelectedExistingNomineesCount()">
+                <label class="form-check-label" for="existing-nom-${nom.id}">
+                    <strong>${nom.name}</strong>
+                    ${categoryNames ? `<br><small class="text-muted">Currently in: ${categoryNames}</small>` : ''}
+                </label>
+            </div>
+        `;
+    }).join('');
+    
+    updateSelectedExistingNomineesCount();
+}
+
+function filterExistingNominees(searchTerm) {
+    populateExistingNominees(searchTerm);
+}
+
+function updateSelectedExistingNomineesCount() {
+    const checkboxes = document.querySelectorAll('.existing-nominee-checkbox:checked');
+    const count = checkboxes.length;
+    document.getElementById('selectedExistingNomineesCount').textContent = count;
+    
+    // Update button text
+    const buttonText = document.getElementById('addNomineeButtonText');
+    if (count > 0) {
+        buttonText.textContent = `Assign Selected (${count})`;
+    } else {
+        buttonText.textContent = 'Add Nominee';
+    }
+}
+
+function toggleNewNomineeForm() {
+    const form = document.getElementById('newNomineeForm');
+    const btn = document.getElementById('toggleNewNomineeBtn');
+    
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        btn.innerHTML = '<i class="fas fa-minus me-1"></i>Hide Form';
+    } else {
+        form.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-plus me-1"></i>Create New';
+    }
+}
+
+function populateCategoryCheckboxes(searchTerm = '') {
+    const container = document.getElementById('categoriesCheckboxList');
+    const filteredCategories = categories.filter(cat => 
+        cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (filteredCategories.length === 0) {
+        container.innerHTML = '<div class="text-muted text-center py-3">No categories found</div>';
+        return;
+    }
+    
+    container.innerHTML = filteredCategories.map(cat => `
+        <div class="form-check">
+            <input class="form-check-input category-checkbox" type="checkbox" value="${cat.id}" id="cat-${cat.id}" onchange="updateSelectedCategoriesCount()">
+            <label class="form-check-label" for="cat-${cat.id}">
+                ${cat.name}
+            </label>
+        </div>
+    `).join('');
+    
+    updateSelectedCategoriesCount();
+}
+
+function updateSelectedCategoriesCount() {
+    const checkboxes = document.querySelectorAll('.category-checkbox:checked');
+    document.getElementById('selectedCategoriesCount').textContent = checkboxes.length;
+}
+
+// Category search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySearch = document.getElementById('categorySearch');
+    if (categorySearch) {
+        categorySearch.addEventListener('input', function(e) {
+            populateCategoryCheckboxes(e.target.value);
+        });
+    }
+});
+
+function saveNomineeFromModal() {
+    // Check if user selected existing nominees
+    const selectedExistingCheckboxes = document.querySelectorAll('.existing-nominee-checkbox:checked');
+    const selectedExistingNomineeIds = Array.from(selectedExistingCheckboxes).map(cb => cb.value);
+    
+    // Get selected categories from checkboxes
+    const selectedCategoryCheckboxes = document.querySelectorAll('.category-checkbox:checked');
+    const selectedCategories = Array.from(selectedCategoryCheckboxes).map(cb => cb.value);
+    
+    if (selectedCategories.length === 0) {
+        alert('Please select at least one category');
+        return;
+    }
+    
+    // Handle existing nominees assignment
+    if (selectedExistingNomineeIds.length > 0) {
+        selectedExistingNomineeIds.forEach(nomineeId => {
+            const nominee = nominees.find(n => String(n.id) === String(nomineeId));
+            if (nominee) {
+                // Add new categories to existing nominee
+                selectedCategories.forEach(catId => {
+                    if (!nominee.categories.includes(catId)) {
+                        nominee.categories.push(catId);
+                        // Shortcode will be generated on save/publish
+                    }
+                });
+            }
+        });
+        
+        renderNominees();
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addNomineeModal'));
+        modal.hide();
+        
+        // Show success message
+        const count = selectedExistingNomineeIds.length;
+        showToast(`${count} nominee(s) assigned to selected categories!`, 'success');
+        return;
+    }
+    
+    // Handle new nominee creation
+    const nomineeName = document.getElementById('nomineeName').value.trim();
+    const nomineeBio = document.getElementById('nomineeBio').value.trim();
+    const nomineePhoto = document.getElementById('nomineePhoto').files[0];
+    
+    if (!nomineeName) {
+        alert('Please enter nominee name or select existing nominees');
+        document.getElementById('nomineeName').focus();
+        return;
+    }
     
     const nominee = {
         id: Date.now(),
         name: nomineeName,
-        bio: '',
+        bio: nomineeBio,
         image_url: '',
-        categories: []
+        categories: selectedCategories,
+        shortcodes: {}, // Object to store shortcode per category
+        shortcode_regenerations: {} // Object to store regeneration count per category
     };
     
+    // Handle photo if uploaded
+    if (nomineePhoto) {
+        nominee.photo_file = nomineePhoto;
+        // Create preview URL
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            nominee.image_url = e.target.result;
+        };
+        reader.readAsDataURL(nomineePhoto);
+    }
+    
     nominees.push(nominee);
+    
+    // Shortcodes will be generated on save/publish
+    // selectedCategories.forEach(categoryId => {
+    //     generateShortcodeForCategory(nominee.id, nomineeName, categoryId);
+    // });
+    
     renderNominees();
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addNomineeModal'));
+    modal.hide();
+    
+    // Show success message
+    showToast(`Nominee "${nomineeName}" added successfully!`, 'success');
 }
 
 function removeNominee(nomineeId) {
+    const nominee = nominees.find(n => n.id === nomineeId);
+    
+    // If this is an existing nominee (has database ID), track it for deletion
+    if (nominee && nominee.is_existing && nominee.db_id) {
+        // Add to deleted nominees list
+        if (!window.deletedNomineeIds) {
+            window.deletedNomineeIds = [];
+        }
+        window.deletedNomineeIds.push(nominee.db_id);
+        
+        // Update hidden field
+        updateDeletedNomineesField();
+    }
+    
+    // Remove from nominees array
     nominees = nominees.filter(n => n.id !== nomineeId);
     renderNominees();
+    
+    showToast('Nominee removed', 'info');
+}
+
+function updateDeletedNomineesField() {
+    // Get or create hidden field for deleted nominee IDs
+    let deletedField = document.getElementById('deleted_nominee_ids');
+    if (!deletedField) {
+        deletedField = document.createElement('input');
+        deletedField.type = 'hidden';
+        deletedField.id = 'deleted_nominee_ids';
+        deletedField.name = 'deleted_nominee_ids';
+        document.getElementById('eventWizardForm').appendChild(deletedField);
+    }
+    
+    // Update value with comma-separated IDs
+    deletedField.value = (window.deletedNomineeIds || []).join(',');
 }
 
 function renderNominees() {
@@ -978,91 +1557,208 @@ function renderNominees() {
     
     const html = nominees.map((nominee, index) => `
         <div class="nominee-item" data-nominee-id="${nominee.id}">
-            <div class="d-flex align-items-start gap-2">
-                <div class="drag-handle" style="cursor: move; padding: 8px; color: #6c757d;">
-                    <i class="fas fa-grip-vertical"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <input type="text" 
-                           class="form-control form-control-sm mb-2" 
-                           name="nominees[${nominee.id}][name]" 
-                           value="${nominee.name}"
-                           placeholder="Nominee name"
-                           onchange="updateNomineeName(${nominee.id}, this.value)"
-                           required>
-                    <input type="hidden" name="nominees[${nominee.id}][order]" value="${index}">
+                <div class="d-flex gap-3">
+                    <div class="drag-handle" style="cursor: move; padding: 4px; color: #6c757d;">
+                        <i class="fas fa-grip-vertical"></i>
+                    </div>
                     
-                    <div class="row mb-2">
-                        <div class="col-md-4">
-                            <label class="form-label small">Bio</label>
-                            <textarea class="form-control form-control-sm" 
-                                      name="nominees[${nominee.id}][bio]" 
-                                      placeholder="Nominee bio (optional)" 
-                                      rows="2" 
-                                      onchange="updateNomineeBio(${nominee.id}, this.value)">${nominee.bio || ''}</textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small">Photo</label>
-                            <input type="file" class="form-control form-control-sm" 
-                                   name="nominee_photo_${nominee.id}" 
-                                   accept="image/*"
-                                   onchange="previewNomineePhoto(${nominee.id}, this)">
-                            <div class="form-text">JPG, PNG (max 2MB)</div>
-                            
+                    <!-- Photo with hover effect -->
+                    <div class="nominee-photo-container" style="position: relative; width: 80px; height: 80px;">
+                        <input type="file" 
+                               id="photo-input-${nominee.id}"
+                               name="nominee_photo_${nominee.id}" 
+                               accept="image/*"
+                               style="display: none;"
+                               onchange="previewNomineePhoto(${nominee.id}, this)">
+                        <div class="photo-wrapper" 
+                             id="photo-wrapper-${nominee.id}"
+                             style="width: 80px; height: 80px; border-radius: 8px; overflow: hidden; cursor: pointer; position: relative;"
+                             onclick="document.getElementById('photo-input-${nominee.id}').click()">
                             ${nominee.image_url ? `
-                                <div class="mt-2" id="current-nominee-image-${nominee.id}">
-                                    <small class="text-success">✓ Current photo</small>
-                                    <div class="mt-1">
-                                        <img src="${getImageUrl(nominee.image_url)}" 
-                                             alt="Current nominee photo" 
-                                             style="width: 60px; height: 60px; object-fit: cover;" 
-                                             class="img-thumbnail">
-                                    </div>
+                                <img src="${getImageUrl(nominee.image_url)}" 
+                                     alt="Photo" 
+                                     style="width: 100%; height: 100%; object-fit: cover;">
+                                <div class="photo-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;">
+                                    <i class="fas fa-camera text-white"></i>
                                 </div>
                             ` : `
-                                <div class="mt-2" id="no-nominee-image-${nominee.id}">
-                                    <small class="text-muted">No photo uploaded</small>
-                                    <div class="mt-1">
-                                        <div style="width: 60px; height: 60px; background-color: #f8f9fa; border: 1px dashed #dee2e6; display: flex; align-items: center; justify-content: center; border-radius: 4px;">
-                                            <i class="fas fa-user text-muted"></i>
+                                <div style="width: 100%; height: 100%; background-color: #f8f9fa; border: 2px dashed #dee2e6; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                    <i class="fas fa-camera text-muted mb-1"></i>
+                                    <small class="text-muted">Add Photo</small>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow-1">
+                        <div class="row g-2">
+                            <!-- Name and Bio in one row -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold mb-1">Name *</label>
+                                <input type="text" 
+                                       class="form-control form-control-sm" 
+                                       name="nominees[${nominee.id}][name]" 
+                                       value="${nominee.name}"
+                                       placeholder="Nominee name"
+                                       onchange="updateNomineeName(${nominee.id}, this.value)"
+                                       required>
+                                <input type="hidden" name="nominees[${nominee.id}][order]" value="${index}">
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold mb-1">Bio (Optional)</label>
+                                <input type="text" 
+                                       class="form-control form-control-sm" 
+                                       name="nominees[${nominee.id}][bio]" 
+                                       placeholder="Brief biography or description" 
+                                       value="${nominee.bio || ''}"
+                                       onchange="updateNomineeBio(${nominee.id}, this.value)">
+                            </div>
+                            
+                            <!-- Categories with Select2 -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold mb-1">Categories *</label>
+                                <select class="form-select form-select-sm nominee-categories-select" 
+                                        id="categories-select-${nominee.id}"
+                                        name="nominees[${nominee.id}][categories][]" 
+                                        multiple
+                                        data-nominee-id="${nominee.id}">
+                                    ${categories.map(cat => `
+                                        <option value="${cat.id}" ${nominee.categories && nominee.categories.map(String).includes(String(cat.id)) ? 'selected' : ''}>
+                                            ${cat.name}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            
+                            <!-- Inline Shortcodes -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold mb-1">Shortcodes</label>
+                                <div class="d-flex flex-wrap gap-1" style="min-height: 31px; align-items: center;">
+                                    ${nominee.categories && nominee.categories.length > 0 ? 
+                                        nominee.categories.map(catId => {
+                                            const category = categories.find(c => String(c.id) === String(catId));
+                                            const categoryName = category ? category.name : 'Unknown';
+                                            const shortcodes = nominee.shortcodes || {};
+                                            const shortcode = shortcodes[catId] || (nominee.is_existing ? 'Loading...' : 'On Save');
+                                            const regenerations = nominee.shortcode_regenerations || {};
+                                            const regenCount = regenerations[catId] || 0;
+                                            
+                                            return `
+                                                <span class="badge bg-primary" 
+                                                      id="shortcode-${nominee.id}-${catId}"
+                                                      title="${categoryName}: ${shortcode}${nominee.is_existing ? ' (Locked)' : ' - ' + regenCount + '/3 regens'}">
+                                                    ${shortcode}
+                                                    ${nominee.is_existing ? '<i class="fas fa-lock ms-1" style="font-size: 0.7em;"></i>' : ''}
+                                                </span>
+                                            `;
+                                        }).join('') 
+                                        : '<small class="text-muted">No categories</small>'
+                                    }
+                                </div>
+                            </div>
+                            
+                            <!-- Per-Category Photos (Collapsible) -->
+                            ${nominee.categories && nominee.categories.length > 0 ? `
+                            <div class="col-12 mt-3">
+                                <div class="accordion accordion-flush" id="accordion-${nominee.id}">
+                                    <div class="accordion-item border">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed py-2 px-3" type="button" 
+                                                    data-bs-toggle="collapse" 
+                                                    data-bs-target="#collapse-photos-${nominee.id}">
+                                                <i class="fas fa-images me-2"></i>
+                                                <small class="fw-bold">Per-Category Photos (Optional)</small>
+                                                <small class="text-muted ms-2">Use different photos for each category</small>
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-photos-${nominee.id}" class="accordion-collapse collapse">
+                                            <div class="accordion-body p-3">
+                                                <div class="row g-2">
+                                                    ${nominee.categories.map(catId => {
+                                                        const category = categories.find(c => String(c.id) === String(catId));
+                                                        const categoryName = category ? category.name : 'Unknown';
+                                                        const categoryPhotos = nominee.category_photos || {};
+                                                        const categoryPhoto = categoryPhotos[catId];
+                                                        
+                                                        return `
+                                                        <div class="col-md-6">
+                                                            <div class="card">
+                                                                <div class="card-body p-2">
+                                                                    <label class="form-label small mb-1 fw-bold">${categoryName}</label>
+                                                                    <div class="d-flex gap-2 align-items-center">
+                                                                        <input type="file" 
+                                                                               id="cat-photo-${nominee.id}-${catId}"
+                                                                               name="nominee_category_photo_${nominee.id}_${catId}"
+                                                                               accept="image/*"
+                                                                               class="form-control form-control-sm"
+                                                                               onchange="previewCategoryPhoto(${nominee.id}, '${catId}', this)">
+                                                                        ${categoryPhoto ? `
+                                                                            <img src="${getImageUrl(categoryPhoto)}" 
+                                                                                 id="cat-photo-preview-${nominee.id}-${catId}"
+                                                                                 alt="Category Photo" 
+                                                                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" 
+                                                                                 class="border">
+                                                                        ` : `
+                                                                            <div id="cat-photo-preview-${nominee.id}-${catId}" 
+                                                                                 style="width: 40px; height: 40px; background: #f8f9fa; border: 1px dashed #dee2e6; border-radius: 4px; display: none;">
+                                                                            </div>
+                                                                        `}
+                                                                    </div>
+                                                                    <small class="text-muted d-block mt-1">
+                                                                        <i class="fas fa-info-circle me-1"></i>
+                                                                        Leave empty to use default photo
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        `;
+                                                    }).join('')}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            `}
-                            
-                            <div id="nominee-preview-${nominee.id}" class="mt-2" style="display: none;">
-                                <small class="text-info">New photo preview:</small>
-                                <div class="mt-1">
-                                    <img id="nominee-preview-img-${nominee.id}" src="" alt="Preview" 
-                                         style="width: 60px; height: 60px; object-fit: cover;" 
-                                         class="img-thumbnail">
-                                </div>
                             </div>
+                            ` : ''}
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small">Categories</label>
-                            <select class="form-select form-select-sm" 
-                                    name="nominees[${nominee.id}][categories][]" 
-                                    multiple 
-                                    onchange="updateNomineeCategories(${nominee.id}, this)">
-                                ${categories.map(cat => `
-                                    <option value="${cat.id}" ${nominee.categories && nominee.categories.includes(cat.id) ? 'selected' : ''}>
-                                        ${cat.name}
-                                    </option>
-                                `).join('')}
-                            </select>
-                            <div class="form-text">Hold Ctrl to select multiple</div>
-                        </div>
-                    </div>
+                <div class="mt-2 text-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeNominee(${nominee.id})">
+                        <i class="fas fa-trash me-1"></i>Remove Nominee
+                    </button>
                 </div>
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeNominee(${nominee.id})">
-                    <i class="fas fa-trash"></i>
-                </button>
             </div>
         </div>
     `).join('');
     
     container.innerHTML = html;
+    
+    // Destroy existing Select2 instances first
+    $('.nominee-categories-select').each(function() {
+        if ($(this).data('select2')) {
+            $(this).select2('destroy');
+        }
+    });
+    
+    // Initialize Select2 for all category selects
+    setTimeout(() => {
+        if (typeof $.fn.select2 !== 'undefined') {
+            $('.nominee-categories-select').each(function() {
+                const nomineeId = $(this).data('nominee-id');
+                $(this).select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Select categories...',
+                    allowClear: false,
+                    width: '100%',
+                    dropdownAutoWidth: true
+                }).on('change', function() {
+                    updateNomineeCategories(nomineeId);
+                });
+            });
+        } else {
+            console.error('Select2 not loaded');
+        }
+    }, 150);
     
     // Initialize sortable if not already initialized
     if (!nomineesSortable && typeof Sortable !== 'undefined') {
@@ -1181,12 +1877,43 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pre-populate nominees
         <?php if (!empty($nominees)): ?>
         nominees = <?= json_encode(array_map(function($nominee) {
+            // Convert shortcodes array to object with string keys for JavaScript
+            $shortcodesObj = [];
+            if (!empty($nominee['shortcodes'])) {
+                foreach ($nominee['shortcodes'] as $catId => $code) {
+                    $shortcodesObj[strval($catId)] = $code;
+                }
+            }
+            
+            // Set regenerations to 3 for all categories to disable regeneration
+            $regenerationsObj = [];
+            if (!empty($nominee['categories'])) {
+                foreach ($nominee['categories'] as $catId) {
+                    $regenerationsObj[strval($catId)] = 3;
+                }
+            }
+            
+            // Get category-specific photos
+            $categoryPhotosObj = [];
+            if (!empty($nominee['category_photos'])) {
+                foreach ($nominee['category_photos'] as $catId => $photoUrl) {
+                    if (!empty($photoUrl)) {
+                        $categoryPhotosObj[strval($catId)] = $photoUrl;
+                    }
+                }
+            }
+            
             return [
                 'id' => $nominee['id'],
+                'db_id' => $nominee['id'], // Store database ID for deletion tracking
                 'name' => $nominee['name'],
                 'bio' => $nominee['bio'] ?? '',
                 'image_url' => $nominee['image_url'] ?? '',
-                'categories' => array_map('strval', $nominee['categories'] ?? []) // Convert to strings
+                'categories' => array_map('strval', $nominee['categories'] ?? []), // Convert to strings
+                'shortcodes' => $shortcodesObj, // Object with category_id => shortcode
+                'shortcode_regenerations' => $regenerationsObj, // Set to 3 per category to disable regeneration
+                'category_photos' => $categoryPhotosObj, // Object with category_id => photo_url
+                'is_existing' => true // Flag to indicate this is an existing nominee
             ];
         }, $nominees)) ?>;
         console.log('Pre-populating nominees:', nominees);
@@ -1259,7 +1986,197 @@ function initializeNomineesSortable() {
         }
     });
 }
+
+// Shortcode generation functions (per category)
+function generateShortcodeForCategory(nomineeId, nomineeName, categoryId) {
+    fetch('<?= APP_URL ?>/api/shortcode/generate-preview', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            nominee_name: nomineeName,
+            nominee_id: nomineeId,
+            category_id: categoryId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update nominee object
+            const nominee = nominees.find(n => n.id === nomineeId);
+            if (nominee) {
+                if (!nominee.shortcodes) nominee.shortcodes = {};
+                nominee.shortcodes[categoryId] = data.shortcode;
+                
+                // Update display
+                const shortcodeElement = document.getElementById(`shortcode-${nomineeId}-${categoryId}`);
+                if (shortcodeElement) {
+                    shortcodeElement.textContent = data.shortcode;
+                }
+            }
+        } else {
+            console.error('Failed to generate shortcode:', data.message);
+            const shortcodeElement = document.getElementById(`shortcode-${nomineeId}-${categoryId}`);
+            if (shortcodeElement) {
+                shortcodeElement.textContent = 'Error';
+                shortcodeElement.classList.remove('bg-primary');
+                shortcodeElement.classList.add('bg-danger');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Shortcode generation error:', error);
+    });
+}
+
+function regenerateShortcodeForCategory(nomineeId, categoryId) {
+    const nominee = nominees.find(n => n.id === nomineeId);
+    if (!nominee) return;
+    
+    // Initialize regenerations object if needed
+    if (!nominee.shortcode_regenerations) nominee.shortcode_regenerations = {};
+    
+    const regenCount = nominee.shortcode_regenerations[categoryId] || 0;
+    
+    // Check regeneration limit
+    if (regenCount >= 3) {
+        alert('Maximum regenerations (3) reached for this category.');
+        return;
+    }
+    
+    const category = categories.find(c => String(c.id) === String(categoryId));
+    const categoryName = category ? category.name : 'this category';
+    
+    if (!confirm(`Are you sure you want to regenerate the shortcode for ${categoryName}? This will replace the current shortcode.`)) {
+        return;
+    }
+    
+    // Show loading state
+    const shortcodeElement = document.getElementById(`shortcode-${nomineeId}-${categoryId}`);
+    const regenerateBtn = document.getElementById(`regenerate-btn-${nomineeId}-${categoryId}`);
+    
+    if (shortcodeElement) {
+        shortcodeElement.textContent = 'Generating...';
+    }
+    if (regenerateBtn) {
+        regenerateBtn.disabled = true;
+    }
+    
+    // Generate new shortcode
+    fetch('<?= APP_URL ?>/api/shortcode/generate-preview', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            nominee_name: nominee.name,
+            nominee_id: nomineeId + Math.random(), // Add randomness for different code
+            category_id: categoryId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update nominee object
+            if (!nominee.shortcodes) nominee.shortcodes = {};
+            nominee.shortcodes[categoryId] = data.shortcode;
+            nominee.shortcode_regenerations[categoryId] = regenCount + 1;
+            
+            // Re-render to update display and button state
+            renderNominees();
+            
+            // Show success message
+            showToast(`Shortcode regenerated for ${categoryName}: ${data.shortcode} (${nominee.shortcode_regenerations[categoryId]}/3)`, 'success');
+        } else {
+            showToast('Failed to regenerate shortcode: ' + data.message, 'error');
+            if (regenerateBtn) {
+                regenerateBtn.disabled = false;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Shortcode regeneration error:', error);
+        showToast('An error occurred while regenerating the shortcode.', 'error');
+        if (regenerateBtn) {
+            regenerateBtn.disabled = false;
+        }
+    });
+}
+
+// Toast notification function
+function showToast(message, type = 'success') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-info';
+    const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+    
+    const toastHTML = `
+        <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas ${icon} me-2"></i>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+    
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+    
+    // Remove toast element after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', function () {
+        toastElement.remove();
+    });
+}
+
+// Add Enter key support for modals
+document.addEventListener('DOMContentLoaded', function() {
+    // Category modal Enter key
+    const categoryNameInput = document.getElementById('categoryName');
+    if (categoryNameInput) {
+        categoryNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveCategoryFromModal();
+            }
+        });
+    }
+    
+    // Nominee modal Enter key (only for name field, not textarea)
+    const nomineeNameInput = document.getElementById('nomineeName');
+    if (nomineeNameInput) {
+        nomineeNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveNomineeFromModal();
+            }
+        });
+    }
+});
 </script>
 
 <!-- SortableJS Library -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<!-- jQuery (required for Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 CSS and JS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

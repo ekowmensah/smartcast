@@ -274,11 +274,16 @@
                         </div>
                         
                         <div class="contestants-grid-modern">
-                            <?php foreach ($categoryContestants as $contestant): ?>
+                            <?php foreach ($categoryContestants as $contestant): 
+                                // Use category-specific photo if available, otherwise use default
+                                $displayImage = (!empty($contestant['category_image_url']) && $contestant['use_category_photo']) 
+                                    ? $contestant['category_image_url'] 
+                                    : $contestant['image_url'];
+                            ?>
                             <div class="contestant-card-modern">
                                 <div class="contestant-image-container">
-                                    <?php if ($contestant['image_url']): ?>
-                                        <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
+                                    <?php if ($displayImage): ?>
+                                        <img src="<?= htmlspecialchars(image_url($displayImage)) ?>" 
                                              alt="<?= htmlspecialchars($contestant['name']) ?>"
                                              class="contestant-image-modern">
                                     <?php elseif (!empty($event['featured_image'])): ?>
@@ -352,11 +357,16 @@
                     </div>
                     
                     <div class="contestants-grid-modern">
-                        <?php foreach ($contestants as $contestant): ?>
+                        <?php foreach ($contestants as $contestant): 
+                            // Use category-specific photo if available, otherwise use default
+                            $displayImage = (!empty($contestant['category_image_url']) && $contestant['use_category_photo']) 
+                                ? $contestant['category_image_url'] 
+                                : $contestant['image_url'];
+                        ?>
                         <div class="contestant-card-modern">
                             <div class="contestant-image-container">
-                                <?php if ($contestant['image_url']): ?>
-                                    <img src="<?= htmlspecialchars(image_url($contestant['image_url'])) ?>" 
+                                <?php if ($displayImage): ?>
+                                    <img src="<?= htmlspecialchars(image_url($displayImage)) ?>" 
                                          alt="<?= htmlspecialchars($contestant['name']) ?>"
                                          class="contestant-image-modern">
                                 <?php elseif (!empty($event['featured_image'])): ?>
@@ -436,7 +446,12 @@
             </div>
             
             <div class="leaderboard-modern">
-                <?php foreach (array_slice($leaderboard, 0, 10) as $index => $leader): ?>
+                <?php foreach ($leaderboard as $index => $leader): 
+                // Use category-specific photo if available, otherwise use default
+                $leaderImage = (!empty($leader['category_image_url']) && $leader['use_category_photo']) 
+                    ? $leader['category_image_url'] 
+                    : $leader['image_url'];
+            ?>
                 <div class="leaderboard-item-modern">
                     <div class="position-modern">
                         <?php if ($index === 0): ?>
@@ -451,8 +466,8 @@
                     </div>
                     
                     <div class="leader-avatar-modern">
-                        <?php if ($leader['image_url']): ?>
-                            <img src="<?= htmlspecialchars(image_url($leader['image_url'])) ?>" 
+                        <?php if ($leaderImage): ?>
+                            <img src="<?= htmlspecialchars(image_url($leaderImage)) ?>" 
                                  alt="<?= htmlspecialchars($leader['name']) ?>">
                         <?php elseif (!empty($event['featured_image'])): ?>
                             <img src="<?= htmlspecialchars(image_url($event['featured_image'])) ?>" 

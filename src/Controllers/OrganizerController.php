@@ -331,11 +331,26 @@ class OrganizerController extends BaseController
             $contestantModel = new \SmartCast\Models\Contestant();
             $contestants = $contestantModel->findAll(['event_id' => $editEventId]);
             
-            // Load nominee-category assignments
+            // Load nominee-category assignments with shortcodes (per category)
             $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
             foreach ($contestants as &$contestant) {
                 $assignments = $contestantCategoryModel->findAll(['contestant_id' => $contestant['id']]);
                 $contestant['categories'] = array_column($assignments, 'category_id');
+                
+                // Build shortcodes object with category_id as key
+                $contestant['shortcodes'] = [];
+                // Build category photos object with category_id as key
+                $contestant['category_photos'] = [];
+                
+                foreach ($assignments as $assignment) {
+                    if (!empty($assignment['short_code'])) {
+                        $contestant['shortcodes'][$assignment['category_id']] = $assignment['short_code'];
+                    }
+                    // Add category-specific photo if exists
+                    if (!empty($assignment['category_image_url']) && $assignment['use_category_photo']) {
+                        $contestant['category_photos'][$assignment['category_id']] = $assignment['category_image_url'];
+                    }
+                }
             }
             $nominees = $contestants;
             
@@ -502,50 +517,6 @@ class OrganizerController extends BaseController
                         'category_id' => $category['category_id'],
                         'category_id_for_votes' => $category['category_id']
                     ]);
-                    
-                    // If no contestants found, try a simpler query without shortcode
-                    if (empty($category['contestants'])) {
-                        $simpleSql = "
-                            SELECT 
-                                c.id,
-                                c.name,
-                                c.contestant_code,
-                                c.image_url,
-                                c.bio,
-                                cc.short_code as voting_shortcode,
-                                0 as total_votes,
-                                0 as revenue
-                            FROM contestants c
-                            INNER JOIN contestant_categories cc ON c.id = cc.contestant_id
-                            WHERE cc.category_id = :category_id
-                            AND c.active = 1
-                            ORDER BY cc.display_order ASC, c.name ASC
-                        ";
-                        $category['contestants'] = $this->eventModel->getDatabase()->select($simpleSql, ['category_id' => $category['category_id']]);
-                        
-                        // If still no contestants, try getting all contestants for this event
-                        if (empty($category['contestants'])) {
-                            $allContestantsSql = "
-                                SELECT 
-                                    c.id,
-                                    c.name,
-                                    c.contestant_code,
-                                    c.image_url,
-                                    c.bio,
-                                    c.contestant_code as voting_shortcode,
-                                    0 as total_votes,
-                                    0 as revenue
-                                FROM contestants c
-                                WHERE c.event_id = :event_id
-                                AND c.active = 1
-                                ORDER BY c.name ASC
-                            ";
-                            $allContestants = $this->eventModel->getDatabase()->select($allContestantsSql, ['event_id' => $event['event_id']]);
-                            
-                            // Assign all contestants to this category for display purposes
-                            $category['contestants'] = $allContestants;
-                        }
-                    }
                     
                 } catch (\Exception $e) {
                     $category['contestants'] = [];
@@ -1274,7 +1245,21 @@ class OrganizerController extends BaseController
             $contestantCategoryModel = new \SmartCast\Models\ContestantCategory();
             $categoryIds = [];
             
+            // Store existing shortcodes before deleting (when editing) - per contestant-category pair
+            $existingShortcodes = [];
             if ($isEditing) {
+                // Get all existing contestant-category assignments with shortcodes
+                $existingAssignments = $contestantCategoryModel->getDatabase()->select(
+                    "SELECT contestant_id, category_id, short_code FROM contestant_categories WHERE category_id IN (SELECT id FROM categories WHERE event_id = :event_id)",
+                    ['event_id' => $eventId]
+                );
+                foreach ($existingAssignments as $assignment) {
+                    // Store by contestant_id + category_id combination
+                    $key = $assignment['contestant_id'] . '_' . $assignment['category_id'];
+                    $existingShortcodes[$key] = $assignment['short_code'];
+                }
+                error_log("DEBUG: Preserved " . count($existingShortcodes) . " existing shortcodes (per contestant-category)");
+                
                 // Delete existing categories and their assignments
                 $existingCategories = $categoryModel->findAll(['event_id' => $eventId]);
                 foreach ($existingCategories as $existingCategory) {
@@ -1316,6 +1301,21 @@ class OrganizerController extends BaseController
                 error_log("DEBUG: Found " . count($existingContestants) . " existing contestants");
                 foreach ($existingContestants as $contestant) {
                     error_log("DEBUG: Existing contestant ID: " . $contestant['id'] . ", name: " . $contestant['name'] . ", image: " . ($contestant['image_url'] ?? 'NULL'));
+                }
+                
+                // Handle explicitly deleted nominees
+                if (!empty($data['deleted_nominee_ids'])) {
+                    $deletedIds = array_filter(array_map('trim', explode(',', $data['deleted_nominee_ids'])));
+                    foreach ($deletedIds as $deletedId) {
+                        if (is_numeric($deletedId)) {
+                            error_log("DEBUG: Explicitly deleting nominee ID: $deletedId");
+                            $contestantModel->delete((int)$deletedId);
+                            // Remove from existing contestants array to avoid double-processing
+                            $existingContestants = array_filter($existingContestants, function($c) use ($deletedId) {
+                                return $c['id'] != $deletedId;
+                            });
+                        }
+                    }
                 }
             }
             
@@ -1381,12 +1381,35 @@ class OrganizerController extends BaseController
                             $contestantId = $contestantModel->create($contestantData);
                         }
                         
-                        // Assign to categories with auto-generated shortcodes
+                        // Assign to categories with preserved or auto-generated shortcodes
                         if (!empty($nomineeData['categories']) && is_array($nomineeData['categories'])) {
                             foreach ($nomineeData['categories'] as $oldCategoryId) {
                                 if (isset($categoryIds[$oldCategoryId])) {
                                     $newCategoryId = $categoryIds[$oldCategoryId];
-                                    $contestantCategoryModel->assignContestantToCategory($contestantId, $newCategoryId);
+                                    
+                                    // Use existing shortcode if available (when editing) - per contestant-category pair
+                                    $customShortcode = null;
+                                    if ($isEditing) {
+                                        // Look up shortcode by contestant_id + old_category_id
+                                        $key = $contestantId . '_' . $oldCategoryId;
+                                        if (isset($existingShortcodes[$key])) {
+                                            $customShortcode = $existingShortcodes[$key];
+                                            error_log("DEBUG: Using preserved shortcode '{$customShortcode}' for contestant {$contestantId} category {$oldCategoryId}");
+                                        }
+                                    }
+                                    
+                                    $contestantCategoryModel->assignContestantToCategory($contestantId, $newCategoryId, $customShortcode);
+                                    
+                                    // Handle per-category photo upload
+                                    $categoryPhotoFieldName = "nominee_category_photo_{$nomineeId}_{$oldCategoryId}";
+                                    if (isset($_FILES[$categoryPhotoFieldName]) && $_FILES[$categoryPhotoFieldName]['error'] === UPLOAD_ERR_OK) {
+                                        $categoryImagePath = $this->handleImageUpload($_FILES[$categoryPhotoFieldName], 'nominees/categories');
+                                        if ($categoryImagePath) {
+                                            // Update contestant_categories table with category-specific photo
+                                            $contestantCategoryModel->updateCategoryPhoto($contestantId, $newCategoryId, $categoryImagePath);
+                                            error_log("DEBUG: Uploaded category photo for contestant {$contestantId} category {$newCategoryId}: {$categoryImagePath}");
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -4184,18 +4207,26 @@ class OrganizerController extends BaseController
         
         // Generate unique filename
         $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = uniqid($type . '_') . '.' . $extension;
+        // Replace slashes in type for filename to avoid issues
+        $typeForFilename = str_replace('/', '_', $type);
+        $filename = uniqid($typeForFilename . '_') . '.' . $extension;
         
         // Create upload directory if it doesn't exist
         $uploadDir = UPLOAD_PATH . $type . '/';
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
+            if (!mkdir($uploadDir, 0755, true)) {
+                error_log("Failed to create directory: {$uploadDir}");
+                throw new \Exception('Failed to create upload directory');
+            }
         }
         
         $uploadPath = $uploadDir . $filename;
         
         // Move uploaded file
         if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+            error_log("Failed to move uploaded file from {$file['tmp_name']} to {$uploadPath}");
+            error_log("Upload directory exists: " . (is_dir($uploadDir) ? 'yes' : 'no'));
+            error_log("Upload directory writable: " . (is_writable($uploadDir) ? 'yes' : 'no'));
             throw new \Exception('Failed to save uploaded file');
         }
         

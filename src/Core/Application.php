@@ -385,6 +385,10 @@ class Application
             $router->post('/shortcode-lookup', 'Api\\ShortcodeController@lookup');
             $router->post('/shortcode-validate', 'Api\\ShortcodeController@validateShortcode');
             $router->get('/events/{id}/shortcodes', 'Api\\ShortcodeController@getEventShortcodes');
+            
+            // Shortcode Generator API routes (for event wizard)
+            $router->post('/shortcode/generate-preview', 'Api\\ShortcodeGeneratorController@generatePreview');
+            $router->post('/shortcode/validate-availability', 'Api\\ShortcodeGeneratorController@validateShortcode');
         });
     }
     

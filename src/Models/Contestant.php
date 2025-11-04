@@ -38,6 +38,8 @@ class Contestant extends BaseModel
                    cat.name as category_name,
                    cc.short_code,
                    cc.category_id,
+                   cc.category_image_url,
+                   cc.use_category_photo,
                    COALESCE(SUM(v.quantity), 0) as total_votes
             FROM contestants c
             LEFT JOIN contestant_categories cc ON c.id = cc.contestant_id AND cc.active = 1
