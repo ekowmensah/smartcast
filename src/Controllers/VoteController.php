@@ -458,7 +458,8 @@ class VoteController extends BaseController
                 }
                 
                 // Add callback URL for redirect-based payments
-                $paymentData['callback_url'] = APP_URL . '/events/' . $event['slug'] . '/vote/callback';
+                $eventSlug = $event['slug'] ?? $event['id'];
+                $paymentData['callback_url'] = APP_URL . '/events/' . $eventSlug . '/vote/callback';
                 
                 // Use Flutterwave gateway
                 $paymentResult = $this->paymentService->initializeMobileMoneyPayment($paymentData);
@@ -469,7 +470,9 @@ class VoteController extends BaseController
             }
             
             if (!$paymentResult['success']) {
-                throw new \Exception('Payment initiation failed: ' . $paymentResult['message']);
+                // Log the full error for debugging
+                error_log("Payment initiation failed: " . json_encode($paymentResult));
+                throw new \Exception('Payment initiation failed: ' . ($paymentResult['message'] ?? 'Unknown error'));
             }
             
             // Update transaction with payment reference (if available)

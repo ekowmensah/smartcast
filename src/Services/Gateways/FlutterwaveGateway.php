@@ -149,20 +149,23 @@ class FlutterwaveGateway implements PaymentGatewayInterface
                 'meta' => $paymentData['metadata'] ?? []
             ];
             
-            $response = $this->makeRequest('POST', $url, $data, [
-                'Authorization: Bearer ' . $this->clientSecret
-            ], false);
+            // Make API request (requireAuth = true will add Authorization header)
+            $response = $this->makeRequest('POST', $url, $data, [], true);
             
-            if (isset($response['data']['link'])) {
+            // Response structure: { status: "success", message: "...", data: { link: "..." } }
+            if (isset($response['link'])) {
                 return [
                     'success' => true,
                     'reference' => $paymentData['reference'],
-                    'payment_url' => $response['data']['link'],
+                    'payment_url' => $response['link'],
+                    'gateway_reference' => $paymentData['reference'],
                     'status' => 'pending',
                     'message' => 'Redirect to complete payment'
                 ];
             }
             
+            // Log the full response for debugging
+            error_log("Flutterwave Standard Payment Response: " . json_encode($response));
             throw new \Exception($response['message'] ?? 'Failed to initialize payment');
             
         } catch (\Exception $e) {
@@ -308,7 +311,7 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     /**
      * Process webhook
      */
-    public function processWebhook($payload)
+    public function processWebhook($payload, $signature = null)
     {
         try {
             $data = json_decode($payload, true);
