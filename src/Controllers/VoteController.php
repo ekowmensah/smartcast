@@ -208,6 +208,80 @@ class VoteController extends BaseController
         ]);
     }
     
+    /**
+     * Vote by shortcode - Short URL format
+     * URL: /vote/{shortcode} (e.g., /vote/JB-232)
+     */
+    public function voteByShortcode($shortcode)
+    {
+        // Look up contestant by voting shortcode
+        $db = \SmartCast\Core\Database::getInstance();
+        
+        // Query to find contestant by shortcode (case-insensitive)
+        $sql = "
+            SELECT 
+                c.id as contestant_id,
+                c.name as contestant_name,
+                c.contestant_code,
+                c.event_id,
+                e.code as event_code,
+                e.name as event_name,
+                cc.category_id,
+                cc.short_code as voting_shortcode
+            FROM contestant_categories cc
+            INNER JOIN contestants c ON cc.contestant_id = c.id
+            INNER JOIN events e ON c.event_id = e.id
+            WHERE UPPER(cc.short_code) = UPPER(:shortcode)
+            AND c.active = 1
+            AND e.status IN ('published', 'active')
+            LIMIT 1
+        ";
+        
+        error_log("Short URL Debug - Looking up shortcode: {$shortcode}");
+        error_log("Short URL Debug - SQL: " . $sql);
+        
+        try {
+            $stmt = $db->query($sql, ['shortcode' => $shortcode]);
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            error_log("Short URL Debug - Query result count: " . count($result));
+            
+            if (empty($result)) {
+                error_log("Short URL Debug - No results found for shortcode: {$shortcode}");
+                $this->redirect('/events', 'Invalid voting code: ' . htmlspecialchars($shortcode), 'error');
+                return;
+            }
+        } catch (\Exception $e) {
+            error_log("Short URL Debug - Query error: " . $e->getMessage());
+            $this->redirect('/events', 'Database error', 'error');
+            return;
+        }
+        
+        $data = $result[0];
+        
+        // Debug logging
+        error_log("Short URL Debug - Shortcode: {$shortcode}");
+        error_log("Short URL Debug - Data: " . json_encode($data));
+        
+        // Generate slugs for redirect
+        require_once __DIR__ . '/../Helpers/SlugHelper.php';
+        
+        // Use event code or generate slug from name
+        $eventSlug = $data['event_code'] ?: \SmartCast\Helpers\SlugHelper::generateSlug($data['event_name']);
+        
+        // Generate contestant slug from name and ID
+        $contestantSlug = \SmartCast\Helpers\SlugHelper::generateSlug($data['contestant_name']) . '-' . $data['contestant_id'];
+        
+        // Redirect to the full vote form with category parameter
+        $redirectUrl = "/events/{$eventSlug}/vote/{$contestantSlug}?category={$data['category_id']}";
+        
+        error_log("Short URL Debug - Event Slug: {$eventSlug}");
+        error_log("Short URL Debug - Contestant Slug: {$contestantSlug}");
+        error_log("Short URL Debug - Redirect URL: {$redirectUrl}");
+        
+        $this->redirect($redirectUrl);
+    }
+    
     public function processVote($eventSlug = null)
     {
         // Resolve event from slug or ID (for standard voting)

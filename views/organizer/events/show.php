@@ -546,13 +546,26 @@ $eventStatus = getEventStatus($event);
                                                                     </div>
                                                                 </td>
                                                                 <td>
-                                                                    <div class="d-flex align-items-center">
-                                                                        <code class="bg-primary text-white px-2 py-1 rounded"><?= htmlspecialchars($contestant['voting_shortcode']) ?></code>
-                                                                        <button class="btn btn-sm btn-outline-secondary ms-1" 
-                                                                                onclick="copyToClipboard('<?= htmlspecialchars($contestant['voting_shortcode']) ?>')"
-                                                                                title="Copy voting code">
-                                                                            <i class="fas fa-copy"></i>
-                                                                        </button>
+                                                                    <div class="d-flex flex-column gap-1">
+                                                                        <div class="d-flex align-items-center">
+                                                                            <code class="bg-primary text-white px-2 py-1 rounded"><?= htmlspecialchars($contestant['voting_shortcode']) ?></code>
+                                                                            <button class="btn btn-sm btn-outline-secondary ms-1" 
+                                                                                    onclick="copyToClipboard('<?= htmlspecialchars($contestant['voting_shortcode']) ?>')"
+                                                                                    title="Copy voting code">
+                                                                                <i class="fas fa-copy"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="d-flex align-items-center">
+                                                                            <small class="text-muted me-1">
+                                                                                <i class="fas fa-link"></i>
+                                                                                <?= APP_URL ?>/vote/<?= htmlspecialchars($contestant['voting_shortcode']) ?>
+                                                                            </small>
+                                                                            <button class="btn btn-sm btn-outline-success" 
+                                                                                    onclick="copyToClipboard('<?= APP_URL ?>/vote/<?= htmlspecialchars($contestant['voting_shortcode']) ?>')"
+                                                                                    title="Copy short URL">
+                                                                                <i class="fas fa-copy"></i>
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </td>
                                                                 <td>

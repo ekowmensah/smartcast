@@ -195,6 +195,17 @@ foreach ($eventData as $data) {
                                                                             </span>
                                                                         </div>
                                                                         
+                                                                        <?php if (!empty($contestant['voting_shortcode'])): ?>
+                                                                        <div class="small mb-2">
+                                                                            <i class="fas fa-link text-success me-1"></i>
+                                                                            <code class="bg-light px-2 py-1 rounded small"><?= APP_URL ?>/vote/<?= htmlspecialchars($contestant['voting_shortcode']) ?></code>
+                                                                            <span class="text-success ms-1">
+                                                                                <i class="fas fa-copy" onclick="copyToClipboard('<?= APP_URL ?>/vote/<?= htmlspecialchars($contestant['voting_shortcode']) ?>')" 
+                                                                                   title="Copy short URL" style="cursor: pointer;"></i>
+                                                                            </span>
+                                                                        </div>
+                                                                        <?php endif; ?>
+                                                                        
                                                                         <?php if (!empty($contestant['bio'])): ?>
                                                                             <p class="small text-muted mb-2">
                                                                                 <?= htmlspecialchars(substr($contestant['bio'], 0, 120)) ?>
