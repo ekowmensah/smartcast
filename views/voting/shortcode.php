@@ -353,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${nominee.bio ? `<p class="text-muted mt-2 small">${nominee.bio}</p>` : ''}
                     </div>
                     <div class="col-md-3 text-center">
-                        <button class="btn btn-primary vote-btn" onclick="proceedToVote('${nominee.contestant_id}', '${nominee.category_id}', '${nominee.event_id}')">
+                        <button class="btn btn-primary vote-btn" onclick='proceedToVote(${JSON.stringify(nominee)})'>
                             <i class="fas fa-vote-yea me-2"></i>
                             Vote Now
                         </button>
@@ -386,9 +386,21 @@ document.addEventListener('DOMContentLoaded', function() {
     input.focus();
 });
 
-function proceedToVote(contestantId, categoryId, eventId) {
-    // Redirect to the voting page with the nominee information
-    window.location.href = `<?= APP_URL ?>/vote?contestant_id=${contestantId}&category_id=${categoryId}&event_id=${eventId}&source=shortcode`;
+function proceedToVote(nominee) {
+    // Generate slugs for the URL
+    const contestantSlug = generateSlug(nominee.name) + '-' + nominee.contestant_id;
+    const eventSlug = nominee.event_code ? nominee.event_code.toLowerCase() : (generateSlug(nominee.event_name) + '-' + nominee.event_id);
+    
+    // Redirect to the voting page with proper URL structure
+    window.location.href = `<?= APP_URL ?>/events/${eventSlug}/vote/${contestantSlug}?category=${nominee.category_id}`;
+}
+
+function generateSlug(string) {
+    return string
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .substring(0, 50);
 }
 </script>
 

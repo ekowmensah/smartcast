@@ -113,6 +113,7 @@ class ShortcodeController extends BaseController
                 c.event_id,
                 cat.name as category_name,
                 e.name as event_name,
+                e.code as event_code,
                 e.vote_price,
                 e.status as event_status,
                 e.start_date,
