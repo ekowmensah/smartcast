@@ -23,9 +23,9 @@
         <div class="card stats-card text-white bg-primary">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($distribution['total_platform_revenue'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GHS <?= number_format($distribution['total_platform_revenue'] ?? 0, 2) ?></div>
                     <div>Platform Revenue</div>
-                    <div class="small">Total collected fees</div>
+                    <div class="small">All-time platform fees</div>
                 </div>
                 <div class="dropdown">
                     <i class="fas fa-chart-pie fa-2x opacity-75"></i>
@@ -38,9 +38,9 @@
         <div class="card stats-card text-white bg-success">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($distribution['total_tenant_earnings'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GHS <?= number_format($distribution['total_tenant_earnings'] ?? 0, 2) ?></div>
                     <div>Tenant Earnings</div>
-                    <div class="small">Total distributed</div>
+                    <div class="small">All-time tenant share</div>
                 </div>
                 <div class="dropdown">
                     <i class="fas fa-users fa-2x opacity-75"></i>
@@ -53,9 +53,9 @@
         <div class="card stats-card text-white bg-warning">
             <div class="card-body pb-0 d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="fs-4 fw-semibold">$<?= number_format($distribution['pending_payouts'] ?? 0, 2) ?></div>
+                    <div class="fs-4 fw-semibold">GHS <?= number_format($distribution['pending_payouts'] ?? 0, 2) ?></div>
                     <div>Pending Payouts</div>
-                    <div class="small">Ready for payout</div>
+                    <div class="small">Current available balance</div>
                 </div>
                 <div class="dropdown">
                     <i class="fas fa-clock fa-2x opacity-75"></i>
@@ -70,7 +70,7 @@
                 <div>
                     <div class="fs-4 fw-semibold"><?= number_format($distribution['distribution_rate'] ?? 0, 1) ?>%</div>
                     <div>Avg Fee Rate</div>
-                    <div class="small">Platform commission</div>
+                    <div class="small">All-time average</div>
                 </div>
                 <div class="dropdown">
                     <i class="fas fa-percentage fa-2x opacity-75"></i>
@@ -111,103 +111,87 @@
     </div>
 </div>
 
-<!-- Tenant Balances -->
-<div class="row mb-4">
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-wallet me-2"></i>
-                    Top Tenant Balances
-                </h5>
-            </div>
-            <div class="card-body">
-                <?php if (!empty($distribution['tenant_balances'])): ?>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Tenant</th>
-                                    <th>Available</th>
-                                    <th>Total Earned</th>
-                                    <th>Paid Out</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($distribution['tenant_balances'] as $balance): ?>
-                                <tr>
-                                    <td>
-                                        <div class="fw-semibold"><?= htmlspecialchars($balance['tenant_name']) ?></div>
-                                        <small class="text-muted"><?= htmlspecialchars($balance['tenant_email']) ?></small>
-                                    </td>
-                                    <td>
-                                        <span class="fw-bold text-success">$<?= number_format($balance['available'], 2) ?></span>
-                                    </td>
-                                    <td>
-                                        <span class="fw-bold">$<?= number_format($balance['total_earned'], 2) ?></span>
-                                    </td>
-                                    <td>
-                                        <span class="text-muted">$<?= number_format($balance['total_paid'], 2) ?></span>
-                                    </td>
-                                    <td>
-                                        <?php if ($balance['available'] >= 10): ?>
-                                            <button class="btn btn-sm btn-success" onclick="processPayout(<?= $balance['tenant_id'] ?>)">
-                                                <i class="fas fa-money-check-alt"></i>
-                                            </button>
-                                        <?php else: ?>
-                                            <span class="text-muted">-</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php else: ?>
-                    <p class="text-muted">No tenant balances found.</p>
-                <?php endif; ?>
-            </div>
-        </div>
+<!-- Tenant Earnings vs Platform Share -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-balance-scale me-2"></i>
+            Tenant Earnings vs Platform Share
+        </h5>
     </div>
-    
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-cogs me-2"></i>
-                    Fee Rule Breakdown
-                </h5>
+    <div class="card-body">
+        <?php if (!empty($distribution['tenant_earnings_breakdown'])): ?>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tenant</th>
+                            <th class="text-end">Transactions</th>
+                            <th class="text-end">Total Amount</th>
+                            <th class="text-end">Platform Share</th>
+                            <th class="text-end">Tenant Earnings</th>
+                            <th class="text-end">Fee %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $totalTransactions = 0;
+                        $totalAmount = 0;
+                        $totalPlatformFees = 0;
+                        $totalTenantEarnings = 0;
+                        
+                        foreach ($distribution['tenant_earnings_breakdown'] as $tenant): 
+                            $totalTransactions += $tenant['transaction_count'];
+                            $totalAmount += $tenant['total_transaction_amount'];
+                            $totalPlatformFees += $tenant['platform_fees'];
+                            $totalTenantEarnings += $tenant['tenant_earnings'];
+                        ?>
+                        <tr>
+                            <td>
+                                <div class="fw-semibold"><?= htmlspecialchars($tenant['tenant_name']) ?></div>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-secondary"><?= number_format($tenant['transaction_count']) ?></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-bold">GHS <?= number_format($tenant['total_transaction_amount'], 2) ?></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="text-primary fw-bold">GHS <?= number_format($tenant['platform_fees'], 2) ?></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="text-success fw-bold">GHS <?= number_format($tenant['tenant_earnings'], 2) ?></span>
+                            </td>
+                            <td class="text-end">
+                                <span class="badge bg-info"><?= number_format($tenant['avg_fee_percentage'], 1) ?>%</span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        <tr class="table-active fw-bold">
+                            <td>TOTAL</td>
+                            <td class="text-end">
+                                <span class="badge bg-dark"><?= number_format($totalTransactions) ?></span>
+                            </td>
+                            <td class="text-end">GHS <?= number_format($totalAmount, 2) ?></td>
+                            <td class="text-end text-primary">GHS <?= number_format($totalPlatformFees, 2) ?></td>
+                            <td class="text-end text-success">GHS <?= number_format($totalTenantEarnings, 2) ?></td>
+                            <td class="text-end">
+                                <span class="badge bg-info"><?= $totalAmount > 0 ? number_format(($totalPlatformFees / $totalAmount) * 100, 1) : 0 ?>%</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="card-body">
-                <?php if (!empty($distribution['fee_breakdown'])): ?>
-                    <?php foreach ($distribution['fee_breakdown'] as $rule): ?>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <div class="fw-semibold">
-                                <?= ucfirst($rule['rule_type']) ?> Rule
-                                <?php if ($rule['percentage_rate']): ?>
-                                    (<?= $rule['percentage_rate'] ?>%)
-                                <?php endif; ?>
-                                <?php if ($rule['fixed_amount']): ?>
-                                    ($<?= number_format($rule['fixed_amount'], 2) ?>)
-                                <?php endif; ?>
-                            </div>
-                            <small class="text-muted"><?= $rule['usage_count'] ?> transactions</small>
-                        </div>
-                        <div class="text-end">
-                            <div class="fw-bold text-primary">$<?= number_format($rule['total_collected'] ?? 0, 2) ?></div>
-                            <small class="text-muted">avg: $<?= number_format($rule['avg_fee_amount'] ?? 0, 2) ?></small>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p class="text-muted">No fee rules configured.</p>
-                <?php endif; ?>
+        <?php else: ?>
+            <div class="text-center py-5">
+                <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
+                <h5>No Transaction Data Yet</h5>
+                <p class="text-muted">Revenue distribution data will appear here once transactions are processed.</p>
             </div>
-        </div>
+        <?php endif; ?>
     </div>
 </div>
+
 
 <!-- Recent Revenue Distributions -->
 <div class="card">
@@ -249,13 +233,13 @@
                                 <small><?= htmlspecialchars($dist['contestant_name']) ?></small>
                             </td>
                             <td>
-                                <span class="fw-bold">$<?= number_format($dist['total_amount'], 2) ?></span>
+                                <span class="fw-bold">GHS <?= number_format($dist['total_amount'], 2) ?></span>
                             </td>
                             <td>
-                                <span class="text-primary fw-bold">$<?= number_format($dist['platform_fee'], 2) ?></span>
+                                <span class="text-primary fw-bold">GHS <?= number_format($dist['platform_fee'], 2) ?></span>
                             </td>
                             <td>
-                                <span class="text-success fw-bold">$<?= number_format($dist['tenant_amount'], 2) ?></span>
+                                <span class="text-success fw-bold">GHS <?= number_format($dist['tenant_amount'], 2) ?></span>
                             </td>
                             <td>
                                 <span class="badge bg-info">
@@ -328,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             beginAtZero: true,
                             ticks: {
                                 callback: function(value) {
-                                    return '$' + value.toFixed(2);
+                                    return 'GHS ' + value.toFixed(2);
                                 }
                             }
                         }
@@ -342,20 +326,39 @@ document.addEventListener('DOMContentLoaded', function() {
         if (feeCtx) {
             const feeData = <?= json_encode($distribution['fee_breakdown'] ?? []) ?>;
             
+            if (feeData.length === 0) {
+                feeCtx.parentElement.innerHTML = '<div class="text-center py-4"><i class="fas fa-chart-pie fa-2x text-muted mb-2"></i><p class="text-muted mb-0">No fee data available</p></div>';
+            } else {
+            
             new Chart(feeCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: feeData.map(f => f.rule_type + ' (' + (f.percentage_rate || f.fixed_amount) + ')'),
+                    labels: feeData.map(f => {
+                        let label = f.name || (f.rule_type.charAt(0).toUpperCase() + f.rule_type.slice(1));
+                        if (f.percentage_rate) label += ' (' + f.percentage_rate + '%)';
+                        if (f.fixed_amount) label += ' (GHS ' + parseFloat(f.fixed_amount).toFixed(2) + ')';
+                        return label;
+                    }),
                     datasets: [{
-                        data: feeData.map(f => f.total_collected),
-                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                        data: feeData.map(f => parseFloat(f.total_collected)),
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#4BC0C0']
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': GHS ' + context.parsed.toFixed(2);
+                                }
+                            }
+                        }
+                    }
                 }
             });
+            }
         }
     }
 });

@@ -99,7 +99,7 @@ $eventSlug = \SmartCast\Helpers\SlugHelper::generateEventSlug($event);
                 <div class="stats-row">
                     <span class="stat-item"><?= $event['contestant_count'] ?? 0 ?> Contestants</span>
                     <span class="stat-divider">•</span>
-                    <span class="stat-item"><?= number_format($event['total_votes'] ?? 0) ?> Votes</span>
+                 <!--   <span class="stat-item"><?= number_format($event['total_votes'] ?? 0) ?> Votes</span> -->
                     <span class="stat-divider">•</span>
                     <span class="stat-item <?= $textClass ?>"><?= $daysLeftText ?></span>
                 </div>

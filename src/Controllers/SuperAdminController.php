@@ -2809,24 +2809,71 @@ class SuperAdminController extends BaseController
     
     private function getRevenueData()
     {
-        // Get real platform revenue from revenue_shares table
-        $totalPlatformRevenue = $this->revenueModel->getPlatformRevenue();
-        $monthlyRevenue = $this->revenueModel->getPlatformRevenue(
+        // Get corrected platform revenue (including calculated fees for transactions without revenue_shares)
+        $totalPlatformRevenue = $this->getCorrectedPlatformRevenue();
+        $monthlyRevenue = $this->getCorrectedPlatformRevenue(
             date('Y-m-01 00:00:00'),
             date('Y-m-t 23:59:59')
         );
+        
+        // Get previous month revenue for growth calculation
+        $lastMonthStart = date('Y-m-01 00:00:00', strtotime('first day of last month'));
+        $lastMonthEnd = date('Y-m-t 23:59:59', strtotime('last day of last month'));
+        $lastMonthRevenue = $this->getCorrectedPlatformRevenue($lastMonthStart, $lastMonthEnd);
+        
+        // Calculate growth rate
+        $currentMonth = $monthlyRevenue['total_revenue'] ?? 0;
+        $lastMonth = $lastMonthRevenue['total_revenue'] ?? 0;
+        $growthRate = $lastMonth > 0 ? (($currentMonth - $lastMonth) / $lastMonth) * 100 : 0;
+        
+        // Get 12-month average
+        $monthlyTrends = $this->getMonthlyRevenueTrends(12);
+        $avgMonthly = count($monthlyTrends) > 0 ? array_sum(array_column($monthlyTrends, 'revenue')) / count($monthlyTrends) : 0;
         
         // Get tenant payouts
         $totalPayouts = $this->getTotalPayouts();
         
         return [
             'total_revenue' => $totalPlatformRevenue['total_revenue'] ?? 0,
-            'monthly_revenue' => $monthlyRevenue['total_revenue'] ?? 0,
+            'monthly_revenue' => $currentMonth,
+            'avg_monthly' => $avgMonthly,
+            'growth_rate' => round($growthRate, 1),
             'total_payouts' => $totalPayouts,
             'net_profit' => ($totalPlatformRevenue['total_revenue'] ?? 0) - $totalPayouts,
             'active_tenants' => $totalPlatformRevenue['active_tenants'] ?? 0,
-            'total_transactions' => $totalPlatformRevenue['total_transactions'] ?? 0
+            'total_transactions' => $totalPlatformRevenue['total_transactions'] ?? 0,
+            'monthly_trends' => $monthlyTrends,
+            'top_tenants' => $this->getTopRevenueTenants(),
+            'plan_breakdown' => $this->getRevenuePlanBreakdown(),
+            'revenue_sources' => $this->getRevenueSources()
         ];
+    }
+    
+    private function getCorrectedPlatformRevenue($startDate = null, $endDate = null)
+    {
+        $sql = "
+            SELECT 
+                COUNT(*) as total_transactions,
+                SUM(COALESCE(rs.amount, t.amount * COALESCE(fr.percentage_rate, 15) / 100)) as total_revenue,
+                COUNT(DISTINCT t.tenant_id) as active_tenants,
+                AVG(COALESCE(rs.amount, t.amount * COALESCE(fr.percentage_rate, 15) / 100)) as avg_revenue_per_transaction
+            FROM transactions t
+            LEFT JOIN revenue_shares rs ON t.id = rs.transaction_id
+            INNER JOIN tenants ten ON t.tenant_id = ten.id
+            LEFT JOIN subscription_plans sp ON ten.current_plan_id = sp.id
+            LEFT JOIN fee_rules fr ON sp.fee_rule_id = fr.id
+            WHERE t.status = 'success'
+        ";
+        
+        $params = [];
+        
+        if ($startDate && $endDate) {
+            $sql .= " AND t.created_at BETWEEN :start_date AND :end_date";
+            $params['start_date'] = $startDate;
+            $params['end_date'] = $endDate;
+        }
+        
+        return $this->tenantModel->getDatabase()->selectOne($sql, $params);
     }
     
     private function getTotalPayouts()
@@ -3153,16 +3200,18 @@ class SuperAdminController extends BaseController
         $tenantBalances = $this->getTenantBalancesSummary();
         $recentDistributions = $this->getRecentRevenueDistributions();
         $distributionStats = $this->getDistributionStats();
+        $tenantEarningsBreakdown = $this->getTenantEarningsBreakdown();
         
         return [
-            'total_platform_revenue' => $totalRevenue['total_revenue'] ?? 0,
-            'total_tenant_earnings' => $tenantBalances['total_available'] + $tenantBalances['total_paid'],
-            'pending_payouts' => $tenantBalances['total_available'],
-            'completed_payouts' => $tenantBalances['total_paid'],
-            'active_tenants' => $tenantBalances['tenant_count'],
-            'distribution_rate' => $distributionStats['avg_distribution_rate'],
+            'total_platform_revenue' => $distributionStats['total_platform_fees'] ?? 0,
+            'total_tenant_earnings' => $distributionStats['total_tenant_earnings'] ?? 0,
+            'pending_payouts' => $tenantBalances['total_available'] ?? 0,
+            'completed_payouts' => $tenantBalances['total_paid'] ?? 0,
+            'active_tenants' => $tenantBalances['tenant_count'] ?? 0,
+            'distribution_rate' => $distributionStats['avg_distribution_rate'] ?? 0,
             'recent_distributions' => $recentDistributions,
             'tenant_balances' => $tenantBalances['balances'],
+            'tenant_earnings_breakdown' => $tenantEarningsBreakdown,
             'fee_breakdown' => $this->getFeeBreakdown(),
             'distribution_trends' => $this->getDistributionTrends()
         ];
@@ -3225,12 +3274,16 @@ class SuperAdminController extends BaseController
     {
         $sql = "
             SELECT 
-                AVG((rs.amount / t.amount) * 100) as avg_distribution_rate,
                 COUNT(*) as total_distributions,
-                SUM(rs.amount) as total_platform_fees,
-                SUM(t.amount - rs.amount) as total_tenant_earnings
-            FROM revenue_shares rs
-            INNER JOIN transactions t ON rs.transaction_id = t.id
+                SUM(t.amount) as total_transaction_amount,
+                SUM(COALESCE(rs.amount, t.amount * COALESCE(fr.percentage_rate, 15) / 100)) as total_platform_fees,
+                SUM(t.amount - COALESCE(rs.amount, t.amount * COALESCE(fr.percentage_rate, 15) / 100)) as total_tenant_earnings,
+                AVG(COALESCE((rs.amount / t.amount) * 100, fr.percentage_rate, 15)) as avg_distribution_rate
+            FROM transactions t
+            LEFT JOIN revenue_shares rs ON t.id = rs.transaction_id
+            INNER JOIN tenants ten ON t.tenant_id = ten.id
+            LEFT JOIN subscription_plans sp ON ten.current_plan_id = sp.id
+            LEFT JOIN fee_rules fr ON sp.fee_rule_id = fr.id
             WHERE t.status = 'success'
         ";
         
@@ -3241,16 +3294,19 @@ class SuperAdminController extends BaseController
     {
         $sql = "
             SELECT 
+                fr.id,
                 fr.rule_type,
                 fr.percentage_rate,
                 fr.fixed_amount,
+                fr.name,
                 COUNT(rs.id) as usage_count,
-                SUM(rs.amount) as total_collected,
-                AVG(rs.amount) as avg_fee
+                COALESCE(SUM(rs.amount), 0) as total_collected,
+                COALESCE(AVG(rs.amount), 0) as avg_fee_amount
             FROM fee_rules fr
             LEFT JOIN revenue_shares rs ON fr.id = rs.fee_rule_id
             WHERE fr.active = 1
-            GROUP BY fr.id, fr.rule_type, fr.percentage_rate, fr.fixed_amount
+            GROUP BY fr.id, fr.rule_type, fr.percentage_rate, fr.fixed_amount, fr.name
+            HAVING usage_count > 0
             ORDER BY total_collected DESC
         ";
         
@@ -3286,6 +3342,151 @@ class SuperAdminController extends BaseController
         }
         
         return $trends;
+    }
+    
+    private function getMonthlyRevenueTrends($months = 12)
+    {
+        $trends = [];
+        
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $monthStart = date('Y-m-01 00:00:00', strtotime("-{$i} months"));
+            $monthEnd = date('Y-m-t 23:59:59', strtotime("-{$i} months"));
+            
+            $revenue = $this->getCorrectedPlatformRevenue($monthStart, $monthEnd);
+            
+            $trends[] = [
+                'month' => date('M Y', strtotime($monthStart)),
+                'month_short' => date('M', strtotime($monthStart)),
+                'revenue' => floatval($revenue['total_revenue'] ?? 0),
+                'transactions' => intval($revenue['total_transactions'] ?? 0)
+            ];
+        }
+        
+        return $trends;
+    }
+    
+    private function getTopRevenueTenants($limit = 10)
+    {
+        $sql = "
+            SELECT 
+                t.id,
+                t.name,
+                t.email,
+                COALESCE(sp.name, t.plan) as plan,
+                COALESCE(SUM(CASE 
+                    WHEN rs.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01') 
+                    THEN rs.amount 
+                    ELSE 0 
+                END), 0) as monthly_revenue,
+                COALESCE(SUM(rs.amount), 0) as total_revenue
+            FROM tenants t
+            LEFT JOIN revenue_shares rs ON t.id = rs.tenant_id
+            LEFT JOIN subscription_plans sp ON t.current_plan_id = sp.id
+            WHERE t.active = 1
+            GROUP BY t.id, t.name, t.email, sp.name, t.plan
+            HAVING total_revenue > 0
+            ORDER BY total_revenue DESC
+            LIMIT :limit
+        ";
+        
+        return $this->tenantModel->getDatabase()->select($sql, ['limit' => $limit]);
+    }
+    
+    private function getRevenuePlanBreakdown()
+    {
+        $sql = "
+            SELECT 
+                sp.id,
+                sp.name,
+                COUNT(DISTINCT t.id) as subscriber_count,
+                COALESCE(SUM(rs.amount), 0) as revenue
+            FROM subscription_plans sp
+            LEFT JOIN tenants t ON sp.id = t.current_plan_id AND t.active = 1
+            LEFT JOIN revenue_shares rs ON t.id = rs.tenant_id
+            WHERE sp.is_active = 1
+            GROUP BY sp.id, sp.name
+            ORDER BY revenue DESC
+        ";
+        
+        $plans = $this->tenantModel->getDatabase()->select($sql);
+        
+        // Calculate total revenue for percentage
+        $totalRevenue = array_sum(array_column($plans, 'revenue'));
+        
+        // Add percentage to each plan
+        foreach ($plans as &$plan) {
+            $plan['revenue'] = floatval($plan['revenue']);
+            $plan['percentage'] = $totalRevenue > 0 ? ($plan['revenue'] / $totalRevenue) * 100 : 0;
+        }
+        
+        return $plans;
+    }
+    
+    private function getRevenueSources()
+    {
+        // Get revenue breakdown by source
+        $sql = "
+            SELECT 
+                'Platform Fees' as source,
+                COALESCE(SUM(rs.amount), 0) as amount
+            FROM revenue_shares rs
+            WHERE rs.revenue_type = 'platform_fee'
+            
+            UNION ALL
+            
+            SELECT 
+                'Processing Fees' as source,
+                COALESCE(SUM(rs.amount), 0) as amount
+            FROM revenue_shares rs
+            WHERE rs.revenue_type = 'processing_fee'
+            
+            UNION ALL
+            
+            SELECT 
+                'Other' as source,
+                COALESCE(SUM(rs.amount), 0) as amount
+            FROM revenue_shares rs
+            WHERE rs.revenue_type NOT IN ('platform_fee', 'processing_fee')
+        ";
+        
+        $sources = $this->tenantModel->getDatabase()->select($sql);
+        
+        // Calculate total for percentages
+        $total = array_sum(array_column($sources, 'amount'));
+        
+        foreach ($sources as &$source) {
+            $source['amount'] = floatval($source['amount']);
+            $source['percentage'] = $total > 0 ? ($source['amount'] / $total) * 100 : 0;
+        }
+        
+        return array_filter($sources, function($source) {
+            return $source['amount'] > 0;
+        });
+    }
+    
+    private function getTenantEarningsBreakdown()
+    {
+        $sql = "
+            SELECT 
+                t.id as tenant_id,
+                t.name as tenant_name,
+                COUNT(DISTINCT tr.id) as transaction_count,
+                COALESCE(SUM(tr.amount), 0) as total_transaction_amount,
+                SUM(COALESCE(rs.amount, tr.amount * COALESCE(fr.percentage_rate, 15) / 100)) as platform_fees,
+                SUM(tr.amount - COALESCE(rs.amount, tr.amount * COALESCE(fr.percentage_rate, 15) / 100)) as tenant_earnings,
+                AVG(COALESCE((rs.amount / tr.amount) * 100, fr.percentage_rate, 15)) as avg_fee_percentage
+            FROM tenants t
+            INNER JOIN transactions tr ON t.id = tr.tenant_id AND tr.status = 'success'
+            LEFT JOIN revenue_shares rs ON tr.id = rs.transaction_id
+            LEFT JOIN subscription_plans sp ON t.current_plan_id = sp.id
+            LEFT JOIN fee_rules fr ON sp.fee_rule_id = fr.id
+            WHERE t.active = 1
+            GROUP BY t.id, t.name
+            HAVING transaction_count > 0
+            ORDER BY total_transaction_amount DESC
+        ";
+        
+        return $this->tenantModel->getDatabase()->select($sql);
     }
     
     // ===== SMS GATEWAY MANAGEMENT =====

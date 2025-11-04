@@ -492,6 +492,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- CoreUI JavaScript -->
     <script src="<?= COREUI_JS ?>"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- Custom JavaScript -->
     <script src="<?= APP_URL ?>/public/js/superadmin.js"></script>
     
