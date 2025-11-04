@@ -682,9 +682,14 @@ class SuperAdminController extends BaseController
                    u.email as created_by_email,
                    COUNT(DISTINCT c.id) as contestant_count,
                    COUNT(DISTINCT cat.id) as category_count,
-                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount ELSE 0 END), 0) as total_revenue,
-                   COUNT(DISTINCT tr.id) as transaction_count,
-                   COALESCE(SUM(v.quantity), 0) as total_votes
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount ELSE 0 END), 0) as total_transaction_amount,
+                   COALESCE(SUM(CASE 
+                       WHEN tr.status = 'success' 
+                       THEN COALESCE(rs.amount, tr.amount * COALESCE(fr.percentage_rate, 15) / 100)
+                       ELSE 0 
+                   END), 0) as total_revenue,
+                   COUNT(DISTINCT CASE WHEN tr.status = 'success' THEN tr.id END) as transaction_count,
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN v.quantity ELSE 0 END), 0) as total_votes
             FROM events e
             LEFT JOIN tenants t ON e.tenant_id = t.id
             LEFT JOIN users u ON e.created_by = u.id
@@ -692,6 +697,9 @@ class SuperAdminController extends BaseController
             LEFT JOIN categories cat ON e.id = cat.event_id
             LEFT JOIN votes v ON c.id = v.contestant_id
             LEFT JOIN transactions tr ON v.transaction_id = tr.id
+            LEFT JOIN revenue_shares rs ON tr.id = rs.transaction_id
+            LEFT JOIN subscription_plans sp ON t.current_plan_id = sp.id
+            LEFT JOIN fee_rules fr ON sp.fee_rule_id = fr.id
             GROUP BY e.id
             ORDER BY e.created_at DESC
         ";

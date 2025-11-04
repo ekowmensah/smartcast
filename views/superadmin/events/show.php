@@ -38,7 +38,25 @@
                         </div>
                         <div class="col-md-2 text-end">
                             <?php
-                            $statusClass = match($event['admin_status']) {
+                            // Event Status (Primary)
+                            $eventStatusClass = match($event['status']) {
+                                'active' => 'success',
+                                'draft' => 'secondary',
+                                'closed' => 'dark',
+                                'suspended' => 'warning',
+                                default => 'secondary'
+                            };
+                            
+                            $eventStatusText = match($event['status']) {
+                                'active' => 'Active',
+                                'draft' => 'Draft',
+                                'closed' => 'Closed',
+                                'suspended' => 'Suspended',
+                                default => ucfirst($event['status'])
+                            };
+                            
+                            // Admin Status (Secondary)
+                            $adminStatusClass = match($event['admin_status']) {
                                 'approved' => 'success',
                                 'pending' => 'warning',
                                 'rejected' => 'danger',
@@ -46,18 +64,33 @@
                                 default => 'secondary'
                             };
                             
-                            $statusText = match($event['admin_status']) {
+                            $adminStatusText = match($event['admin_status']) {
                                 'approved' => 'Approved',
                                 'pending' => 'Pending',
                                 'rejected' => 'Rejected',
                                 'under_review' => 'Under Review',
                                 default => 'Unknown'
                             };
+                            
+                            $adminStatusIcon = match($event['admin_status']) {
+                                'approved' => 'check-circle',
+                                'pending' => 'clock',
+                                'rejected' => 'times-circle',
+                                'under_review' => 'eye',
+                                default => 'question-circle'
+                            };
                             ?>
-                            <span class="badge bg-<?= $statusClass ?> fs-6 mb-2">
-                                <?= $statusText ?>
+                            <!-- Event Status Badge (Primary) -->
+                            <span class="badge bg-<?= $eventStatusClass ?> fs-6 mb-2">
+                                <i class="fas fa-circle me-1" style="font-size: 0.5em;"></i>
+                                <?= $eventStatusText ?>
                             </span>
                             <br>
+                            <!-- Admin Approval Status (Secondary) -->
+                            <small class="text-muted d-block mb-2">
+                                <i class="fas fa-<?= $adminStatusIcon ?> me-1"></i>
+                                <?= $adminStatusText ?>
+                            </small>
                             <div class="btn-group">
                                 <button class="btn btn-outline-primary btn-sm dropdown-toggle" 
                                         type="button" data-bs-toggle="dropdown">
