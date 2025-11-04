@@ -60,50 +60,16 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     
     /**
      * Initialize payment (mobile money, card, bank transfer, USSD)
+     * All payment methods use Flutterwave Standard API
      */
     public function initializeMobileMoneyPayment($paymentData)
     {
         try {
             $paymentMethod = $paymentData['flutterwave_payment_method'] ?? 'mobilemoney';
             
-            // Use Flutterwave Standard for card, bank transfer, and USSD
-            // These methods use a hosted payment page
-            if (in_array($paymentMethod, ['card', 'banktransfer', 'ussd'])) {
-                return $this->initializeStandardPayment($paymentData, $paymentMethod);
-            }
-            
-            // Mobile money uses direct charge API
-            // Step 1: Create customer
-            $customer = $this->createCustomer($paymentData);
-            
-            if (!isset($customer['id'])) {
-                throw new \Exception('Failed to create customer');
-            }
-            
-            // Step 2: Create payment method
-            $paymentMethodObj = $this->createMobileMoneyPaymentMethod($paymentData, $customer['id']);
-            
-            if (!isset($paymentMethodObj['id'])) {
-                throw new \Exception('Failed to create payment method');
-            }
-            
-            // Step 3: Create charge
-            $charge = $this->createCharge($paymentData, $customer['id'], $paymentMethodObj['id']);
-            
-            if (!isset($charge['id'])) {
-                throw new \Exception('Failed to create charge');
-            }
-            
-            return [
-                'success' => true,
-                'reference' => $charge['reference'] ?? $paymentData['reference'],
-                'charge_id' => $charge['id'],
-                'customer_id' => $customer['id'],
-                'payment_method_id' => $paymentMethodObj['id'],
-                'status' => $charge['status'] ?? 'pending',
-                'message' => 'Payment initiated. Customer will receive a push notification to authorize.',
-                'authorization_url' => $charge['authorization_url'] ?? null
-            ];
+            // All payment methods use Flutterwave Standard (hosted payment page)
+            // This includes mobile money, card, bank transfer, and USSD
+            return $this->initializeStandardPayment($paymentData, $paymentMethod);
             
         } catch (\Exception $e) {
             error_log("Flutterwave Payment Error: " . $e->getMessage());
@@ -125,6 +91,7 @@ class FlutterwaveGateway implements PaymentGatewayInterface
             
             // Map payment method to Flutterwave payment options
             $paymentOptions = [
+                'mobilemoney' => 'mobilemoney',
                 'card' => 'card',
                 'banktransfer' => 'banktransfer',
                 'ussd' => 'ussd'
