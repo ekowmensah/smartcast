@@ -87,11 +87,20 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     }
     
     /**
-     * Initialize mobile money payment
+     * Initialize payment (mobile money, card, bank transfer, USSD)
      */
     public function initializeMobileMoneyPayment($paymentData)
     {
         try {
+            $paymentMethod = $paymentData['flutterwave_payment_method'] ?? 'mobilemoney';
+            
+            // Use Flutterwave Standard for card, bank transfer, and USSD
+            // These methods use a hosted payment page
+            if (in_array($paymentMethod, ['card', 'banktransfer', 'ussd'])) {
+                return $this->initializeStandardPayment($paymentData, $paymentMethod);
+            }
+            
+            // Mobile money uses direct charge API
             // Step 1: Create customer
             $customer = $this->createCustomer($paymentData);
             
@@ -100,14 +109,14 @@ class FlutterwaveGateway implements PaymentGatewayInterface
             }
             
             // Step 2: Create payment method
-            $paymentMethod = $this->createMobileMoneyPaymentMethod($paymentData, $customer['id']);
+            $paymentMethodObj = $this->createMobileMoneyPaymentMethod($paymentData, $customer['id']);
             
-            if (!isset($paymentMethod['id'])) {
+            if (!isset($paymentMethodObj['id'])) {
                 throw new \Exception('Failed to create payment method');
             }
             
             // Step 3: Create charge
-            $charge = $this->createCharge($paymentData, $customer['id'], $paymentMethod['id']);
+            $charge = $this->createCharge($paymentData, $customer['id'], $paymentMethodObj['id']);
             
             if (!isset($charge['id'])) {
                 throw new \Exception('Failed to create charge');
@@ -118,14 +127,74 @@ class FlutterwaveGateway implements PaymentGatewayInterface
                 'reference' => $charge['reference'] ?? $paymentData['reference'],
                 'charge_id' => $charge['id'],
                 'customer_id' => $customer['id'],
-                'payment_method_id' => $paymentMethod['id'],
+                'payment_method_id' => $paymentMethodObj['id'],
                 'status' => $charge['status'] ?? 'pending',
                 'message' => 'Payment initiated. Customer will receive a push notification to authorize.',
                 'authorization_url' => $charge['authorization_url'] ?? null
             ];
             
         } catch (\Exception $e) {
-            error_log("Flutterwave Mobile Money Error: " . $e->getMessage());
+            error_log("Flutterwave Payment Error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
+     * Initialize standard payment (card, bank transfer, USSD)
+     * Uses Flutterwave Standard (hosted payment page)
+     */
+    private function initializeStandardPayment($paymentData, $paymentMethod)
+    {
+        try {
+            $url = $this->apiUrl . '/v3/payments';
+            
+            // Map payment method to Flutterwave payment options
+            $paymentOptions = [
+                'card' => 'card',
+                'banktransfer' => 'banktransfer',
+                'ussd' => 'ussd'
+            ];
+            
+            $data = [
+                'tx_ref' => $paymentData['reference'],
+                'amount' => $paymentData['amount'],
+                'currency' => $paymentData['currency'],
+                'redirect_url' => $paymentData['callback_url'] ?? APP_URL . '/payment/callback',
+                'payment_options' => $paymentOptions[$paymentMethod] ?? 'card',
+                'customer' => [
+                    'email' => $paymentData['email'] ?? 'customer@smartcast.com',
+                    'phonenumber' => $paymentData['phone'],
+                    'name' => $paymentData['name'] ?? 'SmartCast Voter'
+                ],
+                'customizations' => [
+                    'title' => 'SmartCast Voting',
+                    'description' => $paymentData['description'] ?? 'Vote Payment',
+                    'logo' => APP_URL . '/assets/images/logo.png'
+                ],
+                'meta' => $paymentData['metadata'] ?? []
+            ];
+            
+            $response = $this->makeRequest('POST', $url, $data, [
+                'Authorization: Bearer ' . $this->clientSecret
+            ], false);
+            
+            if (isset($response['data']['link'])) {
+                return [
+                    'success' => true,
+                    'reference' => $paymentData['reference'],
+                    'payment_url' => $response['data']['link'],
+                    'status' => 'pending',
+                    'message' => 'Redirect to complete payment'
+                ];
+            }
+            
+            throw new \Exception($response['message'] ?? 'Failed to initialize payment');
+            
+        } catch (\Exception $e) {
+            error_log("Flutterwave Standard Payment Error: " . $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage()

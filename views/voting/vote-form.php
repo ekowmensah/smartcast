@@ -1103,34 +1103,48 @@ body {
                 </label>
             </div>
             
-            <!-- Country & Network Selection for Flutterwave -->
+            <!-- Flutterwave Payment Options -->
             <div id="flutterwave-options" style="display: none; margin-top: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 1rem; padding: 1.5rem;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Country *</label>
-                        <select id="flutterwave-country" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
-                            <option value="">Select Country</option>
-                            <option value="GH">🇬🇭 Ghana</option>
-                            <option value="NG">🇳🇬 Nigeria</option>
-                            <option value="KE">🇰🇪 Kenya</option>
-                            <option value="UG">🇺🇬 Uganda</option>
-                            <option value="RW">🇷🇼 Rwanda</option>
-                            <option value="TZ">🇹🇿 Tanzania</option>
-                            <option value="ZM">🇿🇲 Zambia</option>
-                            <option value="ZA">🇿🇦 South Africa</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Mobile Network *</label>
-                        <select id="flutterwave-network" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
-                            <option value="">Select Network</option>
-                        </select>
-                    </div>
+                <!-- Payment Method Selection -->
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Payment Method *</label>
+                    <select id="flutterwave-payment-method" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
+                        <option value="">Select Payment Method</option>
+                        <option value="mobilemoney">📱 Mobile Money</option>
+                        <option value="card">💳 Card (Visa, Mastercard)</option>
+                        <option value="banktransfer">🏦 Bank Transfer</option>
+                        <option value="ussd">📞 USSD</option>
+                    </select>
                 </div>
+                
+                <!-- Country Selection (for all methods) -->
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Country *</label>
+                    <select id="flutterwave-country" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
+                        <option value="">Select Country</option>
+                        <option value="GH">🇬🇭 Ghana</option>
+                        <option value="NG">🇳🇬 Nigeria</option>
+                        <option value="KE">🇰🇪 Kenya</option>
+                        <option value="UG">🇺🇬 Uganda</option>
+                        <option value="RW">🇷🇼 Rwanda</option>
+                        <option value="TZ">🇹🇿 Tanzania</option>
+                        <option value="ZM">🇿🇲 Zambia</option>
+                        <option value="ZA">🇿🇦 South Africa</option>
+                    </select>
+                </div>
+                
+                <!-- Mobile Network (only for mobile money) -->
+                <div id="flutterwave-network-container" class="form-group" style="display: none; margin-bottom: 1rem;">
+                    <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Mobile Network *</label>
+                    <select id="flutterwave-network" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
+                        <option value="">Select Network</option>
+                    </select>
+                </div>
+                
                 <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(102, 126, 234, 0.1); border-radius: 0.5rem; border-left: 4px solid #667eea;">
                     <small style="color: #4a5568;">
                         <i class="fas fa-info-circle" style="color: #667eea;"></i>
-                        <strong>Note:</strong> You'll receive a push notification on your phone to authorize the payment.
+                        <strong>Note:</strong> You'll be redirected to complete your payment securely.
                     </small>
                 </div>
             </div>
@@ -1215,9 +1229,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Flutterwave payment method selection
+    document.getElementById('flutterwave-payment-method').addEventListener('change', function() {
+        const networkContainer = document.getElementById('flutterwave-network-container');
+        const paymentMethod = this.value;
+        
+        // Only show network selection for mobile money
+        if (paymentMethod === 'mobilemoney') {
+            networkContainer.style.display = 'block';
+        } else {
+            networkContainer.style.display = 'none';
+        }
+        updateSubmitButton();
+    });
+    
     // Flutterwave country selection
     document.getElementById('flutterwave-country').addEventListener('change', function() {
-        updateFlutterwaveNetworks(this.value);
+        const paymentMethod = document.getElementById('flutterwave-payment-method').value;
+        if (paymentMethod === 'mobilemoney') {
+            updateFlutterwaveNetworks(this.value);
+        }
         updateSubmitButton();
     });
     
@@ -1428,11 +1459,15 @@ function updateSubmitButton() {
         // Card payment - only need votes selected
         submitBtn.disabled = !hasVotes;
     } else if (paymentMethod === 'flutterwave') {
-        // Flutterwave - need votes, phone, country, and network
+        // Flutterwave - need votes, phone, payment method, and country
         const hasPhone = msisdn.length >= 10;
+        const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
         const country = document.getElementById('flutterwave-country').value;
         const network = document.getElementById('flutterwave-network').value;
-        submitBtn.disabled = !(hasVotes && hasPhone && country && network);
+        
+        // Network is only required for mobile money
+        const networkValid = (flutterwavePaymentMethod !== 'mobilemoney') || network;
+        submitBtn.disabled = !(hasVotes && hasPhone && flutterwavePaymentMethod && country && networkValid);
     } else {
         // Mobile money (Ghana) - need both votes and phone
         const hasPhone = msisdn.length >= 10;
@@ -1456,14 +1491,20 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     
     // Validate Flutterwave fields
     if (paymentMethod === 'flutterwave') {
+        const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
         const country = document.getElementById('flutterwave-country').value;
         const network = document.getElementById('flutterwave-network').value;
         
+        if (!flutterwavePaymentMethod) {
+            showAlert('Please select a payment method', 'error');
+            return;
+        }
         if (!country) {
             showAlert('Please select your country', 'error');
             return;
         }
-        if (!network) {
+        // Only validate network for mobile money
+        if (flutterwavePaymentMethod === 'mobilemoney' && !network) {
             showAlert('Please select your mobile network', 'error');
             return;
         }
@@ -1501,8 +1542,14 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     
     // Add Flutterwave-specific data
     if (paymentMethod === 'flutterwave') {
+        const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
+        formData.append('flutterwave_payment_method', flutterwavePaymentMethod);
         formData.append('country', document.getElementById('flutterwave-country').value);
-        formData.append('network', document.getElementById('flutterwave-network').value);
+        
+        // Only add network for mobile money
+        if (flutterwavePaymentMethod === 'mobilemoney') {
+            formData.append('network', document.getElementById('flutterwave-network').value);
+        }
     }
     
     if (currentVoteMethod === 'package') {

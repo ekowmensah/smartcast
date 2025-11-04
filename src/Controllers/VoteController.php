@@ -442,11 +442,16 @@ class VoteController extends BaseController
                 $paymentData['phone'] = $data['msisdn'] ?? '';
                 $paymentResult = $this->paymentService->initializeCardPayment($paymentData);
             } elseif ($paymentMethod === 'flutterwave') {
-                // Flutterwave payment (international)
+                // Flutterwave payment (international - supports multiple payment methods)
                 $paymentData['phone'] = $data['msisdn'];
-                $paymentData['network'] = $data['network'] ?? 'MTN';
                 $paymentData['country'] = $data['country'] ?? 'GH';
                 $paymentData['name'] = $data['customer_name'] ?? 'SmartCast Voter';
+                $paymentData['flutterwave_payment_method'] = $data['flutterwave_payment_method'] ?? 'mobilemoney';
+                
+                // Only add network for mobile money
+                if ($paymentData['flutterwave_payment_method'] === 'mobilemoney') {
+                    $paymentData['network'] = $data['network'] ?? 'MTN';
+                }
                 
                 // Use Flutterwave gateway
                 $paymentResult = $this->paymentService->initializeMobileMoneyPayment($paymentData);
