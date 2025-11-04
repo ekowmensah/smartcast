@@ -2694,10 +2694,21 @@ class SuperAdminController extends BaseController
             ]
         ) : [];
         
+        $flutterwave = $this->db->selectOne("SELECT * FROM payment_gateways WHERE provider = 'flutterwave'");
+        $flutterwave_config = $flutterwave ? array_merge(
+            json_decode($flutterwave['config'], true) ?: [],
+            [
+                'is_active' => $flutterwave['is_active'],
+                'is_default' => $flutterwave['is_default'] ?? 0,
+                'priority' => $flutterwave['priority']
+            ]
+        ) : [];
+        
         $content = $this->renderView('superadmin/system/settings', [
             'settings' => $settings,
             'paystack_config' => $paystack_config,
             'hubtel_config' => $hubtel_config,
+            'flutterwave_config' => $flutterwave_config,
             'title' => 'Global Settings'
         ]);
         
@@ -4284,6 +4295,87 @@ class SuperAdminController extends BaseController
             
         } catch (\Exception $e) {
             error_log("Hubtel config save error: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to save configuration: ' . $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+    
+    /**
+     * Save Flutterwave configuration
+     */
+    public function saveFlutterwaveConfig()
+    {
+        // Clean any previous output and set JSON header
+        if (ob_get_level()) ob_clean();
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            exit;
+        }
+        
+        try {
+            $input = file_get_contents('php://input');
+            $data = json_decode($input, true);
+            
+            if (!$data) {
+                echo json_encode(['success' => false, 'message' => 'Invalid JSON data', 'input' => $input]);
+                exit;
+            }
+            
+            // Build config JSON
+            $config = [
+                'client_id' => $data['client_id'] ?? '',
+                'client_secret' => $data['client_secret'] ?? '',
+                'encryption_key' => $data['encryption_key'] ?? '',
+                'webhook_secret' => $data['webhook_secret'] ?? '',
+                'api_url' => $data['api_url'] ?? 'https://api.flutterwave.com',
+                'sandbox' => $data['sandbox'] ?? true
+            ];
+            
+            // Check if row exists
+            $existing = $this->db->selectOne("SELECT id FROM payment_gateways WHERE provider = 'flutterwave'");
+            
+            if ($existing) {
+                // Update existing row
+                $sql = "UPDATE payment_gateways 
+                        SET config = :config,
+                            is_active = :is_active,
+                            priority = :priority,
+                            updated_at = NOW()
+                        WHERE provider = 'flutterwave'";
+                
+                $this->db->query($sql, [
+                    'config' => json_encode($config),
+                    'is_active' => $data['is_active'] ?? 0,
+                    'priority' => $data['priority'] ?? 3
+                ]);
+            } else {
+                // Insert new row
+                $sql = "INSERT INTO payment_gateways 
+                        (name, provider, config, supported_methods, is_active, is_default, priority, created_at, updated_at)
+                        VALUES 
+                        ('Flutterwave', 'flutterwave', :config, :methods, :is_active, 0, :priority, NOW(), NOW())";
+                
+                $this->db->query($sql, [
+                    'config' => json_encode($config),
+                    'methods' => json_encode(['mobile_money', 'card', 'bank_transfer', 'ussd']),
+                    'is_active' => $data['is_active'] ?? 0,
+                    'priority' => $data['priority'] ?? 3
+                ]);
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'Flutterwave configuration saved successfully'
+            ]);
+            exit;
+            
+        } catch (\Exception $e) {
+            error_log("Flutterwave config save error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => 'Failed to save configuration: ' . $e->getMessage()

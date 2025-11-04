@@ -323,6 +323,7 @@ class Application
             // Payment Gateway API
             $router->post('/api/payment-gateways/paystack', 'SuperAdminController@savePaystackConfig');
             $router->post('/api/payment-gateways/hubtel', 'SuperAdminController@saveHubtelConfig');
+            $router->post('/api/payment-gateways/flutterwave', 'SuperAdminController@saveFlutterwaveConfig');
             $router->post('/api/payment-gateways/test/paystack', 'SuperAdminController@testPaystackConnection');
             $router->post('/api/payment-gateways/test/hubtel', 'SuperAdminController@testHubtelConnection');
             

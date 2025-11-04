@@ -5,6 +5,7 @@ namespace SmartCast\Services;
 use SmartCast\Core\Database;
 use SmartCast\Services\Gateways\PaystackGateway;
 use SmartCast\Services\Gateways\HubtelGateway;
+use SmartCast\Services\Gateways\FlutterwaveGateway;
 use SmartCast\Models\Transaction;
 
 /**
@@ -39,10 +40,26 @@ class PaymentService
                 }
             }
             
-            // Get Hubtel gateway for mobile money (Direct Receive Money)
-            $gateway = $this->getGatewayByProvider('hubtel');
+            // Determine gateway based on country/network
+            $gatewayProvider = 'hubtel'; // Default to Hubtel for Ghana
+            
+            // If country is specified and not Ghana, use Flutterwave
+            if (!empty($paymentData['country']) && $paymentData['country'] !== 'GH') {
+                $gatewayProvider = 'flutterwave';
+            }
+            // If network is specified for international payment, use Flutterwave
+            elseif (!empty($paymentData['network']) && !in_array(strtoupper($paymentData['network']), ['MTN', 'VODAFONE', 'TELECEL', 'AIRTELTIGO'])) {
+                $gatewayProvider = 'flutterwave';
+            }
+            
+            // Get appropriate gateway
+            $gateway = $this->getGatewayByProvider($gatewayProvider);
             if (!$gateway) {
-                throw new \Exception('Hubtel gateway not configured');
+                // Fallback to any available gateway
+                $gateway = $this->getGatewayByProvider('hubtel');
+                if (!$gateway) {
+                    throw new \Exception('No payment gateway configured');
+                }
             }
             
             // Generate unique reference
@@ -568,6 +585,8 @@ class PaymentService
                 return new PaystackGateway($config);
             case 'hubtel':
                 return new HubtelGateway($config);
+            case 'flutterwave':
+                return new FlutterwaveGateway($config);
             default:
                 throw new \Exception("Unsupported gateway provider: {$gateway['provider']}");
         }

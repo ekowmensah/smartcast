@@ -398,14 +398,25 @@ class VoteController extends BaseController
             
             $transactionId = $this->transactionModel->createTransaction($transactionData);
             
-            // Get payment method (mobile_money or card)
+            // Get payment method (mobile_money, card, or flutterwave)
             $paymentMethod = $data['payment_method'] ?? 'mobile_money';
+            
+            // Determine currency based on payment method and country
+            $currency = 'GHS'; // Default to Ghana Cedis
+            if ($paymentMethod === 'flutterwave' && !empty($data['country'])) {
+                // Map country code to currency
+                $currencyMap = [
+                    'GH' => 'GHS', 'NG' => 'NGN', 'KE' => 'KES', 'UG' => 'UGX',
+                    'RW' => 'RWF', 'TZ' => 'TZS', 'ZM' => 'ZMW', 'ZA' => 'ZAR'
+                ];
+                $currency = $currencyMap[$data['country']] ?? 'GHS';
+            }
             
             // Prepare common payment data
             $eventSlug = $event['slug'] ?? $event['id'];
             $paymentData = [
                 'amount' => $bundle['price'],
-                'currency' => 'GHS',
+                'currency' => $currency,
                 'description' => "Vote for {$contestant['name']} - {$bundle['votes']} vote(s)",
                 'callback_url' => APP_URL . "/api/payment/callback/{$transactionId}",
                 'return_url' => APP_URL . "/api/payment/callback/{$transactionId}",
@@ -415,6 +426,7 @@ class VoteController extends BaseController
                 'tenant_id' => $event['tenant_id'],
                 'voting_transaction_id' => $transactionId,
                 'related_id' => $transactionId,
+                'reference' => 'VOTE_' . $transactionId . '_' . time(),
                 'metadata' => [
                     'transaction_id' => $transactionId,
                     'event_id' => $eventId,
@@ -429,8 +441,17 @@ class VoteController extends BaseController
                 // Card payment
                 $paymentData['phone'] = $data['msisdn'] ?? '';
                 $paymentResult = $this->paymentService->initializeCardPayment($paymentData);
+            } elseif ($paymentMethod === 'flutterwave') {
+                // Flutterwave payment (international)
+                $paymentData['phone'] = $data['msisdn'];
+                $paymentData['network'] = $data['network'] ?? 'MTN';
+                $paymentData['country'] = $data['country'] ?? 'GH';
+                $paymentData['name'] = $data['customer_name'] ?? 'SmartCast Voter';
+                
+                // Use Flutterwave gateway
+                $paymentResult = $this->paymentService->initializeMobileMoneyPayment($paymentData);
             } else {
-                // Mobile money payment (default)
+                // Mobile money payment (Ghana - default)
                 $paymentData['phone'] = $data['msisdn'];
                 $paymentResult = $this->paymentService->initializeMobileMoneyPayment($paymentData);
             }

@@ -444,6 +444,152 @@
                     </div>
                 </div>
 
+                <!-- Flutterwave Configuration -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-globe-africa me-2"></i>Flutterwave Configuration (Multi-Country)
+                        </h5>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="flutterwaveEnabled" <?= ($flutterwave_config['is_active'] ?? false) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="flutterwaveEnabled">Enabled</label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <form id="flutterwaveSettingsForm">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Multi-Country Support:</strong> Flutterwave enables payments from Nigeria, Kenya, Uganda, Rwanda, Tanzania, Zambia, South Africa, and more.
+                                Get your credentials from <a href="https://app.flutterwave.com/dashboard/settings/apis" target="_blank">Flutterwave Dashboard</a>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="flutterwaveClientId" class="form-label">Client ID</label>
+                                <input type="text" class="form-control font-monospace" id="flutterwaveClientId" 
+                                       placeholder="Your Flutterwave Client ID" value="<?= $flutterwave_config['client_id'] ?? '' ?>">
+                                <small class="text-muted">Found in Settings → API Keys</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="flutterwaveClientSecret" class="form-label">Client Secret</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control font-monospace" id="flutterwaveClientSecret" 
+                                           placeholder="Your Flutterwave Client Secret" value="<?= $flutterwave_config['client_secret'] ?? '' ?>">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('flutterwaveClientSecret')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="flutterwaveEncryptionKey" class="form-label">Encryption Key</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control font-monospace" id="flutterwaveEncryptionKey" 
+                                           placeholder="Your Encryption Key" value="<?= $flutterwave_config['encryption_key'] ?? '' ?>">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('flutterwaveEncryptionKey')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="flutterwaveWebhookSecret" class="form-label">Webhook Secret Hash</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control font-monospace" id="flutterwaveWebhookSecret" 
+                                           placeholder="Your Webhook Secret" value="<?= $flutterwave_config['webhook_secret'] ?? '' ?>">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('flutterwaveWebhookSecret')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Used to verify webhook signatures</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="flutterwaveEnvironment" class="form-label">Environment</label>
+                                        <select class="form-select" id="flutterwaveEnvironment">
+                                            <option value="sandbox" <?= ($flutterwave_config['sandbox'] ?? true) ? 'selected' : '' ?>>Sandbox (Testing)</option>
+                                            <option value="production" <?= !($flutterwave_config['sandbox'] ?? true) ? 'selected' : '' ?>>Production (Live)</option>
+                                        </select>
+                                        <small class="text-muted">Use sandbox for testing, production for live payments</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="flutterwavePriority" class="form-label">Priority</label>
+                                        <input type="number" class="form-control" id="flutterwavePriority" 
+                                               value="<?= $flutterwave_config['priority'] ?? 3 ?>" min="1" max="10">
+                                        <small class="text-muted">Lower number = higher priority</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Supported Countries</label>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_gh" checked disabled>
+                                            <label class="form-check-label" for="fw_gh">🇬🇭 Ghana</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_ng" checked disabled>
+                                            <label class="form-check-label" for="fw_ng">🇳🇬 Nigeria</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_ke" checked disabled>
+                                            <label class="form-check-label" for="fw_ke">🇰🇪 Kenya</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_ug" checked disabled>
+                                            <label class="form-check-label" for="fw_ug">🇺🇬 Uganda</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_rw" checked disabled>
+                                            <label class="form-check-label" for="fw_rw">🇷🇼 Rwanda</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_tz" checked disabled>
+                                            <label class="form-check-label" for="fw_tz">🇹🇿 Tanzania</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_zm" checked disabled>
+                                            <label class="form-check-label" for="fw_zm">🇿🇲 Zambia</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="fw_za" checked disabled>
+                                            <label class="form-check-label" for="fw_za">🇿🇦 South Africa</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">All countries are supported by default</small>
+                            </div>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Important:</strong> After saving, configure the webhook URL in your Flutterwave dashboard and test with sandbox credentials before going live.
+                            </div>
+                            
+                            <button type="button" class="btn btn-warning" onclick="saveFlutterwaveConfig()">
+                                <i class="fas fa-save me-2"></i>Save Flutterwave Configuration
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="testFlutterwaveConnection()">
+                                <i class="fas fa-plug me-2"></i>Test Connection
+                            </button>
+                            <button type="button" class="btn btn-outline-info" onclick="window.open('<?= APP_URL ?>/FLUTTERWAVE_SETUP.md', '_blank')">
+                                <i class="fas fa-book me-2"></i>Setup Guide
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
                 <!-- Webhook URLs -->
                 <div class="card">
                     <div class="card-header">
@@ -474,6 +620,18 @@
                                     <i class="fas fa-copy"></i>
                                 </button>
                             </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Flutterwave Webhook URL</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control font-monospace" readonly 
+                                       value="<?= APP_URL ?>/api/payment/webhook/flutterwave">
+                                <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard(this)">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Configure this in Flutterwave Dashboard → Settings → Webhooks</small>
                         </div>
                     </div>
                 </div>
@@ -691,6 +849,94 @@ async function saveHubtelConfig() {
     } catch (error) {
         console.error('Save error:', error);
         alert('❌ Failed to save Hubtel configuration. Check console for details.');
+    }
+}
+
+async function saveFlutterwaveConfig() {
+    const config = {
+        client_id: document.getElementById('flutterwaveClientId').value,
+        client_secret: document.getElementById('flutterwaveClientSecret').value,
+        encryption_key: document.getElementById('flutterwaveEncryptionKey').value,
+        webhook_secret: document.getElementById('flutterwaveWebhookSecret').value,
+        sandbox: document.getElementById('flutterwaveEnvironment').value === 'sandbox',
+        api_url: document.getElementById('flutterwaveEnvironment').value === 'sandbox' 
+            ? 'https://developersandbox-api.flutterwave.com' 
+            : 'https://api.flutterwave.com',
+        priority: document.getElementById('flutterwavePriority').value,
+        is_active: document.getElementById('flutterwaveEnabled').checked ? 1 : 0
+    };
+    
+    try {
+        const response = await fetch('<?= SUPERADMIN_URL ?>/api/payment-gateways/flutterwave', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(config)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Flutterwave configuration saved successfully!\n\n' +
+                  '📝 Next steps:\n' +
+                  '1. Configure webhook URL in Flutterwave dashboard\n' +
+                  '2. Test with sandbox credentials\n' +
+                  '3. Remove CSS hide rule from vote-form.php (line 612-615)\n' +
+                  '4. Try a test payment');
+            
+            // Reload page to show updated config
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            alert('❌ Error: ' + (result.message || 'Failed to save configuration'));
+        }
+    } catch (error) {
+        console.error('Save error:', error);
+        alert('❌ Failed to save Flutterwave configuration. Check console for details.');
+    }
+}
+
+async function testFlutterwaveConnection() {
+    const clientId = document.getElementById('flutterwaveClientId').value;
+    const clientSecret = document.getElementById('flutterwaveClientSecret').value;
+    
+    if (!clientId || !clientSecret) {
+        alert('⚠️ Please enter your Flutterwave Client ID and Client Secret first');
+        return;
+    }
+    
+    alert('🔄 Testing Flutterwave connection...\n\nThis will attempt to authenticate with Flutterwave API.');
+    
+    try {
+        const response = await fetch('<?= SUPERADMIN_URL ?>/api/payment-gateways/test/flutterwave', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                client_id: clientId,
+                client_secret: clientSecret,
+                api_url: document.getElementById('flutterwaveEnvironment').value === 'sandbox' 
+                    ? 'https://developersandbox-api.flutterwave.com' 
+                    : 'https://api.flutterwave.com'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Connection successful!\n\n' +
+                  'Flutterwave API is responding correctly.\n' +
+                  'Environment: ' + (result.environment || 'Unknown') + '\n' +
+                  'You can now save the configuration.');
+        } else {
+            alert('❌ Connection failed!\n\n' +
+                  'Error: ' + (result.message || 'Unknown error') + '\n\n' +
+                  'Please check your credentials and try again.');
+        }
+    } catch (error) {
+        console.error('Test error:', error);
+        alert('❌ Connection test failed. Check console for details.');
     }
 }
 
