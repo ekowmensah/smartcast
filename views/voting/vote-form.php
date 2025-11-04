@@ -1097,7 +1097,7 @@ body {
                     <input type="radio" name="payment_method" value="flutterwave" style="display: none;">
                     <div class="method-card" style="background: rgba(255, 255, 255, 0.95); border: 2px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; text-align: center; transition: all 0.3s ease;">
                         <i class="fas fa-globe-africa" style="font-size: 2.5rem; color: #718096; margin-bottom: 0.75rem;"></i>
-                        <div style="font-weight: 600; font-size: 1.1rem; color: #2d3748; margin-bottom: 0.25rem;">International Payment</div>
+                        <div style="font-weight: 600; font-size: 1.1rem; color: #2d3748; margin-bottom: 0.25rem;">FlutterWave</div>
                         <small style="color: #718096; font-size: 0.875rem;">Nigeria, Kenya, Uganda, Rwanda +</small>
                     </div>
                 </label>
