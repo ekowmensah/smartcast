@@ -1232,13 +1232,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Flutterwave payment method selection
     document.getElementById('flutterwave-payment-method').addEventListener('change', function() {
         const networkContainer = document.getElementById('flutterwave-network-container');
+        const phoneField = document.getElementById('phone-field');
+        const msisdnInput = document.getElementById('msisdn');
+        const contactSubtitle = document.getElementById('contact-subtitle');
         const paymentMethod = this.value;
         
-        // Only show network selection for mobile money
+        // Only show network selection and phone for mobile money
         if (paymentMethod === 'mobilemoney') {
             networkContainer.style.display = 'block';
+            phoneField.style.display = 'block';
+            msisdnInput.required = true;
+            contactSubtitle.textContent = 'Enter your mobile money number';
         } else {
+            // Card, Bank Transfer, USSD - no phone or network needed
             networkContainer.style.display = 'none';
+            phoneField.style.display = 'none';
+            msisdnInput.required = false;
+            contactSubtitle.textContent = 'You will be redirected to complete payment';
         }
         updateSubmitButton();
     });
@@ -1459,15 +1469,19 @@ function updateSubmitButton() {
         // Card payment - only need votes selected
         submitBtn.disabled = !hasVotes;
     } else if (paymentMethod === 'flutterwave') {
-        // Flutterwave - need votes, phone, payment method, and country
-        const hasPhone = msisdn.length >= 10;
+        // Flutterwave - requirements depend on payment method
         const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
         const country = document.getElementById('flutterwave-country').value;
         const network = document.getElementById('flutterwave-network').value;
         
-        // Network is only required for mobile money
-        const networkValid = (flutterwavePaymentMethod !== 'mobilemoney') || network;
-        submitBtn.disabled = !(hasVotes && hasPhone && flutterwavePaymentMethod && country && networkValid);
+        if (flutterwavePaymentMethod === 'mobilemoney') {
+            // Mobile money needs phone and network
+            const hasPhone = msisdn.length >= 10;
+            submitBtn.disabled = !(hasVotes && hasPhone && flutterwavePaymentMethod && country && network);
+        } else {
+            // Card/Bank/USSD only need payment method and country
+            submitBtn.disabled = !(hasVotes && flutterwavePaymentMethod && country);
+        }
     } else {
         // Mobile money (Ghana) - need both votes and phone
         const hasPhone = msisdn.length >= 10;
@@ -1482,9 +1496,15 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     // Get payment method
     const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
     
-    // Validate phone number for mobile money and flutterwave
+    // Validate phone number for mobile money
     const msisdn = document.getElementById('msisdn').value;
-    if ((paymentMethod === 'mobile_money' || paymentMethod === 'flutterwave') && (!msisdn || msisdn.length < 10)) {
+    const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
+    
+    // Phone required for Ghana mobile money and Flutterwave mobile money only
+    const phoneRequired = paymentMethod === 'mobile_money' || 
+                         (paymentMethod === 'flutterwave' && flutterwavePaymentMethod === 'mobilemoney');
+    
+    if (phoneRequired && (!msisdn || msisdn.length < 10)) {
         showAlert('Please enter a valid phone number', 'error');
         return;
     }
@@ -1571,11 +1591,16 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
         if (data.success && data.payment_initiated) {
             // Check if we have a payment URL
             if (data.payment_url) {
+                const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
+                
                 if (paymentMethod === 'card') {
-                    // Card payment - redirect to Hubtel checkout
+                    // Hubtel card payment - redirect to checkout
+                    window.location.href = data.payment_url;
+                } else if (paymentMethod === 'flutterwave' && flutterwavePaymentMethod !== 'mobilemoney') {
+                    // Flutterwave card/bank/USSD - redirect to Flutterwave hosted page
                     window.location.href = data.payment_url;
                 } else {
-                    // Mobile money - open Paystack in popup
+                    // Mobile money - open in popup
                     showPaymentPopup(data);
                 }
             } else {

@@ -443,15 +443,22 @@ class VoteController extends BaseController
                 $paymentResult = $this->paymentService->initializeCardPayment($paymentData);
             } elseif ($paymentMethod === 'flutterwave') {
                 // Flutterwave payment (international - supports multiple payment methods)
-                $paymentData['phone'] = $data['msisdn'];
                 $paymentData['country'] = $data['country'] ?? 'GH';
                 $paymentData['name'] = $data['customer_name'] ?? 'SmartCast Voter';
                 $paymentData['flutterwave_payment_method'] = $data['flutterwave_payment_method'] ?? 'mobilemoney';
+                $paymentData['email'] = $data['email'] ?? 'voter@smartcast.com';
                 
-                // Only add network for mobile money
+                // Phone and network only needed for mobile money
                 if ($paymentData['flutterwave_payment_method'] === 'mobilemoney') {
+                    $paymentData['phone'] = $data['msisdn'];
                     $paymentData['network'] = $data['network'] ?? 'MTN';
+                } else {
+                    // For card/bank/USSD, phone is optional
+                    $paymentData['phone'] = $data['msisdn'] ?? '0000000000';
                 }
+                
+                // Add callback URL for redirect-based payments
+                $paymentData['callback_url'] = APP_URL . '/events/' . $event['slug'] . '/vote/callback';
                 
                 // Use Flutterwave gateway
                 $paymentResult = $this->paymentService->initializeMobileMoneyPayment($paymentData);
