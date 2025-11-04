@@ -626,9 +626,20 @@
                         <span>Events</span>
                     </a>
                 </div>
+
+
+                <div class="nav-item">
+                    <a href="<?= APP_URL ?>/vote-shortcode" class="nav-link">
+                        <i class="fa-solid fa-code nav-icon"></i>
+                        <span>Vote via Shortcode</span>
+                    </a>
+                </div>
+
+
+
                 <div class="nav-item">
                     <a href="<?= APP_URL ?>/verify-receipt" class="nav-link">
-                        <i class="fas fa-shield-check nav-icon"></i>
+                        <i class="fa-solid fa-file-invoice nav-icon"></i>
                         <span>Verify Receipt</span>
                     </a>
                 </div>
@@ -730,8 +741,14 @@
                 <i class="fas fa-calendar-alt nav-icon"></i>
                 <span>Events</span>
             </a>
-            <a href="<?= APP_URL ?>/verify-receipt" class="nav-link">
+
+            <a href="<?= APP_URL ?>/vote-shortcode" class="nav-link">
                 <i class="fas fa-shield-check nav-icon"></i>
+                <span>Vote via Shortcode</span>
+            </a>
+
+            <a href="<?= APP_URL ?>/verify-receipt" class="nav-link">
+                <i class="fa-solid fa-file-invoice nav-icon"></i>
                 <span>Verify Receipt</span>
             </a>
             <a href="<?= PUBLIC_URL ?>/about" class="nav-link">
