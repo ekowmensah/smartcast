@@ -610,7 +610,7 @@ body {
 }
 
 /* Temporarily hide Flutterwave until configured in database */
-.payment-method-option:nth-child(3) {
+/*.payment-method-option:nth-child(3) {
     display: none !important;
 } 
 

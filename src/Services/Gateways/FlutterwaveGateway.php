@@ -57,34 +57,6 @@ class FlutterwaveGateway implements PaymentGatewayInterface
         }
     }
     
-    /**
-     * Get OAuth access token
-     */
-    private function getAccessToken()
-    {
-        // Check if token is still valid
-        if ($this->accessToken && $this->tokenExpiry > time()) {
-            return $this->accessToken;
-        }
-        
-        $url = $this->apiUrl . '/oauth/token';
-        
-        $data = [
-            'grant_type' => 'client_credentials',
-            'client_id' => $this->clientId,
-            'client_secret' => $this->clientSecret
-        ];
-        
-        $response = $this->makeRequest('POST', $url, $data, [], false);
-        
-        if (isset($response['access_token'])) {
-            $this->accessToken = $response['access_token'];
-            $this->tokenExpiry = time() + ($response['expires_in'] ?? 3600) - 300; // 5 min buffer
-            return $this->accessToken;
-        }
-        
-        throw new \Exception('Failed to obtain access token: ' . ($response['message'] ?? 'Unknown error'));
-    }
     
     /**
      * Initialize payment (mobile money, card, bank transfer, USSD)
@@ -258,9 +230,16 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     {
         $url = $this->apiUrl . '/charges';
         
-        // Get currency based on country
-        $countryCode = $this->extractCountryCode($paymentData['phone']);
-        $currency = $this->getCurrencyByCountry($countryCode);
+        // Get currency - prefer explicit country over phone extraction
+        $currency = $paymentData['currency'] ?? 'GHS';
+        if (!empty($paymentData['country'])) {
+            // Use explicitly provided country
+            $currency = $this->getCurrencyByCountry($paymentData['country']);
+        } elseif (!empty($paymentData['phone'])) {
+            // Fallback to extracting from phone
+            $countryCode = $this->extractCountryCode($paymentData['phone']);
+            $currency = $this->getCurrencyByCountry($countryCode);
+        }
         
         $data = [
             'customer_id' => $customerId,
@@ -464,10 +443,9 @@ class FlutterwaveGateway implements PaymentGatewayInterface
     {
         $ch = curl_init();
         
-        // Get access token if required
+        // Use client secret as Bearer token (Flutterwave doesn't use OAuth)
         if ($requireAuth) {
-            $token = $this->getAccessToken();
-            $headers[] = 'Authorization: Bearer ' . $token;
+            $headers[] = 'Authorization: Bearer ' . $this->clientSecret;
         }
         
         $headers[] = 'Content-Type: application/json';

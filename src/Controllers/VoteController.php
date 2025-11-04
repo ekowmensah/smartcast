@@ -1856,5 +1856,90 @@ class VoteController extends BaseController
         </body>
         </html>";
     }
+    
+    /**
+     * Handle Flutterwave webhook
+     */
+    public function flutterwaveWebhook()
+    {
+        try {
+            $payload = file_get_contents('php://input');
+            $signature = $_SERVER['HTTP_VERIF_HASH'] ?? '';
+            
+            // Log webhook for debugging
+            error_log("Flutterwave Webhook Received: " . $payload);
+            
+            // Process webhook through PaymentService
+            $result = $this->paymentService->processWebhook('flutterwave', $payload, $signature);
+            
+            if ($result['success']) {
+                http_response_code(200);
+                echo json_encode(['status' => 'success']);
+            } else {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => $result['message'] ?? 'Webhook processing failed']);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Flutterwave Webhook Error: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Handle Paystack webhook
+     */
+    public function paystackWebhook()
+    {
+        try {
+            $payload = file_get_contents('php://input');
+            $signature = $_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] ?? '';
+            
+            error_log("Paystack Webhook Received: " . $payload);
+            
+            $result = $this->paymentService->processWebhook('paystack', $payload, $signature);
+            
+            if ($result['success']) {
+                http_response_code(200);
+                echo json_encode(['status' => 'success']);
+            } else {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => $result['message'] ?? 'Webhook processing failed']);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Paystack Webhook Error: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Handle Hubtel webhook
+     */
+    public function hubtelWebhook()
+    {
+        try {
+            $payload = file_get_contents('php://input');
+            
+            error_log("Hubtel Webhook Received: " . $payload);
+            
+            $result = $this->paymentService->processWebhook('hubtel', $payload, null);
+            
+            if ($result['success']) {
+                http_response_code(200);
+                echo json_encode(['status' => 'success']);
+            } else {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => $result['message'] ?? 'Webhook processing failed']);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Hubtel Webhook Error: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
 
 }

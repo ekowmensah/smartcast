@@ -78,6 +78,11 @@ class Application
         $this->router->get('/payment/receipt/{transactionId}', 'VoteController@showPaymentReceipt'); // Show payment receipt page
         $this->router->get('/verify-receipt', 'VoteController@showReceiptVerification'); // Show receipt verification page
         
+        // Payment Gateway Webhooks
+        $this->router->post('/api/payment/webhook/paystack', 'VoteController@paystackWebhook'); // Paystack webhook
+        $this->router->post('/api/payment/webhook/hubtel', 'VoteController@hubtelWebhook'); // Hubtel webhook
+        $this->router->post('/api/payment/webhook/flutterwave', 'VoteController@flutterwaveWebhook'); // Flutterwave webhook
+        
         // USSD routes
         $this->router->post('/api/ussd/callback', 'UssdController@handleRequest'); // Handle USSD requests from Hubtel (Service Interaction + Service Fulfillment)
         $this->router->get('/api/ussd/callback', 'UssdController@handleRequest'); // Handle USSD requests (GET fallback)

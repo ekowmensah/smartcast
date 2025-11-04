@@ -33,18 +33,29 @@ class PaymentService
     {
         try {
             // Validate required fields
-            $required = ['amount', 'phone', 'description', 'metadata'];
+            $required = ['amount', 'description', 'metadata'];
+            
+            // Phone is only required for mobile money payments
+            $flutterwaveMethod = $paymentData['flutterwave_payment_method'] ?? '';
+            if ($flutterwaveMethod === 'mobilemoney' || empty($flutterwaveMethod)) {
+                $required[] = 'phone';
+            }
+            
             foreach ($required as $field) {
                 if (empty($paymentData[$field])) {
                     throw new \Exception("Missing required field: {$field}");
                 }
             }
             
-            // Determine gateway based on country/network
+            // Determine gateway based on payment method and country/network
             $gatewayProvider = 'hubtel'; // Default to Hubtel for Ghana
             
+            // If Flutterwave payment method is explicitly specified, use Flutterwave
+            if (!empty($paymentData['flutterwave_payment_method'])) {
+                $gatewayProvider = 'flutterwave';
+            }
             // If country is specified and not Ghana, use Flutterwave
-            if (!empty($paymentData['country']) && $paymentData['country'] !== 'GH') {
+            elseif (!empty($paymentData['country']) && $paymentData['country'] !== 'GH') {
                 $gatewayProvider = 'flutterwave';
             }
             // If network is specified for international payment, use Flutterwave
@@ -55,7 +66,15 @@ class PaymentService
             // Get appropriate gateway
             $gateway = $this->getGatewayByProvider($gatewayProvider);
             if (!$gateway) {
-                // Fallback to any available gateway
+                // Log the missing gateway
+                error_log("Payment gateway not found: {$gatewayProvider}");
+                
+                // If Flutterwave is not configured, throw specific error
+                if ($gatewayProvider === 'flutterwave') {
+                    throw new \Exception('Flutterwave payment gateway is not configured. Please configure it in SuperAdmin settings.');
+                }
+                
+                // Fallback to any available gateway for other cases
                 $gateway = $this->getGatewayByProvider('hubtel');
                 if (!$gateway) {
                     throw new \Exception('No payment gateway configured');
@@ -89,14 +108,19 @@ class PaymentService
             $gatewayService = $this->getGatewayService($gateway);
             $gatewayData = [
                 'amount' => $paymentData['amount'],
-                'phone' => $paymentData['phone'],
+                'phone' => $paymentData['phone'] ?? '',
                 'reference' => $reference,
                 'currency' => $paymentData['currency'] ?? 'GHS',
                 'email' => $paymentData['email'] ?? 'voter@smartcast.com',
                 'customer_name' => $paymentData['customer_name'] ?? 'SmartCast Voter',
+                'name' => $paymentData['name'] ?? $paymentData['customer_name'] ?? 'SmartCast Voter',
                 'description' => $paymentData['description'],
                 'callback_url' => $paymentData['callback_url'] ?? null,
-                'metadata' => $paymentData['metadata']
+                'metadata' => $paymentData['metadata'],
+                // Flutterwave-specific parameters
+                'flutterwave_payment_method' => $paymentData['flutterwave_payment_method'] ?? null,
+                'country' => $paymentData['country'] ?? null,
+                'network' => $paymentData['network'] ?? null
             ];
             
             $result = $gatewayService->initializeMobileMoneyPayment($gatewayData);
