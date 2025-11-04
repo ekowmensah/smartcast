@@ -80,15 +80,15 @@ class ContestantCategory extends BaseModel
     /**
      * Generate random shortcode in format: 2 letters + 2 numbers (e.g., AA87, BT14)
      * Letters: ABCDEFGHJKLMNPQRSTUVWXYZ (24 chars, no I/O)
-     * Numbers: 0123456789 (10 chars)
-     * Total combinations: 24² × 10² = 57,600 unique codes
+     * Numbers: 123456789 (9 chars, no 0)
+     * Total combinations: 24² × 9² = 46,656 unique codes
      * Random generation makes codes difficult to guess
      */
     public function generateShortCode($categoryId, $contestantName, $contestantId = null)
     {
         // Character sets (excluding I and O to avoid confusion)
         $letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // 24 letters
-        $numbers = '0123456789'; // 10 numbers
+        $numbers = '123456789'; // 9 numbers (no 0)
         
         $maxAttempts = 100;
         $attempts = 0;
@@ -150,12 +150,12 @@ class ContestantCategory extends BaseModel
     public function getShortCodeStats()
     {
         $letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // 24 letters
-        $numbers = '0123456789'; // 10 numbers
+        $numbers = '123456789'; // 9 numbers (no 0)
         
         // Calculate limits for different formats
-        $standardLimit = pow(24, 2) * pow(10, 2); // 57,600 (2 letters + 2 numbers)
-        $extendedLimit = pow(24, 3) * pow(10, 2); // 1,382,400 (3 letters + 2 numbers)
-        $totalLimit = $standardLimit + $extendedLimit; // 1,439,000
+        $standardLimit = pow(24, 2) * pow(9, 2); // 46,656 (2 letters + 2 numbers)
+        $extendedLimit = pow(24, 3) * pow(9, 2); // 1,119,744 (3 letters + 2 numbers)
+        $totalLimit = $standardLimit + $extendedLimit; // 1,166,400
         
         // Get current counts
         $standardCount = $this->db->selectOne("
