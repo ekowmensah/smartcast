@@ -1105,21 +1105,9 @@ body {
             
             <!-- Flutterwave Payment Options -->
             <div id="flutterwave-options" style="display: none; margin-top: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 1rem; padding: 1.5rem;">
-                <!-- Payment Method Selection -->
+                <!-- Country Selection -->
                 <div class="form-group" style="margin-bottom: 1rem;">
-                    <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Payment Method *</label>
-                    <select id="flutterwave-payment-method" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
-                        <option value="">Select Payment Method</option>
-                        <option value="mobilemoney">📱 Mobile Money</option>
-                        <option value="card">💳 Card (Visa, Mastercard)</option>
-                        <option value="banktransfer">🏦 Bank Transfer</option>
-                        <option value="ussd">📞 USSD</option>
-                    </select>
-                </div>
-                
-                <!-- Country Selection (for all methods) -->
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Country *</label>
+                    <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Select Your Country *</label>
                     <select id="flutterwave-country" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
                         <option value="">Select Country</option>
                         <option value="GH">🇬🇭 Ghana</option>
@@ -1133,18 +1121,10 @@ body {
                     </select>
                 </div>
                 
-                <!-- Mobile Network (only for mobile money) -->
-                <div id="flutterwave-network-container" class="form-group" style="display: none; margin-bottom: 1rem;">
-                    <label class="form-label" style="margin-bottom: 0.5rem; font-weight: 600;">Mobile Network *</label>
-                    <select id="flutterwave-network" class="form-input" style="padding: 0.75rem; border-radius: 0.5rem; border: 2px solid #e2e8f0;">
-                        <option value="">Select Network</option>
-                    </select>
-                </div>
-                
                 <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(102, 126, 234, 0.1); border-radius: 0.5rem; border-left: 4px solid #667eea;">
                     <small style="color: #4a5568;">
                         <i class="fas fa-info-circle" style="color: #667eea;"></i>
-                        <strong>Note:</strong> You'll be redirected to complete your payment securely.
+                        <strong>Note:</strong> You'll be redirected to Flutterwave to choose your payment method (Mobile Money, Card, Bank Transfer, or USSD) and complete payment securely.
                     </small>
                 </div>
             </div>
@@ -1229,40 +1209,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Flutterwave payment method selection
-    document.getElementById('flutterwave-payment-method').addEventListener('change', function() {
-        const networkContainer = document.getElementById('flutterwave-network-container');
-        const phoneField = document.getElementById('phone-field');
-        const msisdnInput = document.getElementById('msisdn');
-        const contactSubtitle = document.getElementById('contact-subtitle');
-        const paymentMethod = this.value;
-        
-        // Only show network selection and phone for mobile money
-        if (paymentMethod === 'mobilemoney') {
-            networkContainer.style.display = 'block';
-            phoneField.style.display = 'block';
-            msisdnInput.required = true;
-            contactSubtitle.textContent = 'Enter your mobile money number';
-        } else {
-            // Card, Bank Transfer, USSD - no phone or network needed
-            networkContainer.style.display = 'none';
-            phoneField.style.display = 'none';
-            msisdnInput.required = false;
-            contactSubtitle.textContent = 'You will be redirected to complete payment';
-        }
-        updateSubmitButton();
-    });
-    
-    // Flutterwave country selection
+    // Flutterwave country selection (simplified - no payment method needed)
     document.getElementById('flutterwave-country').addEventListener('change', function() {
-        const paymentMethod = document.getElementById('flutterwave-payment-method').value;
-        if (paymentMethod === 'mobilemoney') {
-            updateFlutterwaveNetworks(this.value);
-        }
-        updateSubmitButton();
-    });
-    
-    document.getElementById('flutterwave-network').addEventListener('change', function() {
         updateSubmitButton();
     });
     
@@ -1297,10 +1245,10 @@ function handlePaymentMethodChange(method) {
         contactSubtitle.textContent = 'Card payment will redirect to secure checkout page';
         flutterwaveOptions.style.display = 'none';
     } else if (method === 'flutterwave') {
-        // Flutterwave - show country/network selection
+        // Flutterwave - show country selection only
         phoneField.style.display = 'block';
-        msisdnInput.required = true;
-        contactSubtitle.textContent = 'Enter your mobile money number';
+        msisdnInput.required = false; // Phone optional - Flutterwave will collect if needed
+        contactSubtitle.textContent = 'You will be redirected to Flutterwave to complete payment';
         flutterwaveOptions.style.display = 'block';
     } else {
         // Mobile money (Ghana) - phone required
@@ -1469,19 +1417,9 @@ function updateSubmitButton() {
         // Card payment - only need votes selected
         submitBtn.disabled = !hasVotes;
     } else if (paymentMethod === 'flutterwave') {
-        // Flutterwave - requirements depend on payment method
-        const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
+        // Flutterwave - only need country selected (payment method handled by Flutterwave)
         const country = document.getElementById('flutterwave-country').value;
-        const network = document.getElementById('flutterwave-network').value;
-        
-        if (flutterwavePaymentMethod === 'mobilemoney') {
-            // Mobile money needs phone and network
-            const hasPhone = msisdn.length >= 10;
-            submitBtn.disabled = !(hasVotes && hasPhone && flutterwavePaymentMethod && country && network);
-        } else {
-            // Card/Bank/USSD only need payment method and country
-            submitBtn.disabled = !(hasVotes && flutterwavePaymentMethod && country);
-        }
+        submitBtn.disabled = !(hasVotes && country);
     } else {
         // Mobile money (Ghana) - need both votes and phone
         const hasPhone = msisdn.length >= 10;
@@ -1498,34 +1436,21 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     
     // Validate phone number for mobile money
     const msisdn = document.getElementById('msisdn').value;
-    const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
     
-    // Phone required for Ghana mobile money and Flutterwave mobile money only
-    const phoneRequired = paymentMethod === 'mobile_money' || 
-                         (paymentMethod === 'flutterwave' && flutterwavePaymentMethod === 'mobilemoney');
+    // Phone required for Ghana mobile money only
+    const phoneRequired = paymentMethod === 'mobile_money';
     
     if (phoneRequired && (!msisdn || msisdn.length < 10)) {
         showAlert('Please enter a valid phone number', 'error');
         return;
     }
     
-    // Validate Flutterwave fields
+    // Validate Flutterwave fields (only country needed)
     if (paymentMethod === 'flutterwave') {
-        const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
         const country = document.getElementById('flutterwave-country').value;
-        const network = document.getElementById('flutterwave-network').value;
         
-        if (!flutterwavePaymentMethod) {
-            showAlert('Please select a payment method', 'error');
-            return;
-        }
         if (!country) {
             showAlert('Please select your country', 'error');
-            return;
-        }
-        // Only validate network for mobile money
-        if (flutterwavePaymentMethod === 'mobilemoney' && !network) {
-            showAlert('Please select your mobile network', 'error');
             return;
         }
     }
@@ -1562,14 +1487,8 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
     
     // Add Flutterwave-specific data
     if (paymentMethod === 'flutterwave') {
-        const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
-        formData.append('flutterwave_payment_method', flutterwavePaymentMethod);
         formData.append('country', document.getElementById('flutterwave-country').value);
-        
-        // Only add network for mobile money
-        if (flutterwavePaymentMethod === 'mobilemoney') {
-            formData.append('network', document.getElementById('flutterwave-network').value);
-        }
+        // Flutterwave will handle payment method selection on their checkout page
     }
     
     if (currentVoteMethod === 'package') {
@@ -1591,13 +1510,11 @@ document.getElementById('votingForm').addEventListener('submit', function(e) {
         if (data.success && data.payment_initiated) {
             // Check if we have a payment URL
             if (data.payment_url) {
-                const flutterwavePaymentMethod = document.getElementById('flutterwave-payment-method').value;
-                
                 if (paymentMethod === 'card') {
                     // Hubtel card payment - redirect to checkout
                     window.location.href = data.payment_url;
-                } else if (paymentMethod === 'flutterwave' && flutterwavePaymentMethod !== 'mobilemoney') {
-                    // Flutterwave card/bank/USSD - redirect to Flutterwave hosted page
+                } else if (paymentMethod === 'flutterwave') {
+                    // Flutterwave - redirect to hosted checkout page
                     window.location.href = data.payment_url;
                 } else {
                     // Mobile money - open in popup

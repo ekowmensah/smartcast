@@ -89,20 +89,12 @@ class FlutterwaveGateway implements PaymentGatewayInterface
         try {
             $url = $this->apiUrl . '/v3/payments';
             
-            // Map payment method to Flutterwave payment options
-            $paymentOptions = [
-                'mobilemoney' => 'mobilemoney',
-                'card' => 'card',
-                'banktransfer' => 'banktransfer',
-                'ussd' => 'ussd'
-            ];
-            
             $data = [
                 'tx_ref' => $paymentData['reference'],
                 'amount' => $paymentData['amount'],
                 'currency' => $paymentData['currency'],
                 'redirect_url' => $paymentData['callback_url'] ?? APP_URL . '/payment/callback',
-                'payment_options' => $paymentOptions[$paymentMethod] ?? 'card',
+                // Don't specify payment_options - let Flutterwave show all available options for the country
                 'customer' => [
                     'email' => $paymentData['email'] ?? 'customer@smartcast.com',
                     'phonenumber' => $paymentData['phone'],

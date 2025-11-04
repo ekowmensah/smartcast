@@ -445,17 +445,11 @@ class VoteController extends BaseController
                 // Flutterwave payment (international - supports multiple payment methods)
                 $paymentData['country'] = $data['country'] ?? 'GH';
                 $paymentData['name'] = $data['customer_name'] ?? 'SmartCast Voter';
-                $paymentData['flutterwave_payment_method'] = $data['flutterwave_payment_method'] ?? 'mobilemoney';
                 $paymentData['email'] = $data['email'] ?? 'voter@smartcast.com';
+                $paymentData['phone'] = $data['msisdn'] ?? '0000000000';
                 
-                // Phone and network only needed for mobile money
-                if ($paymentData['flutterwave_payment_method'] === 'mobilemoney') {
-                    $paymentData['phone'] = $data['msisdn'];
-                    $paymentData['network'] = $data['network'] ?? 'MTN';
-                } else {
-                    // For card/bank/USSD, phone is optional
-                    $paymentData['phone'] = $data['msisdn'] ?? '0000000000';
-                }
+                // Flutterwave will handle payment method selection on their checkout page
+                // We don't need to specify payment method or network
                 
                 // Add callback URL for redirect-based payments
                 $eventSlug = $event['slug'] ?? $event['id'];
