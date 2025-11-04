@@ -79,20 +79,96 @@ class SuperAdminController extends BaseController
         // Get security alerts
         $securityAlerts = $this->fraudModel->getFraudEvents(null, null, 10);
         
-        // Get revenue overview
-        $revenueOverview = $this->revenueModel->getPlatformRevenue();
+        // Get top performing events
+        $topEvents = $this->getTopPerformingEvents(5);
+        
+        // Get top tenants by revenue
+        $topTenants = $this->getTopTenantsByRevenue(5);
+        
+        // Get recent transactions
+        $recentTransactions = $this->getRecentTransactions(10);
         
         $content = $this->renderView('superadmin/dashboard', [
             'stats' => $stats,
             'recentActivity' => $recentActivity,
             'securityAlerts' => $securityAlerts,
-            'revenueOverview' => $revenueOverview,
+            'topEvents' => $topEvents,
+            'topTenants' => $topTenants,
+            'recentTransactions' => $recentTransactions,
             'title' => 'Platform Dashboard'
         ]);
         
         echo $this->renderLayout('superadmin_layout', $content, [
             'title' => 'Platform Dashboard'
         ]);
+    }
+    
+    private function getTopPerformingEvents($limit = 5)
+    {
+        $sql = "
+            SELECT e.id, e.name, e.code, e.status,
+                   t.name as tenant_name,
+                   COUNT(DISTINCT tr.id) as transaction_count,
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN v.quantity ELSE 0 END), 0) as total_votes,
+                   COALESCE(SUM(CASE WHEN tr.status = 'success' THEN tr.amount ELSE 0 END), 0) as total_amount,
+                   COALESCE(SUM(CASE 
+                       WHEN tr.status = 'success' 
+                       THEN COALESCE(rs.amount, tr.amount * COALESCE(fr.percentage_rate, 15) / 100)
+                       ELSE 0 
+                   END), 0) as platform_revenue
+            FROM events e
+            INNER JOIN tenants t ON e.tenant_id = t.id
+            LEFT JOIN contestants c ON e.id = c.event_id
+            LEFT JOIN votes v ON c.id = v.contestant_id
+            LEFT JOIN transactions tr ON v.transaction_id = tr.id
+            LEFT JOIN revenue_shares rs ON tr.id = rs.transaction_id
+            LEFT JOIN subscription_plans sp ON t.current_plan_id = sp.id
+            LEFT JOIN fee_rules fr ON sp.fee_rule_id = fr.id
+            WHERE e.status = 'active'
+            GROUP BY e.id
+            ORDER BY platform_revenue DESC
+            LIMIT :limit
+        ";
+        
+        return $this->db->select($sql, ['limit' => $limit]);
+    }
+    
+    private function getTopTenantsByRevenue($limit = 5)
+    {
+        $sql = "
+            SELECT t.id, t.name, t.email,
+                   COUNT(DISTINCT e.id) as event_count,
+                   COUNT(DISTINCT CASE WHEN e.status = 'active' THEN e.id END) as active_events,
+                   COALESCE(tb.total_earned, 0) as total_earned,
+                   COALESCE(tb.available, 0) as available_balance
+            FROM tenants t
+            LEFT JOIN events e ON t.id = e.tenant_id
+            LEFT JOIN tenant_balances tb ON t.id = tb.tenant_id
+            WHERE t.active = 1
+            GROUP BY t.id
+            ORDER BY total_earned DESC
+            LIMIT :limit
+        ";
+        
+        return $this->db->select($sql, ['limit' => $limit]);
+    }
+    
+    private function getRecentTransactions($limit = 10)
+    {
+        $sql = "
+            SELECT tr.id, tr.amount, tr.status, tr.created_at,
+                   e.name as event_name,
+                   t.name as tenant_name,
+                   v.quantity as votes
+            FROM transactions tr
+            INNER JOIN events e ON tr.event_id = e.id
+            INNER JOIN tenants t ON e.tenant_id = t.id
+            LEFT JOIN votes v ON tr.id = v.transaction_id
+            ORDER BY tr.created_at DESC
+            LIMIT :limit
+        ";
+        
+        return $this->db->select($sql, ['limit' => $limit]);
     }
     
     public function tenants()
@@ -649,6 +725,7 @@ class SuperAdminController extends BaseController
         // Total tenants
         $stats['total_tenants'] = $this->tenantModel->count();
         $stats['active_tenants'] = $this->tenantModel->count(['active' => 1]);
+        $stats['pending_tenants'] = $this->tenantModel->count(['verified' => 0]);
         
         // Total users
         $stats['total_users'] = $this->userModel->count();
@@ -657,14 +734,62 @@ class SuperAdminController extends BaseController
         // Total events
         $stats['total_events'] = $this->eventModel->count();
         $stats['active_events'] = $this->eventModel->count(['status' => 'active']);
+        $stats['draft_events'] = $this->eventModel->count(['status' => 'draft']);
+        $stats['closed_events'] = $this->eventModel->count(['status' => 'closed']);
         
         // Total transactions
         $stats['total_transactions'] = $this->transactionModel->count();
         $stats['successful_transactions'] = $this->transactionModel->count(['status' => 'success']);
+        $stats['pending_transactions'] = $this->transactionModel->count(['status' => 'pending']);
+        $stats['failed_transactions'] = $this->transactionModel->count(['status' => 'failed']);
         
-        // Platform revenue
-        $revenueData = $this->revenueModel->getPlatformRevenue();
+        // Platform revenue (corrected calculation)
+        $revenueData = $this->getCorrectedPlatformRevenue();
         $stats['total_revenue'] = $revenueData['total_revenue'] ?? 0;
+        $stats['total_transaction_amount'] = $revenueData['total_transaction_amount'] ?? 0;
+        
+        // Monthly revenue
+        $monthlyRevenue = $this->getCorrectedPlatformRevenue(
+            date('Y-m-01 00:00:00'),
+            date('Y-m-t 23:59:59')
+        );
+        $stats['monthly_revenue'] = $monthlyRevenue['total_revenue'] ?? 0;
+        $stats['monthly_transactions'] = $monthlyRevenue['total_transactions'] ?? 0;
+        
+        // Today's stats
+        $todayRevenue = $this->getCorrectedPlatformRevenue(
+            date('Y-m-d 00:00:00'),
+            date('Y-m-d 23:59:59')
+        );
+        $stats['today_revenue'] = $todayRevenue['total_revenue'] ?? 0;
+        $stats['today_transactions'] = $todayRevenue['total_transactions'] ?? 0;
+        
+        // Votes and contestants
+        $votesQuery = "SELECT COUNT(*) as total_votes, SUM(quantity) as total_vote_count FROM votes";
+        $votesData = $this->db->selectOne($votesQuery);
+        $stats['total_votes'] = $votesData['total_vote_count'] ?? 0;
+        $stats['total_vote_records'] = $votesData['total_votes'] ?? 0;
+        
+        $stats['total_contestants'] = $this->contestantModel->count(['active' => 1]);
+        $stats['total_categories'] = $this->categoryModel->count();
+        
+        // Tenant balances
+        $balanceQuery = "SELECT 
+            SUM(available) as total_available,
+            SUM(pending) as total_pending,
+            SUM(total_paid) as total_paid
+            FROM tenant_balances";
+        $balanceData = $this->db->selectOne($balanceQuery);
+        $stats['pending_payouts'] = $balanceData['total_available'] ?? 0;
+        $stats['total_paid_out'] = $balanceData['total_paid'] ?? 0;
+        
+        // Growth calculations
+        $lastMonthStart = date('Y-m-01 00:00:00', strtotime('first day of last month'));
+        $lastMonthEnd = date('Y-m-t 23:59:59', strtotime('last day of last month'));
+        $lastMonthRevenue = $this->getCorrectedPlatformRevenue($lastMonthStart, $lastMonthEnd);
+        $lastMonth = $lastMonthRevenue['total_revenue'] ?? 0;
+        $currentMonth = $stats['monthly_revenue'];
+        $stats['revenue_growth'] = $lastMonth > 0 ? (($currentMonth - $lastMonth) / $lastMonth) * 100 : 0;
         
         return $stats;
     }
