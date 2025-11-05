@@ -1190,42 +1190,6 @@ function resetFilters() {
     // Focus search input
     searchInput.focus();
 }
-
-// Real-time countdown for events ending in less than 24 hours
-function updateCountdowns() {
-    const countdownElements = document.querySelectorAll('[data-end-time]');
-    
-    countdownElements.forEach(element => {
-        const endTime = parseInt(element.dataset.endTime);
-        const now = Math.floor(Date.now() / 1000);
-        const secondsRemaining = endTime - now;
-        
-        if (secondsRemaining <= 0) {
-            element.textContent = 'Event Ended';
-            element.classList.remove('text-danger', 'fw-bold');
-            element.classList.add('text-muted');
-            return;
-        }
-        
-        // Calculate hours and minutes
-        const hours = Math.floor(secondsRemaining / 3600);
-        const minutes = Math.floor((secondsRemaining % 3600) / 60);
-        const seconds = secondsRemaining % 60;
-        
-        // Format display
-        if (hours > 0) {
-            element.textContent = `${hours}h ${minutes}m ${seconds}s left`;
-        } else if (minutes > 0) {
-            element.textContent = `${minutes}m ${seconds}s left`;
-        } else {
-            element.textContent = `${seconds}s left`;
-        }
-    });
-}
-
-// Update countdowns immediately and then every second
-updateCountdowns();
-setInterval(updateCountdowns, 1000);
 </script>
 
 <?php include __DIR__ . '/../layout/public_footer.php'; ?>

@@ -3394,24 +3394,20 @@ class SuperAdminController extends BaseController
     {
         $sql = "
             SELECT 
-                t.id as transaction_id,
-                COALESCE(rs.amount, t.amount * COALESCE(fr.percentage_rate, 15) / 100) as platform_fee,
-                COALESCE(rs.created_at, t.created_at) as created_at,
+                rs.id,
+                rs.amount as platform_fee,
+                rs.created_at,
                 t.amount as total_amount,
-                (t.amount - COALESCE(rs.amount, t.amount * COALESCE(fr.percentage_rate, 15) / 100)) as tenant_amount,
+                (t.amount - rs.amount) as tenant_amount,
                 ten.name as tenant_name,
                 e.name as event_name,
-                c.name as contestant_name,
-                t.status
-            FROM transactions t
-            LEFT JOIN revenue_shares rs ON rs.transaction_id = t.id
-            INNER JOIN tenants ten ON t.tenant_id = ten.id
-            LEFT JOIN subscription_plans sp ON ten.current_plan_id = sp.id
-            LEFT JOIN fee_rules fr ON sp.fee_rule_id = fr.id
+                c.name as contestant_name
+            FROM revenue_shares rs
+            INNER JOIN transactions t ON rs.transaction_id = t.id
+            INNER JOIN tenants ten ON rs.tenant_id = ten.id
             INNER JOIN events e ON t.event_id = e.id
             INNER JOIN contestants c ON t.contestant_id = c.id
-            WHERE t.status = 'success'
-            ORDER BY t.created_at DESC
+            ORDER BY rs.created_at DESC
             LIMIT :limit
         ";
         
