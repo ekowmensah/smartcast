@@ -68,29 +68,70 @@ $eventSlug = \SmartCast\Helpers\SlugHelper::generateEventSlug($event);
             <div class="ultra-stats mb-2">
                 <?php
                     // Calculate days left or show appropriate status
-                    $startDate = new DateTime($event['start_date']);
-                    $endDate = new DateTime($event['end_date']);
-                    $today = new DateTime();
+                    $timezone = new DateTimeZone('Africa/Accra');
+                    $startDate = new DateTime($event['start_date'], $timezone);
+                    $endDate = new DateTime($event['end_date'], $timezone);
+                    $today = new DateTime('now', $timezone);
                     
                     if ($calculatedStatus === 'ended') {
                         $daysLeftText = 'Ended';
                         $textClass = 'text-danger';
                     } elseif ($calculatedStatus === 'upcoming') {
-                        $daysToStart = max(0, $today->diff($startDate)->days);
-                        if ($daysToStart === 0) {
+                        // Calculate based on actual hours until start (24-hour periods)
+                        $interval = $today->diff($startDate);
+                        $hoursUntilStart = ($interval->days * 24) + $interval->h;
+                        
+                        if ($hoursUntilStart < 24) {
                             $daysLeftText = 'Starts Today';
                             $textClass = 'text-warning';
+                        } elseif ($hoursUntilStart < 48) {
+                            $daysLeftText = 'Starts Tomorrow';
+                            $textClass = 'text-info';
                         } else {
+                            $daysToStart = ceil($hoursUntilStart / 24);
                             $daysLeftText = 'Starts in ' . $daysToStart . ' day' . ($daysToStart !== 1 ? 's' : '');
                             $textClass = 'text-info';
                         }
                     } else {
-                        // Active event
-                        $daysLeft = max(0, $today->diff($endDate)->days);
-                        if ($daysLeft === 0) {
+                        // Active event - use calendar days (midnight as boundary)
+                        $todayDate = $today->format('Y-m-d');
+                        $endDateOnly = $endDate->format('Y-m-d');
+                        $tomorrow = clone $today;
+                        $tomorrowDate = $tomorrow->modify('+1 day')->format('Y-m-d');
+                        
+                        // Calculate actual time remaining
+                        $interval = $today->diff($endDate);
+                        $hoursRemaining = ($interval->days * 24) + $interval->h;
+                        $minutesRemaining = $interval->i;
+                        
+                        // Initialize countdown variables (only used if < 24 hours)
+                        $countdownId = null;
+                        $endTimestamp = null;
+                        
+                        // Debug: Show calculation (remove this after testing)
+                        error_log("Event: {$event['name']}, Today: $todayDate, End: $endDateOnly, Hours: $hoursRemaining");
+                        
+                        if ($hoursRemaining < 24) {
+                            // Less than 24 hours - show countdown
+                            if ($hoursRemaining > 0) {
+                                $daysLeftText = $hoursRemaining . 'h ' . $minutesRemaining . 'm left';
+                            } else {
+                                $daysLeftText = $minutesRemaining . 'm left';
+                            }
+                            $textClass = 'text-danger fw-bold';
+                            $countdownId = 'countdown-' . $event['id'];
+                            $endTimestamp = strtotime($event['end_date']);
+                        } elseif ($endDateOnly === $todayDate) {
+                            // Ends on today's calendar date (but more than 24h away - edge case)
                             $daysLeftText = 'Ends Today';
                             $textClass = 'text-warning';
+                        } elseif ($endDateOnly === $tomorrowDate) {
+                            // Ends on tomorrow's calendar date
+                            $daysLeftText = 'Ends Tomorrow';
+                            $textClass = 'text-warning';
                         } else {
+                            // Ends 2+ days from now
+                            $daysLeft = max(1, $interval->days);
                             $daysLeftText = $daysLeft . ' Day' . ($daysLeft !== 1 ? 's' : '') . ' Left';
                             $textClass = '';
                         }
@@ -101,7 +142,11 @@ $eventSlug = \SmartCast\Helpers\SlugHelper::generateEventSlug($event);
                     <span class="stat-divider">•</span>
                  <!--   <span class="stat-item"><?= number_format($event['total_votes'] ?? 0) ?> Votes</span> 
                     <span class="stat-divider">•</span>-->
-                    <span class="stat-item <?= $textClass ?>"><?= $daysLeftText ?></span>
+                    <span class="stat-item <?= $textClass ?>" 
+                          <?php if (isset($countdownId)): ?>
+                          id="<?= $countdownId ?>" 
+                          data-end-time="<?= $endTimestamp ?>"
+                          <?php endif; ?>><?= $daysLeftText ?></span>
                 </div>
             </div>
             

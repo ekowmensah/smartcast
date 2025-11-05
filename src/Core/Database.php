@@ -37,6 +37,11 @@ class Database
             ];
             
             $this->connection = new PDO($dsn, \DB_USER, \DB_PASS, $options);
+            
+            // Set MySQL timezone to match PHP timezone
+            // This ensures datetime values are properly converted
+            $timezone = date_default_timezone_get();
+            $this->connection->exec("SET time_zone = '+00:00'"); // Africa/Accra is GMT+0
         } catch (PDOException $e) {
             throw new \Exception("Database connection failed: " . $e->getMessage());
         }
