@@ -38,10 +38,11 @@ class Database
             
             $this->connection = new PDO($dsn, \DB_USER, \DB_PASS, $options);
             
+            // Timezone setting temporarily disabled for troubleshooting
             // Set MySQL session timezone to UTC since dates are stored in UTC in the database
             // This ensures MySQL interprets stored dates correctly
             // PHP timezone (Africa/Accra) handles display formatting
-            $this->connection->exec("SET time_zone = '+00:00'");
+            // $this->connection->exec("SET time_zone = '+00:00'");
         } catch (PDOException $e) {
             throw new \Exception("Database connection failed: " . $e->getMessage());
         }
