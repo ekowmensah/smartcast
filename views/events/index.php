@@ -1190,6 +1190,74 @@ function resetFilters() {
     // Focus search input
     searchInput.focus();
 }
+
+// Live countdown timer for all events
+function updateCountdowns() {
+    document.querySelectorAll('.event-card').forEach(card => {
+        const status = card.dataset.status;
+        const statItem = card.querySelector('.ultra-stats .stat-item:last-child');
+        
+        if (!statItem) return;
+        
+        // Get the event dates from the mini-dates section
+        const miniDates = card.querySelector('.mini-dates');
+        if (!miniDates) return;
+        
+        const dateText = miniDates.textContent;
+        
+        // Extract end date
+        const endsMatch = dateText.match(/Ends:\s*([^|]+)/);
+        const startsMatch = dateText.match(/Starts:\s*([^|]+)/);
+        
+        if (status === 'active' && endsMatch) {
+            // Parse the end date
+            const endDateStr = endsMatch[1].trim();
+            const currentYear = new Date().getFullYear();
+            const endDate = new Date(endDateStr + ', ' + currentYear);
+            
+            // Calculate days left
+            const now = new Date();
+            const diff = endDate - now;
+            const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            
+            if (daysLeft < 0) {
+                statItem.textContent = 'Ended';
+                statItem.className = 'stat-item text-danger';
+            } else if (daysLeft === 0) {
+                statItem.textContent = 'Ends Today';
+                statItem.className = 'stat-item text-warning';
+            } else {
+                statItem.textContent = daysLeft + ' Day' + (daysLeft !== 1 ? 's' : '') + ' Left';
+                statItem.className = 'stat-item';
+            }
+        } else if (status === 'upcoming' && startsMatch) {
+            // Parse the start date
+            const startDateStr = startsMatch[1].trim();
+            const currentYear = new Date().getFullYear();
+            const startDate = new Date(startDateStr + ', ' + currentYear);
+            
+            // Calculate days until start
+            const now = new Date();
+            const diff = startDate - now;
+            const daysToStart = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            
+            if (daysToStart < 0) {
+                statItem.textContent = 'Starting Soon';
+                statItem.className = 'stat-item text-success';
+            } else if (daysToStart === 0) {
+                statItem.textContent = 'Starts Today';
+                statItem.className = 'stat-item text-warning';
+            } else {
+                statItem.textContent = 'Starts in ' + daysToStart + ' day' + (daysToStart !== 1 ? 's' : '');
+                statItem.className = 'stat-item text-info';
+            }
+        }
+    });
+}
+
+// Update countdowns every minute
+updateCountdowns();
+setInterval(updateCountdowns, 60000);
 </script>
 
 <?php include __DIR__ . '/../layout/public_footer.php'; ?>
