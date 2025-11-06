@@ -40,22 +40,35 @@ class VoteCompletionService
     public function processVoteCompletion($transactionId, $additionalData = [])
     {
         try {
+            error_log("VoteCompletionService: Starting vote completion for transaction {$transactionId}");
+            
             // Get transaction
             $transaction = $this->transactionModel->find($transactionId);
-            if (!$transaction || $transaction['status'] !== 'success') {
-                throw new \Exception('Invalid or unsuccessful transaction');
+            if (!$transaction) {
+                throw new \Exception('Transaction not found');
+            }
+            
+            error_log("VoteCompletionService: Transaction found - Status: {$transaction['status']}, Provider: {$transaction['provider']}");
+            
+            if ($transaction['status'] !== 'success') {
+                throw new \Exception('Transaction status is not success: ' . $transaction['status']);
             }
             
             // Get associated vote
             $vote = $this->voteModel->getByTransactionId($transactionId);
             if (!$vote) {
+                error_log("VoteCompletionService: Vote record not found for transaction {$transactionId}");
                 throw new \Exception('Vote record not found for transaction');
             }
+            
+            error_log("VoteCompletionService: Vote found - ID: {$vote['id']}, Quantity: " . ($vote['quantity'] ?? $vote['vote_count'] ?? 'N/A'));
             
             // Get related entities
             $event = $this->eventModel->find($vote['event_id']);
             $contestant = $this->contestantModel->find($vote['contestant_id']);
             $category = $this->categoryModel->find($vote['category_id']);
+            
+            error_log("VoteCompletionService: Related entities - Event: " . ($event['name'] ?? 'N/A') . ", Contestant: " . ($contestant['name'] ?? 'N/A'));
             
             // Generate or get receipt
             $receipt = $this->getOrCreateReceipt($transaction, $vote);
@@ -66,15 +79,19 @@ class VoteCompletionService
                 'nominee_name' => $contestant['name'] ?? 'Unknown Contestant',
                 'event_name' => $event['name'] ?? 'Unknown Event',
                 'category_name' => $category['name'] ?? 'Unknown Category',
-                'vote_count' => $vote['quantity'] ?? 1, // Fixed: use 'quantity' field from votes table
+                'vote_count' => $vote['quantity'] ?? $vote['vote_count'] ?? 1,
                 'amount' => $transaction['amount'] ?? 0,
-                'receipt_number' => $receipt['short_code'] ?? $transaction['reference'] ?? $transaction['id'], // Fixed: use 'short_code' from receipt
+                'receipt_number' => $receipt['short_code'] ?? $transaction['reference'] ?? $transaction['id'],
                 'transaction_id' => $transaction['id'],
                 'vote_id' => $vote['id']
             ];
             
+            error_log("VoteCompletionService: Prepared SMS data - Phone: {$smsData['phone']}, Votes: {$smsData['vote_count']}");
+            
             // Send SMS notification
             $smsResult = $this->smsService->sendVoteConfirmationSms($smsData);
+            
+            error_log("VoteCompletionService: SMS result - " . json_encode($smsResult));
             
             // Log the completion
             $this->logVoteCompletion($transaction, $vote, $smsResult);
@@ -83,13 +100,14 @@ class VoteCompletionService
                 'success' => true,
                 'transaction_id' => $transactionId,
                 'vote_id' => $vote['id'],
-                'receipt_number' => $receipt['short_code'] ?? null, // Fixed: use 'short_code' from receipt
+                'receipt_number' => $receipt['short_code'] ?? null,
                 'sms_sent' => $smsResult['success'] ?? false,
                 'sms_details' => $smsResult
             ];
             
         } catch (\Exception $e) {
             error_log("Vote Completion Service Error: " . $e->getMessage());
+            error_log("Vote Completion Service Error Trace: " . $e->getTraceAsString());
             
             return [
                 'success' => false,
@@ -112,20 +130,25 @@ class VoteCompletionService
             $phone = $additionalData['phone'];
         }
         
+        // From transaction msisdn field (USSD votes)
+        if (!$phone && !empty($transaction['msisdn'])) {
+            $phone = $transaction['msisdn'];
+        }
+        
+        // From transaction phone field (web votes)
+        if (!$phone && !empty($transaction['phone'])) {
+            $phone = $transaction['phone'];
+        }
+        
         // From transaction metadata
         if (!$phone && !empty($transaction['metadata'])) {
             $metadata = is_string($transaction['metadata']) ? 
                 json_decode($transaction['metadata'], true) : 
                 $transaction['metadata'];
                 
-            if (isset($metadata['phone'])) {
-                $phone = $metadata['phone'];
+            if (isset($metadata['phone']) || isset($metadata['msisdn'])) {
+                $phone = $metadata['phone'] ?? $metadata['msisdn'];
             }
-        }
-        
-        // From transaction phone field (if exists)
-        if (!$phone && !empty($transaction['phone'])) {
-            $phone = $transaction['phone'];
         }
         
         // From payment gateway response
@@ -134,15 +157,18 @@ class VoteCompletionService
                 json_decode($transaction['gateway_response'], true) : 
                 $transaction['gateway_response'];
                 
-            if (isset($response['phone']) || isset($response['mobile'])) {
-                $phone = $response['phone'] ?? $response['mobile'];
+            if (isset($response['phone']) || isset($response['mobile']) || isset($response['msisdn'])) {
+                $phone = $response['phone'] ?? $response['mobile'] ?? $response['msisdn'];
             }
         }
         
         if (!$phone) {
+            error_log("VoteCompletionService: Phone number not found. Transaction data: " . json_encode($transaction));
+            error_log("VoteCompletionService: Additional data: " . json_encode($additionalData));
             throw new \Exception('Phone number not found in transaction data');
         }
         
+        error_log("VoteCompletionService: Extracted phone number: {$phone}");
         return $phone;
     }
     
