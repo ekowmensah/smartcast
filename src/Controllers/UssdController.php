@@ -244,7 +244,7 @@ class UssdController extends BaseController
         $response = [
             'SessionId' => $sessionId,
             'Type' => 'AddToCart',
-            'Message' => $data['message'] ?? 'Please wait for payment prompt',
+            'Message' => $data['message'] ?? 'Please wait for payment prompt on your phone to approve payment.',
             'Label' => 'Payment',
             'DataType' => 'display',
             'FieldType' => 'text',
