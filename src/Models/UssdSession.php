@@ -758,7 +758,7 @@ class UssdSession extends BaseModel
             // Return AddToCart response for Hubtel to collect payment
             // This is handled by UssdController, we just return the data
             return [
-                'message' => 'Please wait for payment prompt on your phone to approve payment.',
+                'message' => 'Please wait for payment prompt or Dial *170# to approve.',
                 'end' => true,
                 'add_to_cart' => true,
                 'item' => [

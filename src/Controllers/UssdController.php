@@ -244,7 +244,7 @@ class UssdController extends BaseController
         $response = [
             'SessionId' => $sessionId,
             'Type' => 'AddToCart',
-            'Message' => $data['message'] ?? 'Please wait for payment prompt on your phone to approve payment.',
+            'Message' => $data['message'] ?? 'Please wait for payment prompt or Dial *170# to Approve',
             'Label' => 'Payment',
             'DataType' => 'display',
             'FieldType' => 'text',
@@ -434,11 +434,12 @@ class UssdController extends BaseController
             try {
                 $voteCompletionService = new \SmartCast\Services\VoteCompletionService();
                 $smsResult = $voteCompletionService->processVoteCompletion($transactionId, [
-                    'phone' => $transaction['phone'] ?? null
+                    'phone' => $transaction['msisdn'] ?? $transaction['phone'] ?? null
                 ]);
                 error_log("USSD: SMS notification result: " . json_encode($smsResult));
             } catch (\Exception $e) {
                 error_log("USSD: SMS notification failed: " . $e->getMessage());
+                error_log("USSD: SMS error trace: " . $e->getTraceAsString());
                 // Don't throw - SMS failure shouldn't break the vote process
             }
             
