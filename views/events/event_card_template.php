@@ -7,7 +7,11 @@ require_once __DIR__ . '/../../src/Helpers/SlugHelper.php';
 $eventSlug = \SmartCast\Helpers\SlugHelper::generateEventSlug($event);
 ?>
 
-<div class="col-sm-6 col-md-4 col-lg-3 mb-4 event-card" data-event-id="<?= $event['id'] ?>" data-status="<?= $calculatedStatus ?>">
+<div class="col-sm-6 col-md-4 col-lg-3 mb-4 event-card" 
+     data-event-id="<?= $event['id'] ?>" 
+     data-status="<?= $calculatedStatus ?>"
+     data-start-date="<?= $event['start_date'] ?>"
+     data-end-date="<?= $event['end_date'] ?>">
     <div class="card h-100 border-0 shadow-sm event-card-hover position-relative">
         <div class="position-relative overflow-hidden">
             <?php if ($event['featured_image']): ?>

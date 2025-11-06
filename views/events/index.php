@@ -1193,71 +1193,97 @@ function resetFilters() {
 
 // Live countdown timer for all events
 function updateCountdowns() {
-    document.querySelectorAll('.event-card').forEach(card => {
+    const cards = document.querySelectorAll('.event-card');
+    
+    cards.forEach(card => {
         const status = card.dataset.status;
-        const statItem = card.querySelector('.ultra-stats .stat-item:last-child');
         
-        if (!statItem) return;
+        // Find the countdown stat item (last stat-item in ultra-stats)
+        const statsRow = card.querySelector('.ultra-stats .stats-row');
+        if (!statsRow) return;
         
-        // Get the event dates from the mini-dates section
-        const miniDates = card.querySelector('.mini-dates');
-        if (!miniDates) return;
+        const statItems = statsRow.querySelectorAll('.stat-item');
+        if (statItems.length === 0) return;
         
-        const dateText = miniDates.textContent;
+        const countdownItem = statItems[statItems.length - 1]; // Last stat item
         
-        // Extract end date
-        const endsMatch = dateText.match(/Ends:\s*([^|]+)/);
-        const startsMatch = dateText.match(/Starts:\s*([^|]+)/);
+        // Get dates from data attributes
+        const startDateStr = card.dataset.startDate;
+        const endDateStr = card.dataset.endDate;
         
-        if (status === 'active' && endsMatch) {
-            // Parse the end date
-            const endDateStr = endsMatch[1].trim();
-            const currentYear = new Date().getFullYear();
-            const endDate = new Date(endDateStr + ', ' + currentYear);
-            
-            // Calculate days left
-            const now = new Date();
+        if (!startDateStr || !endDateStr) return;
+        
+        const now = new Date();
+        const startDate = new Date(startDateStr);
+        const endDate = new Date(endDateStr);
+        
+        if (status === 'active') {
+            // Calculate time left until end
             const diff = endDate - now;
-            const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            const totalHours = Math.floor(diff / (1000 * 60 * 60));
+            const totalMinutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
             
-            if (daysLeft < 0) {
-                statItem.textContent = 'Ended';
-                statItem.className = 'stat-item text-danger';
-            } else if (daysLeft === 0) {
-                statItem.textContent = 'Ends Today';
-                statItem.className = 'stat-item text-warning';
+            if (diff < 0) {
+                countdownItem.textContent = 'Ended';
+                countdownItem.className = 'stat-item text-danger';
+            } else if (totalHours < 1) {
+                // Less than 1 hour - show minutes and seconds
+                countdownItem.textContent = minutes + 'm ' + seconds + 's left';
+                countdownItem.className = 'stat-item text-danger';
+            } else if (totalHours < 24) {
+                // Less than 24 hours - show hours, minutes, seconds
+                countdownItem.textContent = hours + 'h ' + minutes + 'm ' + seconds + 's';
+                countdownItem.className = 'stat-item text-warning';
             } else {
-                statItem.textContent = daysLeft + ' Day' + (daysLeft !== 1 ? 's' : '') + ' Left';
-                statItem.className = 'stat-item';
+                // More than 24 hours - show days
+                const daysLeft = Math.ceil(totalHours / 24);
+                countdownItem.textContent = daysLeft + ' Day' + (daysLeft !== 1 ? 's' : '') + ' Left';
+                countdownItem.className = 'stat-item';
             }
-        } else if (status === 'upcoming' && startsMatch) {
-            // Parse the start date
-            const startDateStr = startsMatch[1].trim();
-            const currentYear = new Date().getFullYear();
-            const startDate = new Date(startDateStr + ', ' + currentYear);
-            
-            // Calculate days until start
-            const now = new Date();
+        } else if (status === 'upcoming') {
+            // Calculate time until start
             const diff = startDate - now;
-            const daysToStart = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            const totalHours = Math.floor(diff / (1000 * 60 * 60));
+            const totalMinutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
             
-            if (daysToStart < 0) {
-                statItem.textContent = 'Starting Soon';
-                statItem.className = 'stat-item text-success';
-            } else if (daysToStart === 0) {
-                statItem.textContent = 'Starts Today';
-                statItem.className = 'stat-item text-warning';
+            if (diff < 0) {
+                countdownItem.textContent = 'Starting Soon';
+                countdownItem.className = 'stat-item text-success';
+            } else if (totalHours < 1) {
+                // Less than 1 hour - show minutes and seconds
+                countdownItem.textContent = minutes + 'm ' + seconds + 's';
+                countdownItem.className = 'stat-item text-success';
+            } else if (totalHours < 24) {
+                // Less than 24 hours - show hours, minutes, seconds
+                countdownItem.textContent = hours + 'h ' + minutes + 'm ' + seconds + 's';
+                countdownItem.className = 'stat-item text-warning';
             } else {
-                statItem.textContent = 'Starts in ' + daysToStart + ' day' + (daysToStart !== 1 ? 's' : '');
-                statItem.className = 'stat-item text-info';
+                // More than 24 hours - show days
+                const daysToStart = Math.ceil(totalHours / 24);
+                countdownItem.textContent = 'Starts in ' + daysToStart + ' day' + (daysToStart !== 1 ? 's' : '');
+                countdownItem.className = 'stat-item text-info';
             }
         }
     });
 }
 
-// Update countdowns every minute
-updateCountdowns();
-setInterval(updateCountdowns, 60000);
+// Wait for DOM to be fully loaded, then start countdown
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCountdowns();
+        setInterval(updateCountdowns, 1000); // Update every second
+    });
+} else {
+    // DOM already loaded
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000); // Update every second
+}
 </script>
 
 <?php include __DIR__ . '/../layout/public_footer.php'; ?>
