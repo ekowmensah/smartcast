@@ -429,6 +429,19 @@ class UssdController extends BaseController
             
             error_log("USSD: Vote cast successfully - Vote ID: {$voteId}, Count: {$voteCount}");
             
+            // ✅ SEND SMS NOTIFICATION - Same as web voting
+            error_log("USSD: Sending SMS notification for transaction: {$transactionId}");
+            try {
+                $voteCompletionService = new \SmartCast\Services\VoteCompletionService();
+                $smsResult = $voteCompletionService->processVoteCompletion($transactionId, [
+                    'phone' => $transaction['phone'] ?? null
+                ]);
+                error_log("USSD: SMS notification result: " . json_encode($smsResult));
+            } catch (\Exception $e) {
+                error_log("USSD: SMS notification failed: " . $e->getMessage());
+                // Don't throw - SMS failure shouldn't break the vote process
+            }
+            
             return [
                 'success' => true,
                 'vote_id' => $voteId,
